@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: ca555f70665c13245a2107753b99d6e8
+timeCreated: 1506777645
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 101601
+  packageName: Crusader tank
+  packageVersion: 1.0
+  assetPath: Assets/Crusader tank/Materials/Crusader tank_blunt.mat
+  uploadId: 365453
