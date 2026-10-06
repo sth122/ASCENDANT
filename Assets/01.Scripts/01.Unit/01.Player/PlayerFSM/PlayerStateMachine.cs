@@ -1,16 +1,16 @@
-using UnityEngine;
+﻿using System.Collections.Generic;
 
-public class PlayerStateMachine : MonoBehaviour
+// PlayerController 전용 StateMachine
+public class PlayerStateMachine : UnitStateMachine<PlayerController>
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public void SetUpPlayerState(PlayerController Player)
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        AddState(UnitState.Idle, new PlayerIdleState(Player, this));
+        AddState(UnitState.Move, new PlayerMoveState(Player, this));
+        //AddState(UnitState.Sprint, new PlayerSprintState(Player, this));
+        //AddState(UnitState.Jump, new PlayerJumpState(Player, this));
+        //AddState(UnitState.Attack, new PlayerAttackState(Player, this));
+        //AddState(UnitState.Parry, new PlayerParryState(Player, this));
+        //AddState(UnitState.Stun, new PlayerStunState(Player, this));
     }
 }
