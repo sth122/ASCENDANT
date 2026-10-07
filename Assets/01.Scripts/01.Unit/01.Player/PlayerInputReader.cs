@@ -1,7 +1,6 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class PlayerInputReader : IDisposable, PlayerInput.IPlayerActions
+public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
 {
     private PlayerInput _inputActions;
 
@@ -17,10 +16,11 @@ public class PlayerInputReader : IDisposable, PlayerInput.IPlayerActions
 
     #region Input Action Events
     // 외부 ( Command 패턴, 사운드, 이펙트 등)에서 구독할 이벤트
-    public event Action OnJumpEvent;
-    public event Action OnRollEvent;
-    public event Action OnAttackEvent;
-    public event Action OnInteractEvent;
+    public event System.Action OnJumpEvent;
+    public event System.Action OnRollEvent;
+    public event System.Action OnAttackEvent;
+    public event System.Action OnInteractEvent;
+    public event System.Action OnLockOnEvent;
     #endregion
 
     public PlayerInputReader()
@@ -117,6 +117,13 @@ public class PlayerInputReader : IDisposable, PlayerInput.IPlayerActions
         {
             HasRollInput = true;
             OnRollEvent?.Invoke();
+        }
+    }
+    public void OnLockOn(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            OnLockOnEvent?.Invoke();
         }
     }
     #endregion
