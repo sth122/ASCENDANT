@@ -27,3 +27,12 @@ public enum UnitId
     NPC = 201
 }
 #endregion
+
+#region Stat Enum
+public enum StatModType
+{
+    Flat,
+    PercentMult,
+}
+
+#endregion
