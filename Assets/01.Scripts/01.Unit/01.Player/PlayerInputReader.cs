@@ -9,6 +9,10 @@ public class PlayerInputReader : IDisposable, PlayerInput.IPlayerActions
     // FSM Update에서 Input을 읽기 위한 Properties
     public Vector2 MoveInput { get; private set; }
     public bool IsSprinting { get; private set; }
+    public bool HasJumpInput { get; private set; }
+    public bool HasRollInput { get; private set; }
+    public bool HasAttackInput { get; private set; }
+    public bool HasInteractInput { get; private set; }
     #endregion
 
     #region Input Action Events
@@ -74,6 +78,7 @@ public class PlayerInputReader : IDisposable, PlayerInput.IPlayerActions
     {
         if (context.performed)
         {
+            HasJumpInput = true;
             OnJumpEvent?.Invoke();
         }
     }
@@ -85,6 +90,7 @@ public class PlayerInputReader : IDisposable, PlayerInput.IPlayerActions
     {
         if (context.performed)
         {
+            HasAttackInput = true;
             OnAttackEvent?.Invoke();
         }
     }
@@ -96,6 +102,7 @@ public class PlayerInputReader : IDisposable, PlayerInput.IPlayerActions
     {
         if (context.performed)
         {
+            HasInteractInput = true;
             OnInteractEvent?.Invoke();
         }
     }
@@ -108,10 +115,35 @@ public class PlayerInputReader : IDisposable, PlayerInput.IPlayerActions
     {
         if (context.performed)
         {
+            HasRollInput = true;
             OnRollEvent?.Invoke();
         }
     }
     #endregion
+
+    #region Input Consume 구현부
+    public bool ConsumeJumpInput()
+    {
+        bool temp = HasJumpInput;
+        HasJumpInput = false;
+        return temp;
+    }
+
+    public bool ConsumeRollInput()
+    {
+        bool temp = HasRollInput;
+        HasRollInput = false;
+        return temp;
+    }
+
+    public bool ConsumeAttackInput()
+    {
+        bool temp = HasAttackInput;
+        HasAttackInput = false;
+        return temp;
+    }
+    #endregion
+
     public void Dispose()
     {
         if (_inputActions != null)

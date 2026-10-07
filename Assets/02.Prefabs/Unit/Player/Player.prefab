@@ -12104,6 +12104,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50e258a97e874f44f87699e4ee0c07ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  type: 0
+  _playerStat:
+    <MaxHp>k__BackingField: 0
+    <Poise>k__BackingField: 0
+    <DropSouls>k__BackingField: 0
+    <WalkSpeed>k__BackingField: 0
+    <SprintSpeed>k__BackingField: 0
+    <RotationSpeed>k__BackingField: 0
+    <JumpForce>k__BackingField: 0
+    <RollForce>k__BackingField: 0
+    <SoulLevel>k__BackingField: 0
+    <CurrentSouls>k__BackingField: 0
+    <Vigor>k__BackingField: 0
+    <Endurance>k__BackingField: 0
+    <Strength>k__BackingField: 0
+    <Dexterity>k__BackingField: 0
+  _groundLayer:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!1 &1953607639529104
 GameObject:
   m_ObjectHideFlags: 0
