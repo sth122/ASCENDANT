@@ -4,6 +4,10 @@
 [RequireComponent(typeof(Rigidbody), typeof(Animator))]
 public abstract class UnitController<T> : MonoBehaviour where T : UnitController<T>
 {
+    #region SerializeField Variable
+    [field: SerializeField] protected UnitId type;
+    #endregion
+
     #region Variables
     protected StateMachine<T> _stateMachine;
     protected Rigidbody _rigidbody;

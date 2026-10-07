@@ -1,7 +1,7 @@
 ﻿// Singleon 패턴. 어디서든 단 1개의 인스터스를 생성하고 접근할 수 있도록 하는 클래스
 
 using UnityEngine;
-public class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour, IInitable
+public class MonoSingleton<T> : MonoBehaviour, IInitable where T : MonoBehaviour
 {
     [SerializeField] protected bool isDDOL = false;
     private static T _instance;

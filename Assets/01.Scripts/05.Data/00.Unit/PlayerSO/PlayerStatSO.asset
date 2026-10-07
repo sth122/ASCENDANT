@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b436f45bb6a6dff48b3585b9c4c02452, type: 3}
+  m_Name: PlayerStatSO
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStatSO
+  _players:
+  - Id: 0
+    Stat:
+      <MaxHp>k__BackingField: 100
+      <Poise>k__BackingField: 5
+      <WalkSpeed>k__BackingField: 5
+      <SprintSpeed>k__BackingField: 8
+      <RotationSpeed>k__BackingField: 5
+      <JumpForce>k__BackingField: 5
+      <RollForce>k__BackingField: 5
+      <SoulLevel>k__BackingField: 1
+      <CurrentSouls>k__BackingField: 0
+      <Vigor>k__BackingField: 1
+      <Endurance>k__BackingField: 1
+      <Strength>k__BackingField: 1
+      <Dexterity>k__BackingField: 1
