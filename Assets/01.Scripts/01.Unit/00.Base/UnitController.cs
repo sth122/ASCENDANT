@@ -2,7 +2,7 @@
 
 // Unit에 해당하는 모든 객체의 Controller 제네릭 추상 클래스
 [RequireComponent(typeof(Rigidbody), typeof(Animator))]
-public abstract class UnitController<T> : MonoBehaviour where T : UnitController<T>
+public abstract class UnitController<T> : MonoBehaviour, IInitable where T : UnitController<T>
 {
     #region SerializeField Variable
     [field: SerializeField] protected UnitId type;
@@ -19,11 +19,16 @@ public abstract class UnitController<T> : MonoBehaviour where T : UnitController
         _rigidbody = GetComponent<Rigidbody>();
         _animator = GetComponent<Animator>();
 
-        InitializeStateMachine();
+        Init();
     }
 
     protected virtual void Update() => _stateMachine.Update();
     protected virtual void FixedUpdate() => _stateMachine.FixedUpdate();
 
     protected abstract void InitializeStateMachine();
+
+    public virtual void Init()
+    {
+        InitializeStateMachine();
+    }
 }

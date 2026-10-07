@@ -19,7 +19,7 @@ public class PlayerInputReader : IDisposable, PlayerInput.IPlayerActions
     public event Action OnInteractEvent;
     #endregion
 
-    private PlayerInputReader()
+    public PlayerInputReader()
     {
         if (_inputActions == null)
         {
