@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Util = DebugLogger<StateMachine<System.Type>>;
 
 // 모든 FSM 범용 제네릭 상태 머신

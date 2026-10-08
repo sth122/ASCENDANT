@@ -1,4 +1,4 @@
-﻿#region unitEnum
+﻿#region Unit Enum
 public enum UnitState
 {
     Idle,
@@ -35,4 +35,15 @@ public enum StatModType
     PercentMult,
 }
 
+#endregion
+
+#region Input Command Type Enum
+public enum InputCommandType
+{
+    None = 0,
+    Jump,
+    Roll,
+    Attack,
+    Parry
+}
 #endregion

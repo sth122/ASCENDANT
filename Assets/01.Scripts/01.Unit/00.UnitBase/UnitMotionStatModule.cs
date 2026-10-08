@@ -2,23 +2,27 @@
 using Util = DebugLogger<UnitMotionStatModule>;
 
 /// <summary>
-/// 유닛의 이동 수치를 보관하고, 장비 무게(Equip Load)에 따른 패널티를 더티 플래그 패턴으로 관리하는 순수 C# 모듈
+/// 유닛의 기동력 수치를 ModifiableStat 더티 플래그로 관리하고, 장비 무게(Equip Load)에 따른 패널티를 더티 플래그 패턴으로 관리하는 순수 C# 모듈
 /// 전달받은 스탯 타입(UnitBaseStat / PlayerStat)에 맞춰 모듈 수치를 적응형으로 설정
 /// </summary>
 [Serializable]
 public class UnitMotionStatModule
 {
+    #region 기동력 수치
     public ModifiableStat WalkSpeed { get; }
     public ModifiableStat SprintSpeed { get; }
     public ModifiableStat JumpForce { get; }
     public ModifiableStat RollForce { get; }
+    #endregion
 
+    #region 장비 패널티 수치
     public float CurrentEquipWeight { get; private set; }
     public float MaxEquipWeight { get; private set; } = 50.0f;
-
     public float WeightRatio => MaxEquipWeight > 0f ? CurrentEquipWeight / MaxEquipWeight : 0f;
+    #endregion
 
     public event System.Action OnMotionStatChanged;
+    
     public UnitMotionStatModule(UnitBaseStat baseStat)
     {
         if (baseStat == null)

@@ -1,14 +1,10 @@
 ﻿/// <summary>
 /// Player의 움직임을 전담하는 FSM 상태 클래스
 /// </summary>
-public class PlayerMoveState : UnitMoveState<PlayerController>
+public class PlayerMoveState : PlayerGroundState
 {
-    protected readonly PlayerStateMachine playerStateMachine;
     public PlayerMoveState(PlayerController owner, PlayerStateMachine stateMachine)
-        : base(owner, stateMachine)
-    {
-        this.playerStateMachine = stateMachine;
-    }
+        : base(owner, stateMachine)  {   }
 
     public override void Enter()
     {
@@ -19,28 +15,12 @@ public class PlayerMoveState : UnitMoveState<PlayerController>
     {
         base.Update();
 
-        // 1. 회피/구르기 입력 우선 체크
-        if (owner.InputReader.ConsumeRollInput())
-        {
-            playerStateMachine.ChangeState(UnitState.Roll);
-            return;
-        }
-
-        // 2. 점프 입력 체크
-        if (owner.Movement.IsGrounded && owner.InputReader.ConsumeJumpInput())
-        {
-            playerStateMachine.ChangeState(UnitState.Jump);
-            return;
-        }
-
-        // 3. 이동 입력이 중단되면 Idle로 복귀
         if (owner.InputReader.MoveInput.sqrMagnitude <= 0.01f)
         {
             playerStateMachine.ChangeState(UnitState.Idle);
             return;
         }
 
-        // 4. Shift 입력 유지 시 Sprint로 전이
         if (owner.InputReader.IsSprinting)
         {
             playerStateMachine.ChangeState(UnitState.Sprint);

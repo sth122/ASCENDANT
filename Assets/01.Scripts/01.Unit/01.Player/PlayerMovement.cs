@@ -7,7 +7,8 @@ public class PlayerMovement : UnitMovement
 {
     private readonly Transform _cameraTransform;
 
-    public PlayerMovement(Rigidbody rb, Transform transform, Transform cameraTransform, LayerMask groundLayer) : base(rb, transform, groundLayer)
+    public PlayerMovement(Rigidbody rb, Transform transform, Transform cameraTransform, LayerMask groundLayer) 
+        : base(rb, transform, groundLayer)
     {
         this._cameraTransform = cameraTransform;
     }
@@ -71,17 +72,21 @@ public class PlayerMovement : UnitMovement
     /// <summary>
     /// 경사면을 타고도 구를 수 있도록 임펄스 적용
     /// </summary>
-    public void ApplyRoll(Vector3 rollDirection, float rollForce)
+    public void ApplyRoll(Vector3 targetDirection, float rollForce)
     {
-        if (rollDirection.sqrMagnitude < 0.001f)
+        Vector3 horizeontalDirection = targetDirection;
+        horizeontalDirection.y = 0f;
+
+        if (targetDirection.sqrMagnitude > 0.001f)
         {
-            rollDirection = _transform.forward;
+            _transform.rotation = Quaternion.LookRotation(horizeontalDirection.normalized);
         }
 
-        Vector3 adjustedRollDir = AdjustDirectionToSlope(rollDirection);
+        Vector3 finalRollDirection = AdjustDirectionToSlope(horizeontalDirection.normalized);
 
-        _transform.rotation = Quaternion.LookRotation(adjustedRollDir);
+        _transform.rotation = Quaternion.LookRotation(finalRollDirection);
+
         _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
-        _rb.AddForce(adjustedRollDir * rollForce, ForceMode.Impulse);
+        _rb.AddForce(finalRollDirection * rollForce, ForceMode.Impulse);
     }
 }

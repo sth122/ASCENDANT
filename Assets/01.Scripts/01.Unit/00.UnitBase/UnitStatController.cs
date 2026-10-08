@@ -3,8 +3,7 @@ using UnityEngine;
 using Util = DebugLogger<UnitStatController>;
 
 /// <summary>
-/// 모든 Unit(Player, Enemy, NPC)이 공유하는 공통 스탯 모듈을 관리하는 Base 컴포넌트
-/// 공통 스탯만을 인스펙터에 노출하며, 세부 Unit 전용 스탯은 하위 클래스 컴포넌트에서 동작
+/// 모든 Unit(Player, Enemy, NPC)이 공유하는 런타임 가변 수치를 전담 관리하는 추상 컴포넌트
 /// </summary>
 public class UnitStatController : MonoBehaviour
 {
@@ -31,8 +30,8 @@ public class UnitStatController : MonoBehaviour
     #endregion
 
     public event System.Action OnDieEvent;
-    public event System.Action<float> OnHpChanged;
     public event System.Action OnPoiseBreakEvent;
+    public event System.Action<float> OnHpChanged;
 
     protected virtual void Awake()
     {
@@ -52,8 +51,29 @@ public class UnitStatController : MonoBehaviour
         _currentPoise = baseStat.Poise;
         _dropSouls = baseStat.DropSouls;
         MotionStats = new UnitMotionStatModule(baseStat);
+
+        PoiserRecoveryLoopAsync(_cts.Token).Forget();
     }
 
+    public virtual void TakeDamage(float damage, float poiseDamage = 0f)
+    {
+        _currentHp = Mathf.Max(0f, _currentHp - damage);
+        OnHpChanged?.Invoke(_currentHp);
+
+        _poiseRecoveryTimer = PoiseRecoveryDelay;
+        _currentPoise = Mathf.Max(0f, _currentPoise - poiseDamage);
+
+
+        if (_currentHp <= 0f)
+        {
+            OnDieEvent?.Invoke();
+        }
+
+        if (_currentPoise <= 0f)
+        {
+            OnPoiseBreakEvent?.Invoke();
+        }
+    }
 
     private async UniTaskVoid PoiserRecoveryLoopAsync(System.Threading.CancellationToken token)
     {

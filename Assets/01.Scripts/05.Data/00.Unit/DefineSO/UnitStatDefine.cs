@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// Unit(Player, Enemy, NPC)의 기반이 되는 최상위 스탯 클래스
+/// 모든 Unit(Player, Enemy, NPC)이 공유하는 스탯 데이터 클래스
+/// 공통적인 스탯만 가지고 있고, 플레이어 및 특수 유닛에 종속적이 스탯은 하위 클래스에서 구현
 /// </summary>
 [System.Serializable]
 public class UnitBaseStat
@@ -33,7 +34,9 @@ public class UnitBaseStat
 
 
 /// <summary>
-/// UnitBaseStat을 상속받아 플레이어 레벨업 및 능력치를 추가한 Player 스탯 클래스
+/// Player 전용 확장 스탯 클래스
+/// Player 조작에 필요한 기동력 ( 달리기, 회전, 점프, 구르기 ) 및
+/// 성장 스탯( 생명력, 지구력, 근력, 기량 )과 Soul 데이터를 관리
 /// </summary>
 [System.Serializable]
 public class PlayerStat : UnitBaseStat
@@ -71,8 +74,7 @@ public class PlayerStat : UnitBaseStat
     /// </summary>
     public void AddSouls(int amount)
     {
-        if (amount <= 0)
-            return;
+        if (amount <= 0) return;
         CurrentSouls += amount;
     }
 
@@ -81,8 +83,7 @@ public class PlayerStat : UnitBaseStat
     /// </summary>
     public void ConsumeSouls(int amount)
     {
-        if (amount <= 0 || CurrentSouls < amount)
-            return;
+        if (amount <= 0 || CurrentSouls < amount)  return;
         CurrentSouls -= amount;
     }
 

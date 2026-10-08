@@ -20,6 +20,8 @@ public class PlayerController : UnitController<PlayerController>
 
     public PlayerStatController PlayerStatController => _statController as PlayerStatController;
 
+    public event System.Action<InputCommandType> OnCommandTriggered;
+
     protected override void Awake()
     {
         base.Awake();
@@ -56,6 +58,7 @@ public class PlayerController : UnitController<PlayerController>
         if (InputReader != null)
         {
             InputReader.OnLockOnEvent += HandleLockOnInput;
+            InputReader.OnCommandInputEvent += HandleCommandInput;
         }
     }
 
@@ -64,7 +67,13 @@ public class PlayerController : UnitController<PlayerController>
         if (InputReader != null)
         {
             InputReader.OnLockOnEvent -= HandleLockOnInput;
+            InputReader.OnCommandInputEvent -= HandleCommandInput;
         }
+    }
+
+    private void HandleCommandInput(InputCommandType command)
+    {
+        OnCommandTriggered?.Invoke(command);
     }
 
     protected override void InitializeStateMachine()
