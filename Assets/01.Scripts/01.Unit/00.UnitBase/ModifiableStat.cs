@@ -1,4 +1,6 @@
-﻿/// <summary>
+﻿using System;
+
+/// <summary>
 /// 스탯에 주는 영향을 표현하는 기본 데이터 구조
 /// </summary>
 public readonly struct StatModifier
@@ -17,6 +19,7 @@ public readonly struct StatModifier
 /// 개별 스탯 수치 계산기. 스탯 하나의 기본값과 수정자 목록을 들고 있으며, 수정자가 변경될 때만 캐시를 재계산하는 순수 C# 클래스
 /// 값이 변경될 때만 재계산하는 더티 플래그(Dirty Flag) 패턴 사용
 /// </summary>
+[Serializable]
 public class ModifiableStat
 {
     public float BaseValue { get; set; }

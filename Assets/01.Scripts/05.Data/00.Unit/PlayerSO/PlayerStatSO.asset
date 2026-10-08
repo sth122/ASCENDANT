@@ -17,9 +17,10 @@ MonoBehaviour:
     Stat:
       <MaxHp>k__BackingField: 100
       <Poise>k__BackingField: 5
+      <DropSouls>k__BackingField: 0
       <WalkSpeed>k__BackingField: 5
       <SprintSpeed>k__BackingField: 8
-      <RotationSpeed>k__BackingField: 5
+      <RotationSpeed>k__BackingField: 3
       <JumpForce>k__BackingField: 5
       <RollForce>k__BackingField: 5
       <SoulLevel>k__BackingField: 1

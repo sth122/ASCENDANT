@@ -1,4 +1,6 @@
-﻿
+﻿/// <summary>
+/// Player의 동작 없음(입력 없음)을 전담하는 FSM 상태 클래스
+/// </summary>
 public class PlayerIdleState : UnitIdleState<PlayerController>
 {
     private readonly PlayerStateMachine playerStateMachine;

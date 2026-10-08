@@ -3,9 +3,6 @@ using Util = DebugLogger<PlayerController>;
 
 public class PlayerController : UnitController<PlayerController>
 {
-    [Header("Player SO")]
-    [SerializeField] private PlayerStatSO _playerStatSO;
-
     [Header("Ground Check")]
     [SerializeField] private LayerMask _groundLayer;
 
@@ -16,38 +13,41 @@ public class PlayerController : UnitController<PlayerController>
     public PlayerMovement Movement { get; private set; }
     public PlayerInputReader InputReader { get; private set; }
     public Vector3 CurrentMoveDirection { get; private set; }
-
     public PlayerStat RuntimePlayerStat { get; private set; }
 
     // 락온 타켓 추적용 변수 ( 추후 타켓팅 시스템과 연동 예정 )
     public Transform CurrentLockOnTarget { get; private set; }
 
+    public PlayerStatController PlayerStatController => _statController as PlayerStatController;
+
     protected override void Awake()
     {
-        InputReader = new PlayerInputReader();
+        base.Awake();
         
+        InputReader = new PlayerInputReader();
+        SubscribeInputEvents();
+
         // 메인 카메라는 CinemachineBrain에 의해 항상 활성화된 가상 카메라의 위치/각도를 반영함
         Transform mainCameraTransform = Camera.main != null ? Camera.main.transform : null;
-
         Movement = new PlayerMovement(_rigidbody, transform, mainCameraTransform, _groundLayer);
 
-        if(_playerStatSO != null && _playerStatSO.TryGetPlayerStats(unitId, out PlayerStat stat))
+        if(DataManager.Instance != null && DataManager.Instance._playerStatSO.TryGetPlayerStats(unitId, out PlayerStat stat))
         {
             RuntimePlayerStat = (PlayerStat)stat.Clone();
+            PlayerStatController.Init(RuntimePlayerStat);
         }
-        _statController = GetComponent<UnitStatController>();
-        if(RuntimePlayerStat != null)
+        else
         {
-            _statController.Init(RuntimePlayerStat);
+            Util.LogError($"{gameObject.name}: PlayerStat SO 데이터를 찾을 수 없습니다.");
         }
 
         _stateMachine = new PlayerStateMachine();
-
-        base.Awake();
+        Init();
     }
 
     private void OnDestroy()
     {
+        UnsubscribeInputEvents();
         InputReader?.Dispose();
     }
 

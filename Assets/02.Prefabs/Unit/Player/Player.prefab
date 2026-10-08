@@ -11987,7 +11987,7 @@ GameObject:
   - component: {fileID: 1942175488455472146}
   - component: {fileID: 3912655674336569224}
   - component: {fileID: 2902184904698667939}
-  - component: {fileID: 4645591984369185413}
+  - component: {fileID: 4294903306521300948}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -12106,12 +12106,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50e258a97e874f44f87699e4ee0c07ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  type: 0
-  _playerStat: {fileID: 0}
+  unitId: 0
   _groundLayer:
     serializedVersion: 2
     m_Bits: 256
---- !u!114 &4645591984369185413
+  _enemyLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  _lockOnRadius: 15
+--- !u!114 &4294903306521300948
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -12120,9 +12123,27 @@ MonoBehaviour:
   m_GameObject: {fileID: 1949430161825482}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 33902ba9d1d866f40a826a16a5e091ee, type: 3}
+  m_Script: {fileID: 11500000, guid: f6091023c914dbd4086f6ddb21574c83, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UnitStatController
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStatController
+  _currentHp: 0
+  _maxHp: 0
+  _currentPoise: 0
+  _dropSouls: 0
+  _walkSpeed: 0
+  _playerMotionData:
+    EquipWeight: 0
+    MaxEquipWeight: 0
+    SprintSpeed: 0
+    JumpForce: 0
+    RollForce: 0
+  _playerAttributeData:
+    SoulLevel: 0
+    CurrentSouls: 0
+    Vigor: 0
+    Endurance: 0
+    Strength: 0
+    Dexterity: 0
 --- !u!1 &1953607639529104
 GameObject:
   m_ObjectHideFlags: 0

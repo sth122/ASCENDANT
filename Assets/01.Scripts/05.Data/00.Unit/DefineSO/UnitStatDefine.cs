@@ -13,12 +13,8 @@ public class UnitBaseStat
     [Header("Drop Rewards")]
     [field: SerializeField] public int DropSouls { get; protected set; }
 
-    [Header("Movement Physics")]
+    [Header("Basic Movement Physics")]
     [field: SerializeField] public float WalkSpeed { get; protected set; }
-    [field: SerializeField] public float SprintSpeed { get; protected set; }
-    [field: SerializeField] public float RotationSpeed { get; protected set; }
-    [field: SerializeField] public float JumpForce { get; protected set; }
-    [field: SerializeField] public float RollForce { get; protected set; }
 
     /// <summary>
     /// 원본 SO 훼손을 막기 위한 복제 메서드
@@ -31,10 +27,6 @@ public class UnitBaseStat
             Poise = this.Poise,
             DropSouls = this.DropSouls,
             WalkSpeed = this.WalkSpeed,
-            SprintSpeed = this.SprintSpeed,
-            RotationSpeed = this.RotationSpeed,
-            JumpForce = this.JumpForce,
-            RollForce = this.RollForce
         };
     }
 }
@@ -46,6 +38,12 @@ public class UnitBaseStat
 [System.Serializable]
 public class PlayerStat : UnitBaseStat
 {
+    [field: Header("Player Movement Physics")]
+    [field: SerializeField] public float SprintSpeed { get; protected set; }
+    [field: SerializeField] public float RotationSpeed { get; protected set; }
+    [field: SerializeField] public float JumpForce { get; protected set; }
+    [field: SerializeField] public float RollForce { get; protected set; }
+
     [field: Header("Level & Souls")]
     [field: SerializeField] public int SoulLevel { get; private set; }
     [field: SerializeField] public int CurrentSouls { get; private set; }
@@ -100,12 +98,12 @@ public class PlayerStat : UnitBaseStat
             Poise = this.Poise,
             DropSouls = this.DropSouls,
             WalkSpeed = this.WalkSpeed,
+
+            // 플레이어 고유 필드 복사
             SprintSpeed = this.SprintSpeed,
             RotationSpeed = this.RotationSpeed,
             JumpForce = this.JumpForce,
             RollForce = this.RollForce,
-
-            // 플레이어 고유 필드 복사
             SoulLevel = this.SoulLevel,
             CurrentSouls = this.CurrentSouls,
             Vigor = this.Vigor,
