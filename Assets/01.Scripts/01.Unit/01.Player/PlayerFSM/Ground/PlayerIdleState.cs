@@ -1,5 +1,5 @@
 ﻿/// <summary>
-/// Player의 동작 없음(입력 없음)을 전담하는 FSM 상태 클래스
+/// Player 정지 대기 상태를 전담하는 FSM 상태 클래스
 /// </summary>
 public class PlayerIdleState : PlayerGroundState
 {
@@ -23,11 +23,11 @@ public class PlayerIdleState : PlayerGroundState
         {
             if(owner.InputReader.IsSprinting)
             {
-                playerStateMachine.ChangeState(UnitState.Sprint);
+                _playerStateMachine.ChangeState(UnitState.Sprint);
             }
             else
             {
-                playerStateMachine.ChangeState(UnitState.Move);
+                _playerStateMachine.ChangeState(UnitState.Move);
             }
         }
     }

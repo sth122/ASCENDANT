@@ -4,19 +4,18 @@
 /// </summary>
 public class PlayerActionState : UnitBaseState<PlayerController>
 {
-    protected readonly PlayerStateMachine playerStateMachine;
-    protected readonly PlayerStatController playerStatController;
+    protected readonly PlayerStateMachine _playerStateMachine;
+    protected readonly PlayerStatController _playerStatController;
 
     public bool CanMove { get; protected set; } = false;
     public bool CanRotate { get; protected set; } = false;
-    public bool CanCancel { get; protected set; } = false;
 
 
     public PlayerActionState(PlayerController owner, PlayerStateMachine stateMachine) 
         : base(owner, stateMachine)
     {
-        this.playerStateMachine = stateMachine;
-        this.playerStatController = owner.PlayerStatController;
+        this._playerStateMachine = stateMachine;
+        this._playerStatController = owner.PlayerStatController;
     }
 
     public override void Enter()
@@ -34,6 +33,5 @@ public class PlayerActionState : UnitBaseState<PlayerController>
         base.Exit();
         CanMove = false;
         CanRotate = false;
-        CanCancel = false;
     }
 }

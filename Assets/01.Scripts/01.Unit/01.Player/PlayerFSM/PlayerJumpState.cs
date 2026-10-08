@@ -7,10 +7,10 @@ public class PlayerJumpState : UnitBaseState<PlayerController>
 {
     private readonly PlayerStateMachine _playerStateMachine;
     private readonly PlayerStatController _playerStatController;
+   
     private const float JumpStaminaCost = 12.0f;
     private const float AirControlFactor = 0.4f;    // 공중 이동 제어 감쇠율
     private const float JumpCooldown = 0.15f;       // 도약 직후 즉시 찾지 판정도니는 것 방지
-
     private float _tiemInAir;
 
     public PlayerJumpState(PlayerController owner, PlayerStateMachine stateMachine) 
@@ -25,23 +25,26 @@ public class PlayerJumpState : UnitBaseState<PlayerController>
         base.Enter();
 
         _tiemInAir = 0f;
+        owner.ClearCommand(InputCommandType.Jump);
 
         // 1. 스태미나 차감
         _playerStatController?.ConsumeStamina(JumpStaminaCost);
-
         // 2. JumpForce 반영
-        float jumpForce = _playerStatController.MotionStats.JumpForce.Value;
+        float jumpForce = _playerStatController != null ? 
+            _playerStatController.MotionStats.JumpForce.Value : owner.StatController.MotionStats.RollForce.Value;
+
         owner.Movement.ApplyJump(jumpForce);
     }
 
     public override void Update()
     {
         base.Update();
-
         _tiemInAir += UnityEngine.Time.deltaTime;
 
         if(_tiemInAir > JumpCooldown && owner.Movement.IsGrounded)
         {
+            owner.ClearCommand(InputCommandType.Jump);
+
             if(owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
             {
                 if (owner.InputReader.IsSprinting)

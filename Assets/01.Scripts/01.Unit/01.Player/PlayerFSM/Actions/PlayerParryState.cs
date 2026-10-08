@@ -31,9 +31,9 @@ public class PlayerParryState : PlayerActionState
         CanRotate = true;
 
         // 2. 스태미나 회복 속도 저하
-        if(playerStatController != null)
+        if(_playerStatController != null)
         {
-            playerStatController.StaminaRegenMultiplier = GuardStaminaRegenMulitplier;
+            _playerStatController.StaminaRegenMultiplier = GuardStaminaRegenMulitplier;
         }
 
         // 3. 패링 판정 타이머
@@ -48,7 +48,7 @@ public class PlayerParryState : PlayerActionState
         // 1. 회피(Roll) 선입력 캔슬 우선 체크 (위급 시 가드 풀고 굴러서 회피)
         if (owner.ConsumeCommand(InputCommandType.Roll))
         {
-            playerStateMachine.ChangeState(UnitState.Roll);
+            _playerStateMachine.ChangeState(UnitState.Roll);
             return;
         }
 
@@ -73,7 +73,7 @@ public class PlayerParryState : PlayerActionState
             // 락온이 아닐 때 이동 방향으로 조향
             if (owner.CurrentLockOnTarget == null)
             {
-                owner.Movement.RotateTowards(owner.CurrentMoveDirection, owner.RuntimePlayerStat.RotationSpeed, Time.fixedDeltaTime);
+                owner.Movement.RotateTowards(owner.CurrentMoveDirection, owner.GetPlayerStat().RotationSpeed, Time.fixedDeltaTime);
             }
         }
         else
@@ -88,9 +88,9 @@ public class PlayerParryState : PlayerActionState
 
         IsParryWindow = false;
 
-        if(playerStatController != null)
+        if(_playerStatController != null)
         {
-            playerStatController.StaminaRegenMultiplier = 1.0f;
+            _playerStatController.StaminaRegenMultiplier = 1.0f;
         }
 
         if(_parryCts != null)
@@ -111,13 +111,13 @@ public class PlayerParryState : PlayerActionState
         }
 
         // 2. 일반 가드 피격 시 스태미나 차감
-        if (playerStatController != null)
+        if (_playerStatController != null)
         {
-            bool isGuardBroken = playerStatController.BlockAttackWithStamina(damage, ShieldStability);
+            bool isGuardBroken = _playerStatController.BlockAttackWithStamina(damage, ShieldStability);
 
             if (isGuardBroken)
             {
-                playerStateMachine.ChangeState(UnitState.Stun);
+                _playerStateMachine.ChangeState(UnitState.Stun);
             }
             else
             {
@@ -131,7 +131,7 @@ public class PlayerParryState : PlayerActionState
         // 적 유닛 피격/경직 인터페이스 호출
         if(attacker.TryGetComponent(out UnitStatController enemyStat))
         {
-            // 데미지 처리 또는 Poise 깨트리기 처리
+            enemyStat.TakeDamage(0f, 999f);
         }
 
         // 패링 성공 연출
@@ -153,13 +153,13 @@ public class PlayerParryState : PlayerActionState
         if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
         {
             if (owner.InputReader.IsSprinting)
-                playerStateMachine.ChangeState(UnitState.Sprint);
+                _playerStateMachine.ChangeState(UnitState.Sprint);
             else
-                playerStateMachine.ChangeState(UnitState.Move);
+                _playerStateMachine.ChangeState(UnitState.Move);
         }
         else
         {
-            playerStateMachine.ChangeState(UnitState.Idle);
+            _playerStateMachine.ChangeState(UnitState.Idle);
         }
     }
 }

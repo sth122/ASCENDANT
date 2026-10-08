@@ -1,5 +1,5 @@
 ﻿/// <summary>
-/// Player의 움직임을 전담하는 FSM 상태 클래스
+/// Player의 걷기 이동 상태를 전담하는 FSM 상태 클래스
 /// </summary>
 public class PlayerMoveState : PlayerGroundState
 {
@@ -17,13 +17,13 @@ public class PlayerMoveState : PlayerGroundState
 
         if (owner.InputReader.MoveInput.sqrMagnitude <= 0.01f)
         {
-            playerStateMachine.ChangeState(UnitState.Idle);
+            _playerStateMachine.ChangeState(UnitState.Idle);
             return;
         }
 
         if (owner.InputReader.IsSprinting)
         {
-            playerStateMachine.ChangeState(UnitState.Sprint);
+            _playerStateMachine.ChangeState(UnitState.Sprint);
             return;
         }
     }

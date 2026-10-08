@@ -1,12 +1,12 @@
 ﻿// 모든 유닛이 공유할 수 있는 제네릭 Idle 상태 클래스
 public class PlayerGroundState : UnitBaseState<PlayerController>
 {
-    protected readonly PlayerStateMachine playerStateMachine;
+    protected readonly PlayerStateMachine _playerStateMachine;
 
     public PlayerGroundState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine)
     {
-        this.playerStateMachine = stateMachine;
+        this._playerStateMachine = stateMachine;
     }
     public override void Enter()
     {
@@ -32,22 +32,22 @@ public class PlayerGroundState : UnitBaseState<PlayerController>
         switch (command)
         {
             case InputCommandType.Roll:
-                playerStateMachine.ChangeState(UnitState.Roll); 
+                _playerStateMachine.ChangeState(UnitState.Roll); 
                 break;
 
             case InputCommandType.Jump:
                 if (owner.Movement.IsGrounded)
                 {
-                    playerStateMachine.ChangeState(UnitState.Jump);
+                    _playerStateMachine.ChangeState(UnitState.Jump);
                 }
                 break;
 
             case InputCommandType.Attack:
-                playerStateMachine.ChangeState(UnitState.Attack);
+                _playerStateMachine.ChangeState(UnitState.Attack);
                 break;
 
             case InputCommandType.Parry:
-                playerStateMachine.ChangeState(UnitState.Parry); 
+                _playerStateMachine.ChangeState(UnitState.Parry); 
                 break;
         }
     }

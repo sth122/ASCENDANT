@@ -1,5 +1,6 @@
-﻿using UnityEngine;
-
+﻿/// <summary>
+/// Player 달리기 이동 상태를 전담하는 Player FSM 상태 클래스
+/// </summary>
 public class PlayerSprintState : PlayerMoveState
 {
     public PlayerSprintState(PlayerController owner, PlayerStateMachine stateMachine)
@@ -9,13 +10,13 @@ public class PlayerSprintState : PlayerMoveState
     {
         if (owner.InputReader.MoveInput.sqrMagnitude <= 0.01f)
         {
-            playerStateMachine.ChangeState(UnitState.Idle);
+            _playerStateMachine.ChangeState(UnitState.Idle);
             return;
         }
 
         if (!owner.InputReader.IsSprinting)
         {
-            playerStateMachine.ChangeState(UnitState.Move);
+            _playerStateMachine.ChangeState(UnitState.Move);
             return;
         }
     }
@@ -30,7 +31,7 @@ public class PlayerSprintState : PlayerMoveState
 
         if (owner.CurrentLockOnTarget == null && moveDir.sqrMagnitude > 0.001f)
         {
-            owner.Movement.RotateTowards(moveDir, owner.RuntimePlayerStat.RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+            owner.Movement.RotateTowards(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
         }
     }
 }
