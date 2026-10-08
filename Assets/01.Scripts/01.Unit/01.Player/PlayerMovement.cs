@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// Player의 모든 
+/// Player의 모든 이동 관련 물리 연산을 전담하는 클래스
 /// </summary>
 public class PlayerMovement : UnitMovement
 {
@@ -32,6 +32,11 @@ public class PlayerMovement : UnitMovement
         return (forward * input.y + right * input.x).normalized;
     }
 
+    /// <summary>
+    /// Player 이동 + 경사면 처리
+    /// </summary>
+    /// <param name="direction"></param>
+    /// <param name="speed"></param>
     public void Move(Vector3 direction, float speed)
     {
         if (direction.sqrMagnitude < 0.001f)

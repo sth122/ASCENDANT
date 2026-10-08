@@ -39,7 +39,7 @@ public class PlayerMoveState : PlayerGroundState
 
         if(owner.CurrentLockOnTarget == null && moveDir.sqrMagnitude > 0.001f)
         {
-            owner.Movement.RotateTowards(moveDir, owner.RuntimePlayerStat.RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+            owner.Movement.RotateTowards(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
         }
     }
 

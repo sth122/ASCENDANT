@@ -92,7 +92,7 @@ public class PlayerRollState : UnitBaseState<PlayerController>
             return;
         }
 
-        if (owner.ConsumeCommand(InputCommandType.LightAttack))
+        if (owner.ConsumeCommand(InputCommandType.Attack))
         {
             _playerStateMachine.ChangeState(UnitState.Attack);
             return;

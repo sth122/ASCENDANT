@@ -1,8 +1,18 @@
-﻿using UnityEngine;
+﻿using System.Data;
+using UnityEngine;
 using Util = DebugLogger<PlayerController>;
 
+/// <summary>
+/// Player Main Controller
+/// PlayerStateMachine, StatController를 중계하는 Center Controller
+/// Player의 입력 버퍼 소비 및 Action Event를 제공
+/// </summary>
 public class PlayerController : UnitController<PlayerController>
 {
+    [Header("Runtime PlayerStat")]
+    [SerializeField] private PlayerStat _runtimePlayerStat;
+    public PlayerStat GetPlayerStat() => _runtimePlayerStat;
+
     [Header("Ground Check")]
     [SerializeField] private LayerMask _groundLayer;
 
@@ -13,8 +23,7 @@ public class PlayerController : UnitController<PlayerController>
     public PlayerMovement Movement { get; private set; }
     public PlayerInputReader InputReader { get; private set; }
     public Vector3 CurrentMoveDirection { get; private set; }
-    public PlayerStat RuntimePlayerStat { get; private set; }
-
+    
     // 락온 타켓 추적용 변수 ( 추후 타켓팅 시스템과 연동 예정 )
     public Transform CurrentLockOnTarget { get; private set; }
 
@@ -35,8 +44,8 @@ public class PlayerController : UnitController<PlayerController>
 
         if(DataManager.Instance != null && DataManager.Instance._playerStatSO.TryGetPlayerStats(unitId, out PlayerStat stat))
         {
-            RuntimePlayerStat = (PlayerStat)stat.Clone();
-            PlayerStatController.Init(RuntimePlayerStat);
+            _runtimePlayerStat = (PlayerStat)stat.Clone();
+            PlayerStatController.Init(_runtimePlayerStat);
         }
         else
         {
@@ -76,6 +85,23 @@ public class PlayerController : UnitController<PlayerController>
         OnCommandTriggered?.Invoke(command);
     }
 
+    #region Input Buffer Facade -> InputReader의 BufferQueue를 직접 호출하는 것보단 전용 호출 메서드를 추가하는 방식으로 변경해야 할 것 같음
+    public bool ConsumeCommand(InputCommandType commandType)
+    {
+        return InputReader != null && InputReader.BufferQueue.TryConsumeCommnad(commandType);
+    }
+
+    public void ClearCommand(InputCommandType commandType)
+    {
+        InputReader?.BufferQueue.ClearCommnad(commandType);
+    }
+
+    public void ClearAllCommands()
+    {
+        InputReader?.BufferQueue.ClearAll();
+    }
+    #endregion
+
     protected override void InitializeStateMachine()
     {
         if(_stateMachine != null && _stateMachine is PlayerStateMachine playerSM)
@@ -97,7 +123,7 @@ public class PlayerController : UnitController<PlayerController>
         {
             Vector3 lookDirection = (CurrentLockOnTarget.position - transform.position);
             lookDirection.y = 0f;
-            Movement.RotateTowards(lookDirection.normalized, RuntimePlayerStat.RotationSpeed, Time.deltaTime);
+            Movement.RotateTowards(lookDirection.normalized, _runtimePlayerStat.RotationSpeed, Time.deltaTime);
         }
 
         base.Update();
