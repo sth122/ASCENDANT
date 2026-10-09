@@ -69,31 +69,7 @@ public class PlayerRollState : PlayerActionState
         canceled = await UniTask.Delay((int)(remainDelay * 1000f), cancellationToken: token).SuppressCancellationThrow();
         if (canceled) return;
 
-        // 3. 구르기 종료 직전, 선입력 버퍼 확인
-        if (owner.ConsumeCommand(InputCommandType.Roll))
-        {
-            _playerStateMachine.ChangeState(UnitState.Roll);
-            return;
-        }
-
-        if (owner.ConsumeCommand(InputCommandType.Attack))
-        {
-            _playerStateMachine.ChangeState(UnitState.Attack);
-            return;
-        }
-
-        // 4. 선입력 액션이 없다면, 현재 실시간 이동 입력 여부에 따라 복귀
-        if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
-        {
-            if (owner.InputReader.IsSprinting)
-                _playerStateMachine.ChangeState(UnitState.Sprint);
-            else
-                _playerStateMachine.ChangeState(UnitState.Move);
-        }
-        else
-        {
-            _playerStateMachine.ChangeState(UnitState.Idle);
-        }
-
+        // 3. 다음 상태 전이 콜백
+        CompleteActionAndEvaluateTransition();
     }
 }

@@ -1,5 +1,6 @@
 ﻿/// <summary>
-/// 유효 시간(Window) 기반으로 액션 선입력을 저장하고 소비하는 순수 C# 버퍼 관리자
+/// 공격 선후딜레이 및 점프/회피 중 선입력된 커맨드를 큐 방식으로 적재하고
+/// 지정된 버퍼 유효 시간(Window) 내의 입력만 소비하도록 통제하는 순수 C# 버퍼 관리자
 /// </summary>
 public class InputBufferQueue
 {
@@ -11,12 +12,19 @@ public class InputBufferQueue
         this._bufferDuration = bufferDuration; 
     }
 
-    public void EnqueueCommnad(InputCommandType type)
+    /// <summary>
+    /// 새로운 액션 커맨드를 타임 스탬프와 함께 큐에 등록
+    /// </summary>
+    public void EnqueueCommand(InputCommandType type)
     {
         _commnadQueue.Enqueue(new BufferedCommand(type, UnityEngine.Time.time));
     }
 
-    public bool TryConsumeCommnad(InputCommandType targetCommand)
+    /// <summary>
+    /// 특정 커맨드가 유효 시간 내에 버퍼링되어 있는지 확인하고 소비
+    /// 만료된 이전 커맨드들은 자동으로 폐기
+    /// </summary>
+    public bool TryConsumeCommand(InputCommandType targetCommand)
     {
         CleanExpiredCommands();
         if (_commnadQueue.Count == 0) return false;
@@ -30,7 +38,28 @@ public class InputBufferQueue
         return false;
     }
 
-    public void ClearCommnad(InputCommandType type)
+    /// <summary>
+    /// 현재 유효한 버퍼링 커맨드 중 선입력된 커맨드를 산출
+    /// </summary>
+    public bool TryConsumeAnyCommand(out InputCommandType consumedCommand)
+    {
+        CleanExpiredCommands();
+        if(_commnadQueue.Count > 0)
+        {
+            consumedCommand = _commnadQueue.Dequeue().CommnadType;
+            return true;
+        }
+
+        consumedCommand = InputCommandType.None;
+        return false;
+    }
+
+    /// <summary>
+    /// 특정 종류의 커맨드만 버퍼에서 제거
+    /// ex) 점프 상태 진입 시 남아있는 Jump 커맨드 전량 폐기
+    /// </summary>
+    /// <param name="type"></param>
+    public void ClearCommand(InputCommandType type)
     {
         int count = _commnadQueue.Count;
         for (int i = 0; i < count; i++)

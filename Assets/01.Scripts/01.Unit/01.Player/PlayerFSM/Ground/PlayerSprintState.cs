@@ -6,20 +6,7 @@ public class PlayerSprintState : PlayerMoveState
     public PlayerSprintState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
 
-    public override void Update()
-    {
-        if (owner.InputReader.MoveInput.sqrMagnitude <= 0.01f)
-        {
-            _playerStateMachine.ChangeState(UnitState.Idle);
-            return;
-        }
-
-        if (!owner.InputReader.IsSprinting)
-        {
-            _playerStateMachine.ChangeState(UnitState.Move);
-            return;
-        }
-    }
+    public override void Update() => base.Update();
 
     public override void FixedUpdate()
     {
@@ -27,11 +14,26 @@ public class PlayerSprintState : PlayerMoveState
         UnityEngine.Vector3 moveDir = owner.CurrentMoveDirection;
 
         // 물리 이동
-        owner.Movement.Move(moveDir, sprintSpeed);
+        owner.MoveAPI(moveDir, sprintSpeed);
 
         if (owner.CurrentLockOnTarget == null && moveDir.sqrMagnitude > 0.001f)
         {
-            owner.Movement.RotateTowards(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+            owner.RotateTowardsAPI(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+        }
+    }
+
+    protected override void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)
+    {
+        if (moveInput.sqrMagnitude <= 0.01f)
+        {
+            _playerStateMachine.ChangeState(UnitState.Idle);
+        }
+    }
+    protected override void HandleSprintChanged(bool isSprinting)
+    {
+        if (!isSprinting)
+        {
+            _playerStateMachine.ChangeState(UnitState.Move);
         }
     }
 }

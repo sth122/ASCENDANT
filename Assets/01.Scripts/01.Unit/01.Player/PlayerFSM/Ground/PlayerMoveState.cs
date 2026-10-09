@@ -11,22 +11,8 @@ public class PlayerMoveState : PlayerGroundState
         base.Enter();
         // 공통적인 물리적 상태(이동, 관성 등)를 초기화하거나, 애니메이션을 재생하는 등의 작업을 수행
     }
-    public override void Update()
-    {
-        base.Update();
+    public override void Update() => base.Update();
 
-        if (owner.InputReader.MoveInput.sqrMagnitude <= 0.01f)
-        {
-            _playerStateMachine.ChangeState(UnitState.Idle);
-            return;
-        }
-
-        if (owner.InputReader.IsSprinting)
-        {
-            _playerStateMachine.ChangeState(UnitState.Sprint);
-            return;
-        }
-    }
     public override void FixedUpdate()
     {
         base.FixedUpdate();
@@ -35,16 +21,27 @@ public class PlayerMoveState : PlayerGroundState
         UnityEngine.Vector3 moveDir = owner.CurrentMoveDirection;
 
         // 물리 이동
-        owner.Movement.Move(moveDir, walkSpeed);
+        owner.MoveAPI(moveDir, walkSpeed);
 
         if(owner.CurrentLockOnTarget == null && moveDir.sqrMagnitude > 0.001f)
         {
-            owner.Movement.RotateTowards(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+            owner.RotateTowardsAPI(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
         }
     }
 
-    public override void Exit()
+    protected override void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)
     {
-        base.Exit();
+        if(moveInput.sqrMagnitude <= 0.01f)
+        {
+            _playerStateMachine.ChangeState(UnitState.Idle);
+        }
+    }
+
+    protected override void HandleSprintChanged(bool isSprinting)
+    {
+        if (isSprinting)
+        {
+            _playerStateMachine.ChangeState(UnitState.Sprint);
+        }
     }
 }

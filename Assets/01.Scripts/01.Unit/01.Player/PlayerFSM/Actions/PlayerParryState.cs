@@ -11,14 +11,14 @@ public class PlayerParryState : PlayerActionState
     private System.Threading.CancellationTokenSource _parryCts;
     #region MyRegion
     private const float ParryWindowDuration = 0.2f;             // 패링 유효 시간
-    private const float GuardMoveSpeedFactor = 0.4f;            // 가드 중 걷기 속도 배율
+    private const float GuardMoveSpeedFactor = 0.75f;            // 가드 중 걷기 속도 배율
     private const float GuardStaminaRegenMulitplier = 0.25f;    // 가드 중 스태미나 회복 배율
     private float ShieldStability = 0.65f;                      // 기본 방패 버티기 감쇄력
     #endregion
 
-    public bool IsParryWindow {  get; private set; }
+    public bool IsParryWindow { get; private set; }
 
-    public PlayerParryState(PlayerController owner, PlayerStateMachine stateMachine) 
+    public PlayerParryState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
 
 
@@ -31,10 +31,12 @@ public class PlayerParryState : PlayerActionState
         CanRotate = true;
 
         // 2. 스태미나 회복 속도 저하
-        if(_playerStatController != null)
+        if (_playerStatController != null)
         {
             _playerStatController.StaminaRegenMultiplier = GuardStaminaRegenMulitplier;
         }
+
+        EnableEventHandler();
 
         // 3. 패링 판정 타이머
         _parryCts = new System.Threading.CancellationTokenSource();
@@ -46,7 +48,7 @@ public class PlayerParryState : PlayerActionState
         base.Update();
 
         // 1. 회피(Roll) 선입력 캔슬 우선 체크 (위급 시 가드 풀고 굴러서 회피)
-        if (owner.ConsumeCommand(InputCommandType.Roll))
+        if (owner.InputReader.TryConsumeCommand(InputCommandType.Roll))
         {
             _playerStateMachine.ChangeState(UnitState.Roll);
             return;
@@ -68,17 +70,17 @@ public class PlayerParryState : PlayerActionState
         if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
         {
             float guardSpeed = owner.StatController.MotionStats.WalkSpeed.Value * GuardMoveSpeedFactor;
-            owner.Movement.Move(owner.CurrentMoveDirection, guardSpeed);
+            owner.MoveAPI(owner.CurrentMoveDirection, guardSpeed);
 
             // 락온이 아닐 때 이동 방향으로 조향
             if (owner.CurrentLockOnTarget == null)
             {
-                owner.Movement.RotateTowards(owner.CurrentMoveDirection, owner.GetPlayerStat().RotationSpeed, Time.fixedDeltaTime);
+                owner.RotateTowardsAPI(owner.CurrentMoveDirection, owner.GetPlayerStat().RotationSpeed, Time.fixedDeltaTime);
             }
         }
         else
         {
-            owner.Movement.StopMovement();
+            owner.StopMovementAPI();
         }
     }
 
@@ -86,14 +88,16 @@ public class PlayerParryState : PlayerActionState
     {
         base.Exit();
 
+        DisableEventHandler();
+
         IsParryWindow = false;
 
-        if(_playerStatController != null)
+        if (_playerStatController != null)
         {
             _playerStatController.StaminaRegenMultiplier = 1.0f;
         }
 
-        if(_parryCts != null)
+        if (_parryCts != null)
         {
             _parryCts.Cancel();
             _parryCts.Dispose();
@@ -129,7 +133,7 @@ public class PlayerParryState : PlayerActionState
     private void TriggerParrySuccess(GameObject attacker)
     {
         // 적 유닛 피격/경직 인터페이스 호출
-        if(attacker.TryGetComponent(out UnitStatController enemyStat))
+        if (attacker.TryGetComponent(out UnitStatController enemyStat))
         {
             enemyStat.TakeDamage(0f, 999f);
         }
@@ -152,15 +156,40 @@ public class PlayerParryState : PlayerActionState
     {
         if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
         {
-            if (owner.InputReader.IsSprinting)
-                _playerStateMachine.ChangeState(UnitState.Sprint);
-            else
-                _playerStateMachine.ChangeState(UnitState.Move);
+            _playerStateMachine.ChangeState(owner.InputReader.IsSprinting ? UnitState.Sprint : UnitState.Move);
         }
         else
         {
             _playerStateMachine.ChangeState(UnitState.Idle);
         }
     }
+
+    #region EventHandler Func
+    private void EnableEventHandler()
+    {
+        DisableEventHandler();
+        owner.InputReader.OnCommandInputEvent += HandleCommandDuringGuard;
+        owner.InputReader.OnGuardReleased += HandleGuardReleased;
+    }
+    private void DisableEventHandler()
+    {
+        owner.InputReader.OnCommandInputEvent -= HandleCommandDuringGuard;
+        owner.InputReader.OnGuardReleased -= HandleGuardReleased;
+    }
+    private void HandleCommandDuringGuard(InputCommandType command)
+    {
+        // 가드 중 위급 상황 시 즉시 가드를 풀고 회피 전이
+        if (command == InputCommandType.Roll)
+        {
+            _playerStateMachine.ChangeState(UnitState.Roll);
+        }
+    }
+
+    private void HandleGuardReleased()
+    {
+        // 방패 버튼을 떼면 즉시 지상 기본 상태로 복귀
+        ReturnToGroundState();
+    }
+    #endregion
 }
 

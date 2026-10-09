@@ -7,10 +7,13 @@ public class DataManager : MonoSingleton<DataManager>
     protected override void Awake()
     {
         base.Awake();
-        if(_playerStatSO != null)
+    }
+
+    public override void Init()
+    {
+        if (_playerStatSO != null)
         {
             _playerStatSO.InitializeDictionary();
         }
     }
-
 }

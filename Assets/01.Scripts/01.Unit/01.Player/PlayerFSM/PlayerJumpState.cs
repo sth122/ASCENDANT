@@ -25,7 +25,7 @@ public class PlayerJumpState : UnitBaseState<PlayerController>
         base.Enter();
 
         _tiemInAir = 0f;
-        owner.ClearCommand(InputCommandType.Jump);
+        owner.InputReader.ClearCommand(InputCommandType.Jump);
 
         // 1. 스태미나 차감
         _playerStatController?.ConsumeStamina(JumpStaminaCost);
@@ -43,7 +43,7 @@ public class PlayerJumpState : UnitBaseState<PlayerController>
 
         if(_tiemInAir > JumpCooldown && owner.Movement.IsGrounded)
         {
-            owner.ClearCommand(InputCommandType.Jump);
+            owner.InputReader.ClearCommand(InputCommandType.Jump);
 
             if(owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
             {

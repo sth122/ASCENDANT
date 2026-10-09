@@ -5,7 +5,7 @@
 public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
 {
     private PlayerInput _inputActions;
-    public InputBufferQueue BufferQueue { get; private set; }
+    private readonly InputBufferQueue _bufferQueue;
 
     #region Input Properties
     // FSM Update에서 Input을 읽기 위한 Properties
@@ -16,15 +16,20 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     #endregion
 
     #region Input Action Events
-    // 외부 ( Command 패턴, 사운드, 이펙트 등)에서 구독할 이벤트
+    // 단발성 Action 키 이벤트 ( 공격, 구르기, 점프 등)
     public event System.Action<InputCommandType> OnCommandInputEvent;
+
+    // 지속 입력 상태 변화 이벤트
+    public event System.Action<UnityEngine.Vector2> OnMoveInputChanged;
+    public event System.Action<bool> OnSprintChanged;
+    public event System.Action OnGuardReleased;
     public event System.Action OnInteractEvent;
     public event System.Action OnLockOnEvent;
     #endregion
 
     public PlayerInputReader(float bufferDuration = 0.25f)
     {
-        BufferQueue = new InputBufferQueue(bufferDuration);
+        _bufferQueue = new InputBufferQueue(bufferDuration);
 
         if (_inputActions == null)
         {
@@ -48,6 +53,27 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
         _inputActions?.UI.Enable();
     }
 
+    #region Input Buffer Control
+    public bool TryConsumeCommand(InputCommandType commandtype)
+    {
+        return _bufferQueue.TryConsumeCommand(commandtype);
+    }
+    public bool TryConsumeAnyCommand(out InputCommandType consumedCommand)
+    {
+        return _bufferQueue.TryConsumeAnyCommand(out consumedCommand);
+    }
+
+    public void ClearCommand(InputCommandType commandType)
+    {
+        _bufferQueue.ClearCommand(commandType);
+    }
+
+    public void ClearAllCommands()
+    {
+        _bufferQueue.ClearAll();
+    }
+    #endregion
+
     #region IPlayerActions 인터페이스 구현부
     /// <summary>
     /// WASD, 방향키 입력을 읽어 MoveInput에 저장
@@ -55,6 +81,7 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     public void OnMove(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
         MoveInput = context.ReadValue<UnityEngine.Vector2>();
+        OnMoveInputChanged?.Invoke(MoveInput);
     }
 
     /// <summary>
@@ -70,6 +97,8 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
         {
             IsSprinting = false;
         }
+
+        OnSprintChanged?.Invoke(IsSprinting);
     }
 
     /// <summary>
@@ -79,7 +108,7 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     {
         if (context.performed)
         {
-            BufferQueue.EnqueueCommnad(InputCommandType.Jump);
+            _bufferQueue.EnqueueCommand(InputCommandType.Jump);
             OnCommandInputEvent?.Invoke(InputCommandType.Jump);
         }
     }
@@ -91,7 +120,7 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     {
         if (context.performed)
         {
-            BufferQueue.EnqueueCommnad(InputCommandType.Attack);
+            _bufferQueue.EnqueueCommand(InputCommandType.Attack);
             OnCommandInputEvent?.Invoke(InputCommandType.Attack);
         }
     }
@@ -103,7 +132,7 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     {
         if (context.performed)
         {
-            BufferQueue.EnqueueCommnad(InputCommandType.Roll);
+            _bufferQueue.EnqueueCommand(InputCommandType.Roll);
             OnCommandInputEvent?.Invoke(InputCommandType.Roll);
         }
     }
@@ -117,12 +146,13 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
         if(context.performed)
         {
             IsGuarding = true;
-            BufferQueue.EnqueueCommnad(InputCommandType.Parry);
+            _bufferQueue.EnqueueCommand(InputCommandType.Parry);
             OnCommandInputEvent?.Invoke(InputCommandType.Parry);
         }
         else if (context.canceled)
         {
             IsGuarding = false;
+            OnGuardReleased?.Invoke();
         }
     }
     /// <summary>

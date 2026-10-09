@@ -11,24 +11,16 @@ public class PlayerIdleState : PlayerGroundState
         base.Enter();
 
         // 이전 상태 잔여 관성 정지
-        owner.Movement.StopMovement();
+        owner.StopMovementAPI();
     }
 
-    public override void Update()
-    {
-        base.Update();
+    public override void Update() => base.Update();
 
-        // 이동 입력이 감지되면 Shift 여부에 따라 상태 전이
-        if(owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
+    protected override void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)
+    {
+        if (moveInput.sqrMagnitude > 0.01f)
         {
-            if(owner.InputReader.IsSprinting)
-            {
-                _playerStateMachine.ChangeState(UnitState.Sprint);
-            }
-            else
-            {
-                _playerStateMachine.ChangeState(UnitState.Move);
-            }
+            _playerStateMachine.ChangeState(owner.InputReader.IsSprinting ? UnitState.Sprint : UnitState.Move);
         }
     }
 }

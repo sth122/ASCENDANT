@@ -49,6 +49,7 @@ public class MonoSingleton<T> : MonoBehaviour, IInitable where T : MonoBehaviour
             {
                 DontDestroyOnLoad(this.gameObject);
             }
+            Init();
         }
         else if (_instance != this)
         {

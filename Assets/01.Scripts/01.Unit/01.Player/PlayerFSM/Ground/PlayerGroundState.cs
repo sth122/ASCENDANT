@@ -12,15 +12,22 @@ public class PlayerGroundState : UnitBaseState<PlayerController>
     {
         base.Enter();
         // 상태 입장 시 커맨드 이벤트 구독
-        owner.OnCommandTriggered -= HandleCommand;
-        owner.OnCommandTriggered += HandleCommand;
+        owner.InputReader.OnCommandInputEvent -= HandleCommand;
+        owner.InputReader.OnMoveInputChanged -= HandleMoveInputChanged;
+        owner.InputReader.OnSprintChanged -= HandleSprintChanged;
+
+        owner.InputReader.OnCommandInputEvent += HandleCommand;
+        owner.InputReader.OnMoveInputChanged += HandleMoveInputChanged;
+        owner.InputReader.OnSprintChanged += HandleSprintChanged;
     }
 
     public override void Exit()
     {
         base.Exit();
         // 상태 탈출 시 커맨드 이벤트 구독 해제
-        owner.OnCommandTriggered -= HandleCommand;
+        owner.InputReader.OnCommandInputEvent -= HandleCommand;
+        owner.InputReader.OnMoveInputChanged -= HandleMoveInputChanged;
+        owner.InputReader.OnSprintChanged -= HandleSprintChanged;
     }
 
     /// <summary>
@@ -51,4 +58,7 @@ public class PlayerGroundState : UnitBaseState<PlayerController>
                 break;
         }
     }
+
+    protected virtual void HandleMoveInputChanged(UnityEngine.Vector2 moveInput) { }
+    protected virtual void HandleSprintChanged(bool isSprinting) { }
 }

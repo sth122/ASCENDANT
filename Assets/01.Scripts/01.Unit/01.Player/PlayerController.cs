@@ -1,5 +1,4 @@
-﻿using System.Data;
-using UnityEngine;
+﻿using UnityEngine;
 using Util = DebugLogger<PlayerController>;
 
 /// <summary>
@@ -20,16 +19,15 @@ public class PlayerController : UnitController<PlayerController>
     [SerializeField] private LayerMask _enemyLayer;
     [SerializeField] private float _lockOnRadius = 15f;
 
+    #region Properties
     public PlayerMovement Movement { get; private set; }
     public PlayerInputReader InputReader { get; private set; }
     public Vector3 CurrentMoveDirection { get; private set; }
-    
+
     // 락온 타켓 추적용 변수 ( 추후 타켓팅 시스템과 연동 예정 )
     public Transform CurrentLockOnTarget { get; private set; }
-
     public PlayerStatController PlayerStatController => _statController as PlayerStatController;
-
-    public event System.Action<InputCommandType> OnCommandTriggered;
+    #endregion
 
     protected override void Awake()
     {
@@ -40,9 +38,15 @@ public class PlayerController : UnitController<PlayerController>
 
         // 메인 카메라는 CinemachineBrain에 의해 항상 활성화된 가상 카메라의 위치/각도를 반영함
         Transform mainCameraTransform = Camera.main != null ? Camera.main.transform : null;
-        Movement = new PlayerMovement(_rigidbody, transform, mainCameraTransform, _groundLayer);
+        Movement = new PlayerMovement(_rigidbody, transform, mainCameraTransform, _groundLayer);        
+    }
 
-        if(DataManager.Instance != null && DataManager.Instance._playerStatSO.TryGetPlayerStats(unitId, out PlayerStat stat))
+    /// <summary>
+    /// DataManager 데이터 초기화 순서 문제로 임의로 Start 함수에 배포
+    /// </summary>
+    private void Start()
+    {
+        if (DataManager.Instance != null && DataManager.Instance._playerStatSO.TryGetPlayerStats(unitId, out PlayerStat stat))
         {
             _runtimePlayerStat = (PlayerStat)stat.Clone();
             PlayerStatController.Init(_runtimePlayerStat);
@@ -66,8 +70,8 @@ public class PlayerController : UnitController<PlayerController>
     {
         if (InputReader != null)
         {
+            InputReader.OnLockOnEvent -= HandleLockOnInput;
             InputReader.OnLockOnEvent += HandleLockOnInput;
-            InputReader.OnCommandInputEvent += HandleCommandInput;
         }
     }
 
@@ -76,31 +80,8 @@ public class PlayerController : UnitController<PlayerController>
         if (InputReader != null)
         {
             InputReader.OnLockOnEvent -= HandleLockOnInput;
-            InputReader.OnCommandInputEvent -= HandleCommandInput;
         }
     }
-
-    private void HandleCommandInput(InputCommandType command)
-    {
-        OnCommandTriggered?.Invoke(command);
-    }
-
-    #region Input Buffer Facade -> InputReader의 BufferQueue를 직접 호출하는 것보단 전용 호출 메서드를 추가하는 방식으로 변경해야 할 것 같음
-    public bool ConsumeCommand(InputCommandType commandType)
-    {
-        return InputReader != null && InputReader.BufferQueue.TryConsumeCommnad(commandType);
-    }
-
-    public void ClearCommand(InputCommandType commandType)
-    {
-        InputReader?.BufferQueue.ClearCommnad(commandType);
-    }
-
-    public void ClearAllCommands()
-    {
-        InputReader?.BufferQueue.ClearAll();
-    }
-    #endregion
 
     protected override void InitializeStateMachine()
     {
@@ -129,6 +110,12 @@ public class PlayerController : UnitController<PlayerController>
         base.Update();
     }
 
+    #region PlayerMovement Facade API
+    public void MoveAPI(Vector3 direction, float speed) => Movement.Move(direction, speed);
+    public void StopMovementAPI() => Movement.StopMovement();
+    public void RotateTowardsAPI(Vector3 targetDirection, float rotationSpeed, float deltaTime) 
+        => Movement.RotateTowards(targetDirection, rotationSpeed, deltaTime);
+    #endregion
 
     /// <summary>
     /// 마우스 휠 또는 패드 R스틱 클릭 시 실행되는 핸들러
