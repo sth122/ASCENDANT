@@ -58,6 +58,11 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     {
         return _bufferQueue.TryConsumeCommand(commandtype);
     }
+    public bool TryConsumePriorityCommand(out InputCommandType consunmedCommand)
+    {
+        return _bufferQueue.TryConsumePriorityCommand(out consunmedCommand);
+    }
+
     public bool TryConsumeAnyCommand(out InputCommandType consumedCommand)
     {
         return _bufferQueue.TryConsumeAnyCommand(out consumedCommand);
@@ -179,6 +184,15 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
         }
     }
     #endregion
+
+    public void DisablePlayerInput()
+    {
+        _inputActions?.Player.Disable();
+        MoveInput = UnityEngine.Vector2.zero;
+        IsSprinting = false;
+        IsGuarding = false;
+        _bufferQueue.ClearAll();
+    }
 
     public void Dispose()
     {

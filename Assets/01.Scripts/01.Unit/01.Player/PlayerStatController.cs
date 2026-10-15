@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using UnityEngine;
 
 /// <summary>
 /// Player 전용 확장 스탯 컴포넌트
@@ -8,10 +7,12 @@ using UnityEngine;
 public class PlayerStatController : UnitStatController
 {
     #region Player 전용 런타임 가변 수치
-    [Header("Player Exclusive: Stamina")]
-    [SerializeField] private float _currentStamina;
-    [SerializeField] private float _maxStamina;
-    [SerializeField] private float _staminaRegenRate = 35.0f;
+    [UnityEngine.Header("Player Exclusive: Stamina")]
+    [UnityEngine.SerializeField] private float _currentStamina;
+    [UnityEngine.SerializeField] private float _maxStamina;
+    [UnityEngine.SerializeField] private float _staminaRegenRate = 35.0f;
+    private const float StaminaRegenDelay = 1.0f; // 스태미나 소모 후 회복 시작까지의 지연 시간
+    private float _staminaRecoveryTimer = 0f;
 
     // 스태미나 자연 회복 속도 배율
     public float StaminaRegenMultiplier { get; set; } = 1.0f;
@@ -28,17 +29,34 @@ public class PlayerStatController : UnitStatController
         if (baseStat is PlayerStat playerStat)
         {
             PlayerStatSource = playerStat;
+            _maxHp = playerStat.CalculateMaxHp();
+            _currentHp = _maxHp;
             _maxStamina = playerStat.CalculateMaxStamina();
             _currentStamina = _maxStamina;
         }
         StaminaRegenLoopAsync(_cts.Token).Forget();
     }
 
+    /// <summary>
+    /// 인스펙터에서 수정된 PlayerStat 수치를 런타임 모듈에 실시간 주입
+    /// </summary>
+    public void SyncRuntimeStats(PlayerStat updatedStat)
+    {
+        if (updatedStat == null || MotionStats == null) return;
+
+        PlayerStatSource = updatedStat;
+        _maxHp = updatedStat.CalculateMaxHp();
+        _maxStamina = updatedStat.CalculateMaxStamina();
+
+        MotionStats.SyncBaseValues(updatedStat);
+    }
+
     public bool HasEnoughStamina(float cost) => _currentStamina >= cost;
 
     public void ConsumeStamina(float cost)
     {
-        _currentStamina = Mathf.Max(0f, _currentStamina - cost);
+        _currentStamina = UnityEngine.Mathf.Max(0f, _currentStamina - cost);
+        _staminaRecoveryTimer = StaminaRegenDelay;
     }
 
     /// <summary>
@@ -49,7 +67,7 @@ public class PlayerStatController : UnitStatController
     /// <returns>스태미나가 전부 소모하여 가드 브레이크 발생 시 true</returns>
     public bool BlockAttackWithStamina(float incomingDamage, float shieldStability)
     {
-        float staminaCost = incomingDamage * (1.0f - Mathf.Clamp01(shieldStability));
+        float staminaCost = incomingDamage * (1.0f - UnityEngine.Mathf.Clamp01(shieldStability));
         _currentStamina -= staminaCost;
 
         if (_currentStamina <= 0f)
@@ -70,9 +88,16 @@ public class PlayerStatController : UnitStatController
         {
             await UniTask.Yield(PlayerLoopTiming.Update, token);
 
-            if(_currentStamina < _maxStamina)
+            if (_staminaRecoveryTimer > 0f)
             {
-                _currentStamina = Mathf.Min(_maxStamina, _currentStamina + _staminaRegenRate * Time.deltaTime);
+                _staminaRecoveryTimer -= UnityEngine.Time.deltaTime;
+                continue;
+            }
+
+            if (_currentStamina < _maxStamina)
+            {
+                float finalRate = _staminaRegenRate * StaminaRegenMultiplier;
+                _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + finalRate * UnityEngine.Time.deltaTime);
             }
         }
     }

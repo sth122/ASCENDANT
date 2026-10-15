@@ -75,4 +75,24 @@ public class UnitMotionStatModule
 
         OnMotionStatChanged?.Invoke();
     }
+
+    /// <summary>
+    /// 인스펙터 튜닝 시 ModifiableStat의 기본값을 실시간 동기화
+    /// </summary>
+    public void SyncBaseValues(PlayerStat playerStat)
+    {
+        if (playerStat == null) return;
+
+        WalkSpeed.BaseValue = playerStat.WalkSpeed;
+        SprintSpeed.BaseValue = playerStat.SprintSpeed;
+        JumpForce.BaseValue = playerStat.JumpForce;
+        RollForce.BaseValue = playerStat.RollForce;
+        MaxEquipWeight = playerStat.CalculateMaxEquipWeight();
+
+        WalkSpeed.ClearModifiers();
+        SprintSpeed.ClearModifiers();
+        RollForce.ClearModifiers();
+
+        UpdateWeight(CurrentEquipWeight);
+    }
 }

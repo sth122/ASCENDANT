@@ -3,12 +3,12 @@
 /// </summary>
 public readonly struct BufferedCommand
 {
-    public readonly InputCommandType CommnadType;
+    public readonly InputCommandType CommandType;
     public readonly float Timestamp;
 
     public BufferedCommand(InputCommandType type, float timestamp)
     {
-        CommnadType = type;
+        CommandType = type;
         Timestamp = timestamp;
     }
 

@@ -53,10 +53,7 @@ public class PlayerMovement : UnitMovement
         if (IsGrounded && CurrentSlopeAngle <= MaxSlopeAngle)
         {
             // 평지나 내리막길에서 캐릭터가 뜨지 않고 바닥에 밀착되도록 하향 스냅 적용
-            if (Vector3.Dot(targetVelocity, Vector3.up) <= 0.01f)
-            {
-                targetVelocity.y = -1.5f;
-            }
+            targetVelocity.y = -0.5f;
             _rb.linearVelocity = targetVelocity;
         }
         else
@@ -77,21 +74,27 @@ public class PlayerMovement : UnitMovement
     /// <summary>
     /// 경사면을 타고도 구를 수 있도록 임펄스 적용
     /// </summary>
-    public void ApplyRoll(Vector3 targetDirection, float rollForce)
+    public void ApplyRoll(Vector3 rollDirection, float maxSpeed, float normalizedTime)
     {
-        Vector3 horizeontalDirection = targetDirection;
-        horizeontalDirection.y = 0f;
+        // 0.0(시작)에서 최고 속도, 1.0(종료)에 도달할수록 0으로 감속하는 쿼드라틱 감속 곡선
+        float speedMultiplier = Mathf.Clamp01(1.0f - normalizedTime);
+        float currentSpeed = maxSpeed * speedMultiplier;
 
-        if (targetDirection.sqrMagnitude > 0.001f)
-        {
-            _transform.rotation = Quaternion.LookRotation(horizeontalDirection.normalized);
-        }
+        Vector3 slopeRollDir = AdjustDirectionToSlope(rollDirection);
+        slopeRollDir.y = Mathf.Clamp(slopeRollDir.y, -0.2f, 0.1f);
+        slopeRollDir.Normalize();
 
-        Vector3 finalRollDirection = AdjustDirectionToSlope(horizeontalDirection.normalized);
+        Vector3 targetVel = slopeRollDir * currentSpeed;
+        targetVel.y = _rb.linearVelocity.y; // 중력 보존
 
-        _transform.rotation = Quaternion.LookRotation(finalRollDirection);
+        _rb.linearVelocity = targetVel;
+    }
 
-        _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
-        _rb.AddForce(finalRollDirection * rollForce, ForceMode.Impulse);
+    /// <summary>
+    /// 캐릭터를 즉시 180도 뒤로 회전 (백스탭 대용 반전 구르기 시 사용)
+    /// </summary>
+    public void Flip180Degrees()
+    {
+        _transform.rotation = Quaternion.LookRotation(-_transform.forward);
     }
 }

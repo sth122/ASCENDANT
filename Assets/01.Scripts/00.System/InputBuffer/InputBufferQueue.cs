@@ -4,11 +4,12 @@
 /// </summary>
 public class InputBufferQueue
 {
-    private readonly System.Collections.Generic.Queue<BufferedCommand> _commnadQueue = new System.Collections.Generic.Queue<BufferedCommand>();
+    private readonly System.Collections.Generic.Queue<BufferedCommand> _commandQueue;
     private readonly float _bufferDuration;
 
     public InputBufferQueue(float bufferDuration = 0.25f)
     {
+        this._commandQueue = new System.Collections.Generic.Queue<BufferedCommand>(8);
         this._bufferDuration = bufferDuration; 
     }
 
@@ -17,7 +18,8 @@ public class InputBufferQueue
     /// </summary>
     public void EnqueueCommand(InputCommandType type)
     {
-        _commnadQueue.Enqueue(new BufferedCommand(type, UnityEngine.Time.time));
+        CleanExpiredHead();
+        _commandQueue.Enqueue(new BufferedCommand(type, UnityEngine.Time.time));
     }
 
     /// <summary>
@@ -26,16 +28,27 @@ public class InputBufferQueue
     /// </summary>
     public bool TryConsumeCommand(InputCommandType targetCommand)
     {
-        CleanExpiredCommands();
-        if (_commnadQueue.Count == 0) return false;
+        CleanExpiredHead();
+        int initialCount = _commandQueue.Count;
+        if (initialCount == 0) return false;
 
-        if(_commnadQueue.Peek().CommnadType == targetCommand)
+        bool found = false;
+
+        for (int i = 0; i < initialCount; i++)
         {
-            _commnadQueue.Dequeue();
-            return true;
-        }
+            BufferedCommand cmd = _commandQueue.Dequeue();
 
-        return false;
+            if(!found && cmd.CommandType == targetCommand && !cmd.IsExpired(_bufferDuration))
+            {
+                // 대상 커맨드 소비
+                found = true;
+            }else if(!cmd.IsExpired(_bufferDuration))
+            {
+                // 만료되지 않은 다른 커맨드는 다시 Enqueue
+                _commandQueue.Enqueue(cmd);
+            }
+        }
+        return found;
     }
 
     /// <summary>
@@ -43,15 +56,81 @@ public class InputBufferQueue
     /// </summary>
     public bool TryConsumeAnyCommand(out InputCommandType consumedCommand)
     {
-        CleanExpiredCommands();
-        if(_commnadQueue.Count > 0)
+        CleanExpiredHead();
+
+        while (_commandQueue.Count > 0)
         {
-            consumedCommand = _commnadQueue.Dequeue().CommnadType;
-            return true;
+            BufferedCommand cmd = _commandQueue.Dequeue();
+            if (!cmd.IsExpired(_bufferDuration))
+            {
+                consumedCommand = cmd.CommandType;
+                return true;
+            }
         }
 
         consumedCommand = InputCommandType.None;
         return false;
+    }
+
+    /// <summary>
+    /// 큐 내부의 유효 커맨드 중 소울라이크 우선순위(Roll > Parry > Attack > Jump)가 가장 높은 커맨드를 선별 소비
+    /// 큐를 회전시켜 선택된 커맨드만 제거하고 나머지는 보존
+    /// </summary>
+    public bool TryConsumePriorityCommand(out InputCommandType consumedCommand)
+    {
+        CleanExpiredHead();
+        int count = _commandQueue.Count;
+
+        if (count == 0)
+        {
+            consumedCommand = InputCommandType.None;
+            return false;
+        }
+
+        // 1. 최고 우선순위 커맨드 탐색
+        InputCommandType highestPriorityType = InputCommandType.None;
+        int highestPriorityValue = -1;
+
+        foreach (BufferedCommand cmd in _commandQueue)
+        {
+            if (!cmd.IsExpired(_bufferDuration))
+            {
+                int priority = GetCommandPriority(cmd.CommandType);
+                if (priority > highestPriorityValue)
+                {
+                    highestPriorityValue = priority;
+                    highestPriorityType = cmd.CommandType;
+                }
+            }
+        }
+
+        // 2. 최고 우선순위 커맨드가 없으면 만료 처리
+        if (highestPriorityType == InputCommandType.None)
+        {
+            _commandQueue.Clear();
+            consumedCommand = InputCommandType.None;
+            return false;
+        }
+
+        // 3. 큐를 회전하며 해당 커맨드 1회만 소비
+        consumedCommand = highestPriorityType;
+        bool consumed = false;
+
+        for (int i = 0; i < count; i++)
+        {
+            BufferedCommand cmd = _commandQueue.Dequeue();
+
+            if (!consumed && cmd.CommandType == highestPriorityType && !cmd.IsExpired(_bufferDuration))
+            {
+                consumed = true;
+            }
+            else if (!cmd.IsExpired(_bufferDuration))
+            {
+                _commandQueue.Enqueue(cmd);
+            }
+        }
+
+        return consumed;
     }
 
     /// <summary>
@@ -61,23 +140,38 @@ public class InputBufferQueue
     /// <param name="type"></param>
     public void ClearCommand(InputCommandType type)
     {
-        int count = _commnadQueue.Count;
+        int count = _commandQueue.Count;
         for (int i = 0; i < count; i++)
         {
-            BufferedCommand cmd = _commnadQueue.Dequeue();
-            if (cmd.CommnadType != type && !cmd.IsExpired(_bufferDuration))
+            BufferedCommand cmd = _commandQueue.Dequeue();
+            if (cmd.CommandType != type && !cmd.IsExpired(_bufferDuration))
             {
-                _commnadQueue.Enqueue(cmd);
+                _commandQueue.Enqueue(cmd);
             }
         }
     }
     
-    public void ClearAll() => _commnadQueue.Clear();
-    private void CleanExpiredCommands()
+    public void ClearAll() => _commandQueue.Clear();
+    private void CleanExpiredHead()
     {
-        while(_commnadQueue.Count > 0 && _commnadQueue.Peek().IsExpired(_bufferDuration))
+        while(_commandQueue.Count > 0 && _commandQueue.Peek().IsExpired(_bufferDuration))
         {
-            _commnadQueue.Dequeue();
+            _commandQueue.Dequeue();
+        }
+    }
+
+    /// <summary>
+    /// 커맨드 우선순위 가중치: Roll(최우선) -> Parry -> Attack -> Jump
+    /// </summary>
+    private int GetCommandPriority(InputCommandType command)
+    {
+        switch (command)
+        {
+            case InputCommandType.Roll: return 4;
+            case InputCommandType.Parry: return 3;
+            case InputCommandType.Attack: return 2;
+            case InputCommandType.Jump: return 1;
+            default: return 0;
         }
     }
 }

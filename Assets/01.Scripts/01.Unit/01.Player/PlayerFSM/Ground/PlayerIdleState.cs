@@ -12,15 +12,16 @@ public class PlayerIdleState : PlayerGroundState
 
         // 이전 상태 잔여 관성 정지
         owner.StopMovementAPI();
-    }
 
-    public override void Update() => base.Update();
+        _animController.SetFloat(AnimParamType.MoveX, 0f);
+        _animController.SetFloat(AnimParamType.MoveZ, 0f);
+    }
 
     protected override void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)
     {
         if (moveInput.sqrMagnitude > 0.01f)
         {
-            _playerStateMachine.ChangeState(owner.InputReader.IsSprinting ? UnitState.Sprint : UnitState.Move);
+            _playerStateMachine.ChangeState(UnitState.Move);
         }
     }
 }

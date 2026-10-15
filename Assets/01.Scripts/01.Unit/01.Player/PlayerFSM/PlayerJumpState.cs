@@ -3,22 +3,15 @@
 /// 진입 시 수직 임펄스(AddForce)를 가하고 스태미나를 차감하며,
 /// 하강 중 지면 감지 시점에 도달하면 착지 후 조건에 맞는 상태로 복귀
 /// </summary>
-public class PlayerJumpState : UnitBaseState<PlayerController>
-{
-    private readonly PlayerStateMachine _playerStateMachine;
-    private readonly PlayerStatController _playerStatController;
-   
+public class PlayerJumpState : PlayerBaseState
+{  
     private const float JumpStaminaCost = 12.0f;
     private const float AirControlFactor = 0.4f;    // 공중 이동 제어 감쇠율
     private const float JumpCooldown = 0.15f;       // 도약 직후 즉시 찾지 판정도니는 것 방지
-    private float _tiemInAir;
+    private float _tiemInAir = 0f;
 
-    public PlayerJumpState(PlayerController owner, PlayerStateMachine stateMachine) 
-        : base(owner, stateMachine)
-    {
-        _playerStateMachine = stateMachine;
-        _playerStatController = owner.PlayerStatController;
-    }
+    public PlayerJumpState(PlayerController owner, PlayerStateMachine stateMachine)
+        : base(owner, stateMachine) { }
 
     public override void Enter()
     {
@@ -29,11 +22,10 @@ public class PlayerJumpState : UnitBaseState<PlayerController>
 
         // 1. 스태미나 차감
         _playerStatController?.ConsumeStamina(JumpStaminaCost);
-        // 2. JumpForce 반영
-        float jumpForce = _playerStatController != null ? 
-            _playerStatController.MotionStats.JumpForce.Value : owner.StatController.MotionStats.RollForce.Value;
+        _animController.SetTrigger(AnimParamType.Jump);
 
-        owner.Movement.ApplyJump(jumpForce);
+        // 2. JumpForce 반영
+        owner.ApplyJumpAPI(_playerStatController.MotionStats.JumpForce.Value);
     }
 
     public override void Update()
@@ -41,21 +33,19 @@ public class PlayerJumpState : UnitBaseState<PlayerController>
         base.Update();
         _tiemInAir += UnityEngine.Time.deltaTime;
 
-        if(_tiemInAir > JumpCooldown && owner.Movement.IsGrounded)
+        if(_tiemInAir >= JumpCooldown && owner.Movement.IsGrounded)
         {
             owner.InputReader.ClearCommand(InputCommandType.Jump);
 
             if(owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
             {
-                if (owner.InputReader.IsSprinting)
-                    _playerStateMachine.ChangeState(UnitState.Sprint);
-                else
-                    _playerStateMachine.ChangeState(UnitState.Move);
+                _playerStateMachine.ChangeState(UnitState.Move);
             }
             else
             {
                 _playerStateMachine.ChangeState(UnitState.Idle);
             }
+            return;
         }
     }
 

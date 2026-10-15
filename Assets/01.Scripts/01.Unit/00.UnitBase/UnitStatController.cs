@@ -81,7 +81,7 @@ public class UnitStatController : MonoBehaviour
         {
             await UniTask.Yield(PlayerLoopTiming.Update, token);
 
-            if (_currentPoise >= 0f) continue;
+            if (_currentPoise >= _maxPoise) continue;
 
             if (_poiseRecoveryTimer > 0f)
             {
@@ -94,7 +94,7 @@ public class UnitStatController : MonoBehaviour
         }
     }
 
-    protected virtual void OnDestory()
+    protected virtual void OnDestroy()
     {
         if (_cts != null)
         {

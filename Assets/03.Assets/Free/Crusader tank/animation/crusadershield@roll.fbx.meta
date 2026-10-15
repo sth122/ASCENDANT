@@ -1,0 +1,914 @@
+fileFormatVersion: 2
+guid: 44348210c917de444af8236108cd81a5
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects: {}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 3
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: roll
+      takeName: mixamo.com
+      internalID: 1827226128182048838
+      firstFrame: 0
+      lastFrame: 142
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 0
+    importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    meshOptimizationFlags: -1
+    indexFormat: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 0
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 1
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton:
+    - name: crusadershield@roll(Clone)
+      parentName: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: body
+      parentName: crusadershield@roll(Clone)
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: body1
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body1 1
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body2
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body3
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body4
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body5
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body6
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body7
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body8
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body9
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body10
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body11
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body12
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body13
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body14
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body15
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body16
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body17
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body18
+      parentName: body
+      position: {x: 0.0058495966, y: 0.05155361, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon
+      parentName: crusadershield@roll(Clone)
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: weapon1
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon2
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon3
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon4
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon5
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon6
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon7
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: Crusader_tank_Reference
+      parentName: crusadershield@roll(Clone)
+      position: {x: 0.049693577, y: -0.06580315, z: 0.056916125}
+      rotation: {x: -0.036400422, y: 0.36811775, z: 0.013417264, w: 0.9289695}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Hips
+      parentName: Crusader_tank_Reference
+      position: {x: -0.00023187697, y: 1.1511307, z: 0.009606734}
+      rotation: {x: 0.036400422, y: -0.36811772, z: -0.013417255, w: 0.9289695}
+      scale: {x: 1.0000001, y: 1, z: 1}
+    - name: Crusader_tank_LeftUpLeg
+      parentName: Crusader_tank_Hips
+      position: {x: -0.110062495, y: -0.0627, z: 0}
+      rotation: {x: -0.000000011175871, y: -0.000000029802322, z: 0.000000013969839, w: 1}
+      scale: {x: 1, y: 1, z: 0.99999994}
+    - name: Crusader_tank_LeftLeg
+      parentName: Crusader_tank_LeftUpLeg
+      position: {x: -0.047706094, y: -0.4535546, z: -0.017041137}
+      rotation: {x: 0.0000000074505797, y: -0.000000029802322, z: -0.00000002142042, w: 1}
+      scale: {x: 1, y: 0.99999994, z: 0.99999857}
+    - name: Crusader_tank_LeftFoot
+      parentName: Crusader_tank_LeftLeg
+      position: {x: -0.059096154, y: -0.44901854, z: -0.087701894}
+      rotation: {x: -0, y: -0, z: 2.2204458e-16, w: 1}
+      scale: {x: 0.9999999, y: 1, z: 1.0000004}
+    - name: Crusader_tank_LeftToeBase
+      parentName: Crusader_tank_LeftFoot
+      position: {x: -0.031540263, y: -0.0710472, z: 0.15542251}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: heel_flap_left1
+      parentName: Crusader_tank_LeftFoot
+      position: {x: 0.0067572678, y: -0.040320367, z: -0.08728557}
+      rotation: {x: -0.48759204, y: 0.56559795, z: 0.46823668, w: -0.47234255}
+      scale: {x: 1.0000029, y: 1.0000038, z: 1.0000001}
+    - name: heel_flap_left2
+      parentName: heel_flap_left1
+      position: {x: -0.112240426, y: 0, z: 3.5527136e-17}
+      rotation: {x: -0, y: -0, z: -0.000000029802319, w: 1}
+      scale: {x: 1.000007, y: 1.0000056, z: 1.0000073}
+    - name: knee_pad_left1_1
+      parentName: Crusader_tank_LeftLeg
+      position: {x: -0.029684067, y: -0.018011415, z: 0.09603187}
+      rotation: {x: -0.5046781, y: -0.5629186, z: 0.378067, w: 0.53431076}
+      scale: {x: 1.0000011, y: 1.0000026, z: 1}
+    - name: knee_pad_left1_2
+      parentName: knee_pad_left1_1
+      position: {x: -0.1431724, y: 1.4099832e-16, z: 1.0658141e-16}
+      rotation: {x: -0.08025229, y: 0.07505828, z: -0.67893994, w: 0.72592455}
+      scale: {x: 1.0000094, y: 0.99999887, z: 1.0000131}
+    - name: flap_under_the_knee_left1
+      parentName: Crusader_tank_LeftLeg
+      position: {x: -0.011284987, y: -0.067617975, z: -0.118162245}
+      rotation: {x: -0.46479028, y: 0.55278337, z: 0.5141274, w: -0.46268082}
+      scale: {x: 1.000003, y: 1.000001, z: 1}
+    - name: flap_under_the_knee_left2
+      parentName: flap_under_the_knee_left1
+      position: {x: -0.123737864, y: 0, z: -2.1316282e-16}
+      rotation: {x: -0, y: 0.000000029802319, z: -0.000000029802319, w: 1}
+      scale: {x: 1.000008, y: 1.0000087, z: 1.000006}
+    - name: Crusader_tank_RightUpLeg
+      parentName: Crusader_tank_Hips
+      position: {x: 0.110062495, y: -0.0627, z: 0}
+      rotation: {x: -0, y: -0.000000029802322, z: 9.313226e-10, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    - name: Crusader_tank_RightLeg
+      parentName: Crusader_tank_RightUpLeg
+      position: {x: 0.047706094, y: -0.4535546, z: -0.017041137}
+      rotation: {x: 3.8857806e-16, y: -0, z: 0.000000013038516, w: 1}
+      scale: {x: 0.9999999, y: 0.9999999, z: 0.9999999}
+    - name: Crusader_tank_RightFoot
+      parentName: Crusader_tank_RightLeg
+      position: {x: 0.059096154, y: -0.44901854, z: -0.087701894}
+      rotation: {x: -0.0000000037252907, y: 4.8572254e-17, z: -0.000000020489097, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 1.0000002}
+    - name: Crusader_tank_RightToeBase
+      parentName: Crusader_tank_RightFoot
+      position: {x: 0.031540263, y: -0.0710472, z: 0.15542251}
+      rotation: {x: -4.440892e-16, y: -0.000000029802322, z: -9.313227e-10, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 1.0000002}
+    - name: heel_flap_right1
+      parentName: Crusader_tank_RightFoot
+      position: {x: -0.006757743, y: -0.040320333, z: -0.087285966}
+      rotation: {x: -0.47234252, y: -0.46823668, z: 0.5655979, w: 0.4875921}
+      scale: {x: 1.0000057, y: 1.0000081, z: 1.0000042}
+    - name: heel_flap_right2
+      parentName: heel_flap_right1
+      position: {x: 0.11224057, y: -0.00000060695277, z: -0.0000006132957}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0000063, y: 1.0000048, z: 1.0000042}
+    - name: knee_pad_right1
+      parentName: Crusader_tank_RightLeg
+      position: {x: 0.02968441, y: -0.018011075, z: 0.09603184}
+      rotation: {x: 0.5343109, y: -0.37806693, z: -0.5629187, w: 0.504678}
+      scale: {x: 1.0000011, y: 1.0000042, z: 1.0000006}
+    - name: knee_pad_right2
+      parentName: knee_pad_right1
+      position: {x: 0.14317273, y: -0.00000002151038, z: 0.0000007145975}
+      rotation: {x: 0.080252215, y: -0.075058304, z: 0.6789398, w: -0.7259247}
+      scale: {x: 1.0000091, y: 1.0000166, z: 1.0000093}
+    - name: flap_under_the_knee_right1
+      parentName: Crusader_tank_RightLeg
+      position: {x: 0.011285411, y: -0.06761807, z: -0.11816186}
+      rotation: {x: -0.46268082, y: -0.51412743, z: 0.55278337, w: 0.4647903}
+      scale: {x: 1.0000046, y: 1.0000032, z: 1}
+    - name: flap_under_the_knee_right2
+      parentName: flap_under_the_knee_right1
+      position: {x: 0.123737626, y: 0.00000024350524, z: 0.00000037271084}
+      rotation: {x: -0, y: -0, z: 0.000000014901161, w: 1}
+      scale: {x: 1.0000055, y: 1.000003, z: 1}
+    - name: Crusader_tank_Spine
+      parentName: Crusader_tank_Hips
+      position: {x: -0, y: 0.07, z: -1.0587912e-24}
+      rotation: {x: -0, y: -0, z: 9.313226e-10, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 1}
+    - name: Crusader_tank_Spine1
+      parentName: Crusader_tank_Spine
+      position: {x: -0, y: 0.18208109, z: 0}
+      rotation: {x: -0.000000007450581, y: -0.000000029802322, z: -0.000000007450581, w: 1}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: Crusader_tank_Spine2
+      parentName: Crusader_tank_Spine1
+      position: {x: -0, y: 0.18208109, z: 0}
+      rotation: {x: 0.000000018626451, y: -0, z: -0.000000013038516, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_LeftShoulder
+      parentName: Crusader_tank_Spine2
+      position: {x: -0.1277456, y: 0.073968194, z: -0.031493258}
+      rotation: {x: -0.000000026334696, y: 0.12919575, z: -0.052525975, w: 0.990227}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_LeftArm
+      parentName: Crusader_tank_LeftShoulder
+      position: {x: -0.1176274, y: -0.030249914, z: -0.07440383}
+      rotation: {x: 0.08248284, y: -0.077564076, z: -0.27829224, w: 0.9537997}
+      scale: {x: 0.9999999, y: 1.0000001, z: 1}
+    - name: Crusader_tank_LeftForeArm
+      parentName: Crusader_tank_LeftArm
+      position: {x: -0.18693447, y: -0.17074701, z: -0.007815796}
+      rotation: {x: 0.13818336, y: -0.17161489, z: 0.052199617, w: 0.9740272}
+      scale: {x: 1.0000001, y: 1.0000001, z: 1}
+    - name: Crusader_tank_LeftHand
+      parentName: Crusader_tank_LeftForeArm
+      position: {x: -0.2067926, y: -0.13042703, z: 0.11862263}
+      rotation: {x: -0.016341472, y: -0.018996187, z: -0.049374387, w: 0.99846596}
+      scale: {x: 1.0000032, y: 1, z: 1.0000001}
+    - name: Crusader_tank_LeftHandThumb1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.010280712, y: -0.016322276, z: 0.064716004}
+      rotation: {x: 0.02849777, y: -0.13616164, z: -0.025430286, w: 0.9899501}
+      scale: {x: 0.9999971, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandThumb2
+      parentName: Crusader_tank_LeftHandThumb1
+      position: {x: 0.0076402375, y: -0.0041732336, z: 0.030905839}
+      rotation: {x: -0.09813491, y: 0.026984977, z: 0.027903277, w: 0.9944159}
+      scale: {x: 1, y: 1.0000001, z: 1}
+    - name: Crusader_tank_LeftHandThumb3
+      parentName: Crusader_tank_LeftHandThumb2
+      position: {x: 0.004436484, y: -0.011664878, z: 0.026884208}
+      rotation: {x: -0.0000000037252907, y: 0.000000029802322, z: -0.000000030733645, w: 1}
+      scale: {x: 0.99999994, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandThumb4
+      parentName: Crusader_tank_LeftHandThumb3
+      position: {x: 0.0032511624, y: -0.012985991, z: 0.025715522}
+      rotation: {x: -0, y: -0, z: 1.1102232e-16, w: 1}
+      scale: {x: 0.9999988, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandIndex1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.057165783, y: -0.058773197, z: 0.08358884}
+      rotation: {x: 0.027147276, y: -0.037445005, z: -0.020236282, w: 0.99872494}
+      scale: {x: 0.9999971, y: 1, z: 1.0000002}
+    - name: Crusader_tank_LeftHandIndex2
+      parentName: Crusader_tank_LeftHandIndex1
+      position: {x: -0.013035061, y: -0.021419337, z: 0.022147544}
+      rotation: {x: 0.000000007450501, y: -0.000010609627, z: -0.000000022351779, w: 1}
+      scale: {x: 0.99999994, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandIndex3
+      parentName: Crusader_tank_LeftHandIndex2
+      position: {x: -0.011348722, y: -0.02042998, z: 0.018900998}
+      rotation: {x: -1.149747e-12, y: 0.00007978082, z: 0.000000003724988, w: 1}
+      scale: {x: 0.99999875, y: 1.0000001, z: 1.0000001}
+    - name: Crusader_tank_LeftHandIndex4
+      parentName: Crusader_tank_LeftHandIndex3
+      position: {x: -0.01133715, y: -0.022447145, z: 0.018351965}
+      rotation: {x: -0.0000000074477344, y: -0.0002605021, z: 9.317809e-10, w: 1}
+      scale: {x: 0.99999934, y: 1.0000001, z: 0.9999996}
+    - name: Crusader_tank_LeftHandMiddle1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.067844175, y: -0.07972814, z: 0.056513365}
+      rotation: {x: 0.000000011175873, y: -0, z: -0.000000011175872, w: 1}
+      scale: {x: 0.9999971, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandMiddle2
+      parentName: Crusader_tank_LeftHandMiddle1
+      position: {x: -0.016712936, y: -0.024921447, z: 0.0136188185}
+      rotation: {x: -0.019836355, y: -0.016220719, z: -0.05402607, w: 0.99821067}
+      scale: {x: 0.99999994, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandMiddle3
+      parentName: Crusader_tank_LeftHandMiddle2
+      position: {x: -0.0094982125, y: -0.023859633, z: 0.010650836}
+      rotation: {x: -0.000000014901167, y: 3.5527137e-15, z: 0.000000011175871, w: 1}
+      scale: {x: 0.99999887, y: 1, z: 1.0000001}
+    - name: Crusader_tank_LeftHandMiddle4
+      parentName: Crusader_tank_LeftHandMiddle3
+      position: {x: -0.009069466, y: -0.025892166, z: 0.012885261}
+      rotation: {x: -0, y: -0, z: 5.293958e-23, w: 1}
+      scale: {x: 0.99999964, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandRing1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.069974735, y: -0.09220185, z: 0.02491062}
+      rotation: {x: -0.08862113, y: 0.042591948, z: -0.046301857, w: 0.99407667}
+      scale: {x: 0.9999972, y: 1, z: 1.0000002}
+    - name: Crusader_tank_LeftHandRing2
+      parentName: Crusader_tank_LeftHandRing1
+      position: {x: -0.0145667605, y: -0.025146058, z: 0.0047493814}
+      rotation: {x: -0.015862342, y: -0.000690408, z: -0.05230688, w: 0.99850494}
+      scale: {x: 0.99999994, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandRing3
+      parentName: Crusader_tank_LeftHandRing2
+      position: {x: -0.009441575, y: -0.026494188, z: 0.0032129425}
+      rotation: {x: 0.000000007450581, y: -0.000000059604645, z: -9.313237e-10, w: 1}
+      scale: {x: 0.99999875, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandRing4
+      parentName: Crusader_tank_LeftHandRing3
+      position: {x: -0.0070370534, y: -0.02498986, z: 0.003757733}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 0.99999964, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandPinky1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.06462895, y: -0.09675432, z: -0.009653831}
+      rotation: {x: -0.23241776, y: 0.12073537, z: -0.108686924, w: 0.9589537}
+      scale: {x: 0.9999971, y: 1.0000001, z: 1.0000001}
+    - name: Crusader_tank_LeftHandPinky2
+      parentName: Crusader_tank_LeftHandPinky1
+      position: {x: -0.009369774, y: -0.021442698, z: -0.0037828311}
+      rotation: {x: 0.016251812, y: 0.009167496, z: -0.092221215, w: 0.9955637}
+      scale: {x: 1, y: 1.0000001, z: 1.0000001}
+    - name: Crusader_tank_LeftHandPinky3
+      parentName: Crusader_tank_LeftHandPinky2
+      position: {x: -0.0032363806, y: -0.0215178, z: -0.0027093922}
+      rotation: {x: -1.7763568e-15, y: -0.000000029802322, z: -0.00000004004687, w: 1}
+      scale: {x: 0.99999994, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandPinky4
+      parentName: Crusader_tank_LeftHandPinky3
+      position: {x: -0.00287443, y: -0.019102199, z: -0.0020044688}
+      rotation: {x: -0, y: -0, z: -5.293956e-23, w: 1}
+      scale: {x: 0.99999887, y: 1, z: 1}
+    - name: shield1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.41181105, y: -0.05046387, z: 0.3285942}
+      rotation: {x: -0, y: -0, z: -4.440893e-16, w: 1}
+      scale: {x: 0.9999971, y: 1, z: 1.0000001}
+    - name: shield2
+      parentName: shield1
+      position: {x: -0.0022388652, y: -0.4114142, z: -0.0065849386}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 0.99999994, y: 1, z: 1.0000001}
+    - name: shield3
+      parentName: shield1
+      position: {x: -0.0026588652, y: 0.30996877, z: -0.009452938}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 0.99999994, y: 1, z: 1.0000001}
+    - name: Crusader_tank_LeftArm_shoulder1
+      parentName: Crusader_tank_LeftArm
+      position: {x: -0.054658026, y: 0.04217945, z: 0.005408476}
+      rotation: {x: -0.008087868, y: -0.059935194, z: 0.43116716, w: 0.9002429}
+      scale: {x: 1.0000005, y: 1.000006, z: 1.0000001}
+    - name: Crusader_tank_LeftArm_shoulder2
+      parentName: Crusader_tank_LeftArm_shoulder1
+      position: {x: -0.09791454, y: 1.4210854e-16, z: 0}
+      rotation: {x: -0.11322137, y: -0.010727706, z: -0.4319367, w: 0.89470476}
+      scale: {x: 0.9999996, y: 1.0000004, z: 0.99999905}
+    - name: Crusader_tank_RightShoulder
+      parentName: Crusader_tank_Spine2
+      position: {x: 0.1277456, y: 0.073968194, z: -0.031493258}
+      rotation: {x: 0.000000019102567, y: -0.12919576, z: 0.052526206, w: 0.990227}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_RightArm
+      parentName: Crusader_tank_RightShoulder
+      position: {x: 0.1176274, y: -0.030249914, z: -0.07440383}
+      rotation: {x: 0.08248288, y: 0.07756402, z: 0.2782921, w: 0.9537997}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: Crusader_tank_RightForeArm
+      parentName: Crusader_tank_RightArm
+      position: {x: 0.18693447, y: -0.17074701, z: -0.007815796}
+      rotation: {x: 0.13818334, y: 0.17161492, z: -0.05219978, w: 0.97402716}
+      scale: {x: 1.0000001, y: 1, z: 1}
+    - name: Crusader_tank_RightHand
+      parentName: Crusader_tank_RightForeArm
+      position: {x: 0.2067926, y: -0.13042703, z: 0.11862263}
+      rotation: {x: -0.016341789, y: 0.018996699, z: 0.049375318, w: 0.9984659}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_RightHandThumb1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.010280712, y: -0.016322276, z: 0.064716004}
+      rotation: {x: 0.028497586, y: 0.13616262, z: 0.025430644, w: 0.98995}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: Crusader_tank_RightHandThumb2
+      parentName: Crusader_tank_RightHandThumb1
+      position: {x: -0.0076402375, y: -0.0041732336, z: 0.030905839}
+      rotation: {x: -0.09813629, y: -0.026987743, z: -0.027904456, w: 0.9944155}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: Crusader_tank_RightHandThumb3
+      parentName: Crusader_tank_RightHandThumb2
+      position: {x: -0.004436484, y: -0.011664878, z: 0.026884208}
+      rotation: {x: -0.00000003352761, y: -0.000000059604645, z: 0.000000034458935, w: 1}
+      scale: {x: 0.9999999, y: 0.9999999, z: 0.99999994}
+    - name: Crusader_tank_RightHandThumb4
+      parentName: Crusader_tank_RightHandThumb3
+      position: {x: -0.0032511624, y: -0.012985991, z: 0.025715522}
+      rotation: {x: -0, y: -0, z: 1.5543124e-15, w: 1}
+      scale: {x: 1, y: 1.0000001, z: 1}
+    - name: Crusader_tank_RightHandIndex1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.057165783, y: -0.058773197, z: 0.08358884}
+      rotation: {x: 0.027147505, y: 0.037443787, z: 0.020234598, w: 0.998725}
+      scale: {x: 0.9999999, y: 1, z: 1}
+    - name: Crusader_tank_RightHandIndex2
+      parentName: Crusader_tank_RightHandIndex1
+      position: {x: 0.013035061, y: -0.021419337, z: 0.022147544}
+      rotation: {x: -0.000000022351593, y: -0.000010669231, z: 0.0000000065194565, w: 1}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: Crusader_tank_RightHandIndex3
+      parentName: Crusader_tank_RightHandIndex2
+      position: {x: 0.011349525, y: -0.02042998, z: 0.018900517}
+      rotation: {x: 0.000000011175186, y: 0.000079751015, z: -0.0000000083817255, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_RightHandIndex4
+      parentName: Crusader_tank_RightHandIndex3
+      position: {x: 0.011332077, y: -0.022447145, z: 0.018355098}
+      rotation: {x: -0.000000003721806, y: -0.0002605319, z: 0.00000000931491, w: 1}
+      scale: {x: 0.9999999, y: 1, z: 0.99999976}
+    - name: Crusader_tank_RightHandMiddle1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.067844175, y: -0.07972814, z: 0.056513365}
+      rotation: {x: 0.000000011175872, y: -0, z: 0.000000024214387, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_RightHandMiddle2
+      parentName: Crusader_tank_RightHandMiddle1
+      position: {x: 0.016712936, y: -0.024921447, z: 0.0136188185}
+      rotation: {x: -0.019836223, y: 0.016208075, z: 0.05402298, w: 0.9982111}
+      scale: {x: 0.9999999, y: 1.0000002, z: 1}
+    - name: Crusader_tank_RightHandMiddle3
+      parentName: Crusader_tank_RightHandMiddle2
+      position: {x: 0.009498439, y: -0.023859633, z: 0.010650633}
+      rotation: {x: 0.0000000037238743, y: 0.000079751015, z: 0.0000000065195156, w: 1}
+      scale: {x: 0.9999999, y: 0.9999999, z: 1.0000001}
+    - name: Crusader_tank_RightHandMiddle4
+      parentName: Crusader_tank_RightHandMiddle3
+      position: {x: 0.009067684, y: -0.025892166, z: 0.012886516}
+      rotation: {x: -0.0000000037217494, y: -0.0002605319, z: -0.0000000055881935, w: 1}
+      scale: {x: 1, y: 1, z: 0.99999976}
+    - name: Crusader_tank_RightHandRing1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.069974735, y: -0.09220185, z: 0.02491062}
+      rotation: {x: -0.088619575, y: -0.042591527, z: 0.046300102, w: 0.9940769}
+      scale: {x: 1, y: 1.0000001, z: 1}
+    - name: Crusader_tank_RightHandRing2
+      parentName: Crusader_tank_RightHandRing1
+      position: {x: 0.0145667605, y: -0.025146058, z: 0.0047493814}
+      rotation: {x: -0.015861718, y: 0.0006804205, z: 0.05231067, w: 0.9985047}
+      scale: {x: 1, y: 0.9999999, z: 1}
+    - name: Crusader_tank_RightHandRing3
+      parentName: Crusader_tank_RightHandRing2
+      position: {x: 0.009441643, y: -0.026494188, z: 0.0032127416}
+      rotation: {x: -0.0000000037282293, y: 0.00007972121, z: 0.000000030734576, w: 1}
+      scale: {x: 1.0000001, y: 1.0000001, z: 0.9999999}
+    - name: Crusader_tank_RightHandRing4
+      parentName: Crusader_tank_RightHandRing3
+      position: {x: 0.0070365337, y: -0.02498986, z: 0.0037587055}
+      rotation: {x: 0.000000018626228, y: -0.0002605319, z: 0.000000041906922, w: 1}
+      scale: {x: 0.9999997, y: 1.0000002, z: 1}
+    - name: Crusader_tank_RightHandPinky1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.06462895, y: -0.09675432, z: -0.009653831}
+      rotation: {x: -0.23241957, y: -0.12073325, z: 0.10869057, w: 0.95895314}
+      scale: {x: 0.9999999, y: 1, z: 1}
+    - name: Crusader_tank_RightHandPinky2
+      parentName: Crusader_tank_RightHandPinky1
+      position: {x: 0.009369774, y: -0.021442698, z: -0.0037828311}
+      rotation: {x: 0.016251862, y: -0.009177901, z: 0.092216074, w: 0.9955641}
+      scale: {x: 0.9999999, y: 1, z: 1}
+    - name: Crusader_tank_RightHandPinky3
+      parentName: Crusader_tank_RightHandPinky2
+      position: {x: 0.003236323, y: -0.0215178, z: -0.0027094611}
+      rotation: {x: -0.00000002235547, y: 0.00007978082, z: 0.0000000055858, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 0.9999969}
+    - name: Crusader_tank_RightHandPinky4
+      parentName: Crusader_tank_RightHandPinky3
+      position: {x: 0.002874707, y: -0.019102199, z: -0.0020040714}
+      rotation: {x: -0.000000011169652, y: -0.0002605617, z: 0.00000006798772, w: 1}
+      scale: {x: 0.9999999, y: 1, z: 1.0000026}
+    - name: stick_of_a_club1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.31498846, y: 0.049887374, z: 0.2198535}
+      rotation: {x: -0, y: -0, z: 4.4408916e-16, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain1
+      parentName: stick_of_a_club1
+      position: {x: 0.0032907506, y: -0.22996879, z: -0.00066639617}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain2
+      parentName: chain1
+      position: {x: 0.00015994174, y: -0.03986903, z: 0.0013213404}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain3
+      parentName: chain2
+      position: {x: -0.00025642326, y: -0.03721646, z: -0.001179716}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain4
+      parentName: chain3
+      position: {x: -0.0019593944, y: -0.03688799, z: 0.0018546182}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain5
+      parentName: chain4
+      position: {x: 0.0017804713, y: -0.036801357, z: -0.0013538074}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain6
+      parentName: chain5
+      position: {x: -0.001969957, y: -0.03909606, z: 0.0003140208}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain7
+      parentName: chain6
+      position: {x: 0.0025950286, y: -0.037678115, z: 0.00033813535}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain8
+      parentName: chain7
+      position: {x: -0.003949404, y: -0.0379591, z: 0.0038966713}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain9
+      parentName: chain8
+      position: {x: -0.00086501543, y: -0.03656703, z: -0.00046146841}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain10
+      parentName: chain9
+      position: {x: -0.0003869809, y: -0.03783611, z: 0.0013946617}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain11
+      parentName: chain10
+      position: {x: 0.0005840714, y: -0.03851652, z: -0.0010024802}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain12
+      parentName: chain11
+      position: {x: -0.0038353342, y: -0.035718992, z: 0.0059750546}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: ball_on_a_club1
+      parentName: chain12
+      position: {x: 0.0035039978, y: -0.037856426, z: -0.00054466084}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: ball_on_a_club2
+      parentName: ball_on_a_club1
+      position: {x: -0.0016560426, y: -0.09335903, z: -0.0032512422}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: ball_on_a_club3
+      parentName: ball_on_a_club2
+      position: {x: -0.00028432053, y: -0.09705453, z: -0.0004530097}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_rightArm_shoulder2_1
+      parentName: Crusader_tank_RightArm
+      position: {x: 0.054657996, y: 0.042180866, z: 0.005408089}
+      rotation: {x: 0.9002429, y: -0.43116713, z: -0.05993519, w: 0.008087806}
+      scale: {x: 1.0000002, y: 1.000009, z: 1.0000068}
+    - name: Crusader_tank_rightArm_shoulder2_2
+      parentName: Crusader_tank_rightArm_shoulder2_1
+      position: {x: 0.097916566, y: 0.0000022595668, z: -0.00000035194776}
+      rotation: {x: -0.11322147, y: -0.010727733, z: -0.4319367, w: 0.8947047}
+      scale: {x: 0.9999971, y: 1.0000036, z: 0.99999946}
+    - name: Crusader_tank_Neck
+      parentName: Crusader_tank_Spine2
+      position: {x: -0, y: 0.18208109, z: -0.03769832}
+      rotation: {x: -0.0000000037252903, y: 2.9837244e-16, z: 0.000000018626451, w: 1}
+      scale: {x: 1, y: 1.0000001, z: 1}
+    - name: Crusader_tank_Head
+      parentName: Crusader_tank_Neck
+      position: {x: -0, y: 0.22869669, z: 0.011915945}
+      rotation: {x: -0, y: -0, z: 1.1115239e-24, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: hip_flap_left1
+      parentName: Crusader_tank_Spine
+      position: {x: -0.18709484, y: -0.024710946, z: -0.004903755}
+      rotation: {x: 0.031374343, y: 0.026201919, z: 0.6335319, w: 0.77263606}
+      scale: {x: 1.0000018, y: 1.0000032, z: 1}
+    - name: hip_flap_left2
+      parentName: hip_flap_left1
+      position: {x: -0.24127696, y: -5.684342e-16, z: 0}
+      rotation: {x: 0.060592026, y: 0.03640805, z: -0.63052005, w: 0.7729473}
+      scale: {x: 0.999999, y: 1.000002, z: 0.99999934}
+    - name: hip_flap_right1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.18709499, y: -0.024708683, z: -0.00490376}
+      rotation: {x: -0.00023788025, y: 0.00029009578, z: 0.77327156, w: 0.63407487}
+      scale: {x: 1.0000015, y: 1.0000015, z: 1}
+    - name: hip_flap_right2
+      parentName: hip_flap_right1
+      position: {x: -0.241279, y: 3.5527135e-16, z: 1.6653345e-18}
+      rotation: {x: 0.6305215, y: -0.7729462, z: 0.060591828, w: 0.03640769}
+      scale: {x: 0.99999595, y: 1.000005, z: 1.000003}
+    - name: bag_back1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.09237466, y: 0.09237836, z: -0.1627136}
+      rotation: {x: 0.25317213, y: 0.4956711, z: 0.58476776, w: 0.5901362}
+      scale: {x: 0.99999905, y: 0.9999997, z: 1.0000004}
+    - name: bag_back2
+      parentName: bag_back1
+      position: {x: -0.06636588, y: 2.6645352e-17, z: 7.105427e-17}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0000005, y: 0.9999942, z: 0.9999998}
+    - name: bag_right1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.16680528, y: 0.094199084, z: -0.09855853}
+      rotation: {x: 0.18563251, y: 0.22148165, z: 0.70861423, w: 0.6437021}
+      scale: {x: 1.0000061, y: 1.000004, z: 1.0000002}
+    - name: bag_right2
+      parentName: bag_right1
+      position: {x: -0.085250236, y: 7.105427e-17, z: 1.7763568e-17}
+      rotation: {x: -0, y: -0, z: 0.000000014901159, w: 1}
+      scale: {x: 1.0000055, y: 1.0000001, z: 1.000006}
+    - name: bag_front1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.15794162, y: 0.13717662, z: 0.08555537}
+      rotation: {x: -0.30262935, y: -0.17015907, z: 0.61283654, w: 0.709854}
+      scale: {x: 0.999999, y: 1.0000005, z: 1.0000002}
+    - name: bag_front2
+      parentName: bag_front1
+      position: {x: -0.0686622, y: -3.5527136e-17, z: 3.5527136e-17}
+      rotation: {x: 0.47373378, y: -0.4737337, z: 0.5249541, w: 0.5249533}
+      scale: {x: 1.0000074, y: 1.0000167, z: 0.9999998}
+    - name: toga_mid_front3_4
+      parentName: Crusader_tank_Spine
+      position: {x: -0.010610109, y: -0.055828683, z: 0.117153}
+      rotation: {x: -0.056700774, y: 0.006552457, z: 0.7023261, w: 0.70956343}
+      scale: {x: 1.0000058, y: 1.000003, z: 1}
+    - name: toga_mid_front3_5
+      parentName: toga_mid_front3_4
+      position: {x: -0.17358181, y: -0.000000023094344, z: 0.0000003533117}
+      rotation: {x: 0.032754112, y: -0.027413461, z: 0.009225026, w: 0.99904484}
+      scale: {x: 1.0000101, y: 1.0000074, z: 1}
+    - name: toga_mid_front3_6
+      parentName: toga_mid_front3_5
+      position: {x: -0.22619285, y: 0.0000000100160396, z: -0.00000037260492}
+      rotation: {x: -0, y: -0, z: -2.3283062e-10, w: 1}
+      scale: {x: 1.000003, y: 1, z: 0.9999988}
+    - name: toga_left_front1_1
+      parentName: Crusader_tank_Spine
+      position: {x: -0.113510996, y: -0.055828683, z: 0.117153}
+      rotation: {x: -0.69600296, y: 0.7159964, z: -0.0068120398, w: -0.053690284}
+      scale: {x: 1.0000001, y: 0.999997, z: 1.0000024}
+    - name: toga_left_front1_2
+      parentName: toga_left_front1_1
+      position: {x: 0.17358181, y: 0.000000023094344, z: -0.0000003533117}
+      rotation: {x: 0.032754127, y: -0.027413527, z: 0.009224982, w: 0.99904484}
+      scale: {x: 1.0000031, y: 1.0000072, z: 1.000003}
+    - name: toga_left_front1_3
+      parentName: toga_left_front1_2
+      position: {x: 0.22619285, y: -0.000000010016041, z: 0.00000037260492}
+      rotation: {x: -0, y: -0, z: 2.9103833e-10, w: 1}
+      scale: {x: 1.0000001, y: 1.0000035, z: 1.0000019}
+    - name: toga_right_front1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.113510996, y: -0.055828683, z: 0.11715343}
+      rotation: {x: -0.053690296, y: 0.006812021, z: 0.7159964, w: 0.696003}
+      scale: {x: 1.0000062, y: 1.0000092, z: 1}
+    - name: toga_right_front2
+      parentName: toga_right_front1
+      position: {x: -0.1735818, y: 0, z: 3.5527136e-17}
+      rotation: {x: 0.032754127, y: -0.02741352, z: 0.009225071, w: 0.99904484}
+      scale: {x: 1, y: 1.0000004, z: 1.0000013}
+    - name: toga_right_front3
+      parentName: toga_right_front2
+      position: {x: -0.22619323, y: -8.8817837e-17, z: -2.1316282e-16}
+      rotation: {x: -0, y: -0, z: 5.820767e-11, w: 1}
+      scale: {x: 1.0000064, y: 1.000009, z: 1.0000031}
+    - name: toga_right_back1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.113510996, y: -0.055828683, z: -0.133157}
+      rotation: {x: 0.7147454, y: -0.69795346, z: 0.011306256, w: -0.043269977}
+      scale: {x: 1.0000004, y: 1.0000077, z: 1.0000106}
+    - name: toga_right_back2
+      parentName: toga_right_back1
+      position: {x: 0.17310266, y: 0.00000029336303, z: 0.00000015492836}
+      rotation: {x: -0.038422037, y: 0.0054449453, z: 0.005851447, w: 0.99922967}
+      scale: {x: 1.000017, y: 1.0000086, z: 1.0000229}
+    - name: toga_right_back3
+      parentName: toga_right_back2
+      position: {x: 0.22616656, y: -0.00000007375469, z: -0.0000005409444}
+      rotation: {x: 0.028529685, y: 0.051613193, z: -0.70061004, w: 0.7111032}
+      scale: {x: 1, y: 1.0000111, z: 1.000013}
+    - name: toga_mid_back1
+      parentName: Crusader_tank_Spine
+      position: {x: -0.0055274866, y: -0.055828683, z: -0.133157}
+      rotation: {x: 0.026008643, y: -0.0055404757, z: 0.6980231, w: 0.71558136}
+      scale: {x: 1.0000005, y: 0.9999999, z: 1}
+    - name: toga_mid_back2
+      parentName: toga_mid_back1
+      position: {x: -0.17291518, y: -0.0073383627, z: 0.0005635061}
+      rotation: {x: 0.0006544684, y: 0.006065597, z: 0.009073475, w: 0.9999403}
+      scale: {x: 1.0000144, y: 1.0000137, z: 1}
+    - name: toga_mid_back3
+      parentName: toga_mid_back2
+      position: {x: -0.22609363, y: -0.0054599703, z: 0.0000005409444}
+      rotation: {x: 0.028529797, y: 0.051613323, z: -0.70061004, w: 0.7111032}
+      scale: {x: 0.99999934, y: 0.99999696, z: 0.999998}
+    - name: toga_left_back1
+      parentName: Crusader_tank_Spine
+      position: {x: -0.11351055, y: -0.055827517, z: -0.13315707}
+      rotation: {x: 0.043269858, y: 0.011306137, z: 0.6979535, w: 0.7147453}
+      scale: {x: 1.0000006, y: 0.9999999, z: 1}
+    - name: toga_left_back2
+      parentName: toga_left_back1
+      position: {x: -0.1731037, y: -1.2434498e-16, z: -3.5527136e-17}
+      rotation: {x: -0.038421944, y: 0.0054449374, z: 0.005851227, w: 0.99922967}
+      scale: {x: 1.0000092, y: 1.0000123, z: 0.9999994}
+    - name: toga_left_back3
+      parentName: toga_left_back2
+      position: {x: -0.22616704, y: -1.065814e-15, z: 1.2789769e-15}
+      rotation: {x: 0.028529678, y: 0.0516132, z: -0.70061, w: 0.71110326}
+      scale: {x: 1.0000037, y: 1.0000037, z: 1.0000015}
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 1
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 1
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 0
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -9,24 +9,62 @@ public class PlayerMoveState : PlayerGroundState
     public override void Enter()
     {
         base.Enter();
-        // 공통적인 물리적 상태(이동, 관성 등)를 초기화하거나, 애니메이션을 재생하는 등의 작업을 수행
+
+        // 달리기 키가 이미 눌려져 있고 스태미나가 충분하다면 즉시 Sprint 상태로 승급
+        if (owner.InputReader.IsSprinting && _playerStatController != null && _playerStatController.HasEnoughStamina(5.0f))
+        {
+            _playerStateMachine.ChangeState(UnitState.Sprint);
+            return;
+        }
+
+        UpdateLocomotionAnimation();
     }
-    public override void Update() => base.Update();
 
     public override void FixedUpdate()
     {
         base.FixedUpdate();
 
-        float walkSpeed = owner.StatController.MotionStats.WalkSpeed.Value;
         UnityEngine.Vector3 moveDir = owner.CurrentMoveDirection;
+        if (moveDir.sqrMagnitude <= 0.001f)
+        {
+            owner.StopMovementAPI();
+            _playerStateMachine.ChangeState(UnitState.Idle);
+            return;
+        }
 
-        // 물리 이동
+        // 일반 걷기 물리 이동
+        float walkSpeed = _playerStatController != null
+            ? _playerStatController.MotionStats.WalkSpeed.Value
+            : 4.5f;
+
         owner.MoveAPI(moveDir, walkSpeed);
 
-        if(owner.CurrentLockOnTarget == null && moveDir.sqrMagnitude > 0.001f)
+        bool isLockOn = owner.CurrentLockOnTarget != null;
+
+        if (isLockOn)
         {
+            // 락온 시 타겟 주시 회전
+            UnityEngine.Vector3 targetDir = owner.CurrentLockOnTarget.position - owner.transform.position;
+            targetDir.y = 0f;
+            if (targetDir.sqrMagnitude > 0.001f)
+            {
+                owner.RotateTowardsAPI(targetDir.normalized, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+            }
+        }
+        else
+        {
+            // 비 락온 시 진행 방향으로 회전
             owner.RotateTowardsAPI(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
         }
+
+        UpdateLocomotionAnimation();
+    }
+
+    public override void Exit()
+    {
+        base.Exit();
+        _animController.SetFloat(AnimParamType.MoveX, 0f);
+        _animController.SetFloat(AnimParamType.MoveZ, 0f);
     }
 
     protected override void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)
@@ -39,9 +77,31 @@ public class PlayerMoveState : PlayerGroundState
 
     protected override void HandleSprintChanged(bool isSprinting)
     {
-        if (isSprinting)
+        // Shift 입력 감지 시 스태미나 여유가 있으면 Sprint 상태로 전이
+        if (isSprinting && _playerStatController != null && _playerStatController.HasEnoughStamina(5.0f))
         {
             _playerStateMachine.ChangeState(UnitState.Sprint);
+        }
+    }
+
+    private void UpdateLocomotionAnimation()
+    {
+        bool isLockOn = owner.CurrentLockOnTarget != null;
+        _animController.SetBool(AnimParamType.IsLockOn, isLockOn);
+
+        UnityEngine.Vector2 input = owner.InputReader.MoveInput;
+
+        if (isLockOn)
+        {
+            // Lock-On 시 입력 방향을 그대로 전달하여 8방향 Strafe 블렌딩
+            _animController.SetFloat(AnimParamType.MoveX, input.x * 0.5f);
+            _animController.SetFloat(AnimParamType.MoveZ, input.y * 0.5f);
+        }
+        else
+        {
+            // 일반 걷기 시 전방(MoveZ) 수치만 사용
+            _animController.SetFloat(AnimParamType.MoveX, 0f);
+            _animController.SetFloat(AnimParamType.MoveZ, input.magnitude * 0.5f);
         }
     }
 }

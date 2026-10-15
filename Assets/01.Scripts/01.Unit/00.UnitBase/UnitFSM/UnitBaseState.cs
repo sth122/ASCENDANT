@@ -4,7 +4,6 @@ public abstract class UnitBaseState<T> : BaseState<T> where T : UnitController<T
     protected readonly UnitStateMachine<T> unitStateMachine;
 
 #if UNITY_EDITOR
-    private readonly string _ownerTypeName;
     private readonly string _stateTypeName;
 #endif
 
@@ -14,7 +13,6 @@ public abstract class UnitBaseState<T> : BaseState<T> where T : UnitController<T
         this.unitStateMachine = stateMachine;
 
 #if UNITY_EDITOR
-        _ownerTypeName = typeof(T).Name;
         _stateTypeName = GetType().Name;
 #endif
     }
@@ -28,7 +26,7 @@ public abstract class UnitBaseState<T> : BaseState<T> where T : UnitController<T
     public override void Exit()
     {
 #if UNITY_EDITOR
-        DebugLogger<T>.Log($"[{_ownerTypeName}] 퇴장");
+        DebugLogger<T>.Log($"[{_stateTypeName}] 퇴장");
 #endif
     }
 }

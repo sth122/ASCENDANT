@@ -11,7 +11,6 @@ public abstract class UnitController<T> : MonoBehaviour, IInitable where T : Uni
     #region Variables
     protected StateMachine<T> _stateMachine;
     protected Rigidbody _rigidbody;
-    protected Animator _animator;
     protected UnitStatController _statController;
     #endregion
 
@@ -23,7 +22,6 @@ public abstract class UnitController<T> : MonoBehaviour, IInitable where T : Uni
     protected virtual void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
-        _animator = GetComponent<Animator>();
         _statController = GetComponent<UnitStatController>();
     }
 

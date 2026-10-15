@@ -1,6 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using UnityEngine;
-
 /// <summary>
 /// Player 방패 가드 유지 및 패링을 전담하는 Player FSM 액션 상태 클래스
 /// 가드를 올린 직후 짧은 프레임 동안 패링 판정을 활성화하고,
@@ -8,12 +6,12 @@ using UnityEngine;
 /// </summary>
 public class PlayerParryState : PlayerActionState
 {
-    private System.Threading.CancellationTokenSource _parryCts;
     #region MyRegion
     private const float ParryWindowDuration = 0.2f;             // 패링 유효 시간
     private const float GuardMoveSpeedFactor = 0.75f;            // 가드 중 걷기 속도 배율
-    private const float GuardStaminaRegenMulitplier = 0.25f;    // 가드 중 스태미나 회복 배율
-    private float ShieldStability = 0.65f;                      // 기본 방패 버티기 감쇄력
+    private const float GuardStaminaRegenFactor = 0.3f;   // 가드 중 스태미나 회복 배율
+    private const float ShieldStability = 0.7f;           // 기본 방패 버티기(감쇄력) 수치
+    private const float GuardBlockAngle = 120.0f;
     #endregion
 
     public bool IsParryWindow { get; private set; }
@@ -30,53 +28,50 @@ public class PlayerParryState : PlayerActionState
         CanMove = true;
         CanRotate = true;
 
-        // 2. 스태미나 회복 속도 저하
-        if (_playerStatController != null)
-        {
-            _playerStatController.StaminaRegenMultiplier = GuardStaminaRegenMulitplier;
-        }
+        _animController.SetBool(AnimParamType.IsGuarding, true);
+        _animController.SetTrigger(AnimParamType.Parry);
+
+        _playerStatController.StaminaRegenMultiplier = GuardStaminaRegenFactor;
 
         EnableEventHandler();
 
         // 3. 패링 판정 타이머
-        _parryCts = new System.Threading.CancellationTokenSource();
-        ActivateParryWindowAsync(_parryCts.Token).Forget();
-    }
-
-    public override void Update()
-    {
-        base.Update();
-
-        // 1. 회피(Roll) 선입력 캔슬 우선 체크 (위급 시 가드 풀고 굴러서 회피)
-        if (owner.InputReader.TryConsumeCommand(InputCommandType.Roll))
-        {
-            _playerStateMachine.ChangeState(UnitState.Roll);
-            return;
-        }
-
-        // 2. 가드 키(마우스 우클릭 등)를 뗐다면 즉시 상태 해제
-        if (!owner.InputReader.IsGuarding)
-        {
-            ReturnToGroundState();
-            return;
-        }
+        // 부모 토큰을 사용하여 패링 유효 윈도우 비동기 카운트다운 시작
+        System.Threading.CancellationToken token = CreateActionToken();
+        ExecuteParryWindowAsync(token).Forget();
     }
 
     public override void FixedUpdate()
     {
         base.FixedUpdate();
 
-        // 가드 중 저속 보행 이동
+        // 1. 회전 제어: 락온 타겟이 있으면 적 주시, 없으면 카메라 정면 주시
+        UnityEngine.Vector3 lookDir;
+        if (owner.CurrentLockOnTarget != null)
+        {
+            lookDir = owner.CurrentLockOnTarget.position - owner.transform.position;
+            lookDir.y = 0f;
+        }
+        else
+        {
+            lookDir = UnityEngine.Camera.main != null ? UnityEngine.Camera.main.transform.forward : owner.transform.forward;
+            lookDir.y = 0f;
+        }
+
+        if (lookDir.sqrMagnitude > 0.001f)
+        {
+            owner.RotateTowardsAPI(lookDir.normalized, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+        }
+
+        // 2. 가드 보행 이동 및 Strafe 파라미터 전달
+        UnityEngine.Vector2 rawInput = owner.InputReader.MoveInput;
+        _animController.SetFloat(AnimParamType.StrafeX, rawInput.x);
+        _animController.SetFloat(AnimParamType.StrafeZ, rawInput.y);
+
         if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
         {
             float guardSpeed = owner.StatController.MotionStats.WalkSpeed.Value * GuardMoveSpeedFactor;
             owner.MoveAPI(owner.CurrentMoveDirection, guardSpeed);
-
-            // 락온이 아닐 때 이동 방향으로 조향
-            if (owner.CurrentLockOnTarget == null)
-            {
-                owner.RotateTowardsAPI(owner.CurrentMoveDirection, owner.GetPlayerStat().RotationSpeed, Time.fixedDeltaTime);
-            }
         }
         else
         {
@@ -88,30 +83,50 @@ public class PlayerParryState : PlayerActionState
     {
         base.Exit();
 
+        _animController.SetBool(AnimParamType.IsGuarding, false);
+        _animController.ResetTrigger(AnimParamType.Parry);
+        _animController.SetFloat(AnimParamType.StrafeX, 0f);
+        _animController.SetFloat(AnimParamType.StrafeZ, 0f);
+        _playerStatController.StaminaRegenMultiplier = 1.0f;
+
         DisableEventHandler();
 
         IsParryWindow = false;
-
-        if (_playerStatController != null)
-        {
-            _playerStatController.StaminaRegenMultiplier = 1.0f;
-        }
-
-        if (_parryCts != null)
-        {
-            _parryCts.Cancel();
-            _parryCts.Dispose();
-            _parryCts = null;
-        }
     }
 
-    public void OnHitBlocked(float damage, GameObject attacker)
+    /// <summary>
+    /// 공격 수신 시 가드 또는 패링 분기 연산
+    /// 수평면 투영(Dot Product)을 통해 높낮이 지형에 의한 판정 뚫림 완벽 차단
+    /// </summary>
+    public bool TryProcessBlockOrParry(float damage, UnityEngine.GameObject attacker, out bool parrySuccess)
     {
-        // 1. ParryWindow 타이밍에 적중했을 시 패링 카운터 발동
+        parrySuccess = false;
+
+        if (attacker != null)
+        {
+            UnityEngine.Vector3 dirToAttacker = attacker.transform.position - owner.transform.position;
+            dirToAttacker.y = 0f; // 수평 투영
+
+            if (dirToAttacker.sqrMagnitude > 0.001f)
+            {
+                dirToAttacker.Normalize();
+                float dot = UnityEngine.Vector3.Dot(owner.transform.forward, dirToAttacker);
+                float minDot = UnityEngine.Mathf.Cos((GuardBlockAngle * 0.5f) * UnityEngine.Mathf.Deg2Rad);
+
+                // 방어 허용 각도를 벗어난 측후면 피격은 방어 실패
+                if (dot < minDot)
+                {
+                    return false;
+                }
+            }
+        }
+
+        // 1. 패링 윈도우 적중 시 패링 카운터 발동
         if (IsParryWindow)
         {
+            parrySuccess = true;
             TriggerParrySuccess(attacker);
-            return;
+            return true;
         }
 
         // 2. 일반 가드 피격 시 스태미나 차감
@@ -125,23 +140,27 @@ public class PlayerParryState : PlayerActionState
             }
             else
             {
-                // 가드 히트 사운드 및 이펙트 처리 추가
+                // 가드 사운드 및 히트 이팩트 처리
             }
         }
+        return true;
     }
 
-    private void TriggerParrySuccess(GameObject attacker)
+    private void TriggerParrySuccess(UnityEngine.GameObject attacker)
     {
+        _animController.SetTrigger(AnimParamType.ParrySuccess);
+
         // 적 유닛 피격/경직 인터페이스 호출
-        if (attacker.TryGetComponent(out UnitStatController enemyStat))
+        if (attacker != null && attacker.TryGetComponent(out UnitStatController enemyStat))
         {
+            // 상대 그로기 유발
             enemyStat.TakeDamage(0f, 999f);
         }
 
         // 패링 성공 연출
     }
 
-    private async UniTaskVoid ActivateParryWindowAsync(System.Threading.CancellationToken token)
+    private async UniTaskVoid ExecuteParryWindowAsync(System.Threading.CancellationToken token)
     {
         IsParryWindow = true;
 
@@ -150,18 +169,6 @@ public class PlayerParryState : PlayerActionState
 
         // 패링 타이밍 종료. 이후 유지 시 일반 가드로만 유지
         IsParryWindow = false;
-    }
-
-    private void ReturnToGroundState()
-    {
-        if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
-        {
-            _playerStateMachine.ChangeState(owner.InputReader.IsSprinting ? UnitState.Sprint : UnitState.Move);
-        }
-        else
-        {
-            _playerStateMachine.ChangeState(UnitState.Idle);
-        }
     }
 
     #region EventHandler Func
@@ -188,7 +195,14 @@ public class PlayerParryState : PlayerActionState
     private void HandleGuardReleased()
     {
         // 방패 버튼을 떼면 즉시 지상 기본 상태로 복귀
-        ReturnToGroundState();
+        if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
+        {
+            _playerStateMachine.ChangeState(owner.InputReader.IsSprinting ? UnitState.Sprint : UnitState.Move);
+        }
+        else
+        {
+            _playerStateMachine.ChangeState(UnitState.Idle);
+        }
     }
     #endregion
 }
