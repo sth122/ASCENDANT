@@ -180,25 +180,16 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     public void ApplyDamage(in DamageContext context)
     {
         // 1. 무적 판정 중(구르기 등)에는 데미지 무시
-        if (_stateMachine.CurrentState is PlayerRollState rollState && rollState.IsInvincible)
-        {
-            return;
-        }
+        if (_stateMachine.CurrentState is PlayerRollState rollState && rollState.IsInvincible) return;
 
         // 2. 처형 상태 중에는 데미지 무시
-        if (_stateMachine.CurrentState is PlayerRiposteState)
-        {
-            return;
-        }
+        if (_stateMachine.CurrentState is PlayerRiposteState) return;
 
         // 2. 가드/패리 상태인 경우 분기 연산
         if (_stateMachine.CurrentState is PlayerParryState parryState)
         {
             bool isBlocked = parryState.TryProcessBlockOrParry(context.Damage, context.Attacker, out bool parrySuccess);
-            if (isBlocked)
-            {
-                return;
-            }
+            if (isBlocked) return;
         }
 
         // 3. 일반 피격 처리
