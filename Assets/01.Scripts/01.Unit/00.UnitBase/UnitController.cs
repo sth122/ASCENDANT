@@ -5,7 +5,14 @@
 public abstract class UnitController<T> : MonoBehaviour, IInitable where T : UnitController<T>
 {
     #region SerializeField Variable
+    [Header("Unit ID")]
     [field: SerializeField] protected UnitId unitId;
+
+    [Header("Ground Check")]
+    [field: SerializeField] protected LayerMask _groundLayer;
+
+    [Header("Target Check")]
+    [field: SerializeField] protected LayerMask _targetLayer;
     #endregion
 
     #region Variables

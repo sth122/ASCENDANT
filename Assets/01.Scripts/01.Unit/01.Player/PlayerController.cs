@@ -12,11 +12,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     [SerializeField] private PlayerStat _runtimePlayerStat;
     public PlayerStat GetPlayerStat() => _runtimePlayerStat;
 
-    [Header("Ground Check")]
-    [SerializeField] private LayerMask _groundLayer;
-
     [Header("Lock-On Setting")]
-    [SerializeField] private LayerMask _enemyLayer;
     [SerializeField] private float _lockOnRadius = 15f;
     [SerializeField] private float _riposteRange = 2.2f; // 앞잡 유효 사거리
 
@@ -208,7 +204,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     /// </summary>
     public bool TryTriggerRiposte()
     {
-        int hitCount = Physics.OverlapSphereNonAlloc(transform.position, _riposteRange, _lockOnHitBuffer, _enemyLayer);
+        int hitCount = Physics.OverlapSphereNonAlloc(transform.position, _riposteRange, _lockOnHitBuffer, _targetLayer);
         if (hitCount == 0) return false;
 
         for (int i = 0; i < hitCount; i++)
@@ -280,7 +276,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     /// </summary>
     private Transform FindNearestEnemy()
     {
-        int hitCount = Physics.OverlapSphereNonAlloc(transform.position, _lockOnRadius, _lockOnHitBuffer, _enemyLayer);
+        int hitCount = Physics.OverlapSphereNonAlloc(transform.position, _lockOnRadius, _lockOnHitBuffer, _targetLayer);
 
         Transform closest = null;
         float minSqrDistance = float.MaxValue;
