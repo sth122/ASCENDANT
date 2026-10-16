@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 057ee271bea5e64408be385a509f2f4b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 101601
+  packageName: Crusader tank
+  packageVersion: 1.0
+  assetPath: Assets/Crusader tank/base mesh/Materials/lambert2.mat
+  uploadId: 365453

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 074e753a60b1dce4e871b757053fafda
+timeCreated: 1506777913
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 101601
+  packageName: Crusader tank
+  packageVersion: 1.0
+  assetPath: Assets/Crusader tank/Crusader tank Animator Controller.controller
+  uploadId: 365453

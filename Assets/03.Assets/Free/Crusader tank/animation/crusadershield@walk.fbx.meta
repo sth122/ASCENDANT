@@ -1,0 +1,3014 @@
+fileFormatVersion: 2
+guid: fd9a48f8e8a12274fac6dce99d981f80
+AssetOrigin:
+  serializedVersion: 1
+  productId: 101601
+  packageName: Crusader tank
+  packageVersion: 1.0
+  assetPath: Assets/Crusader tank/animation/crusadershield@walk.fbx
+  uploadId: 365453
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable:
+  - first:
+      1: 100000
+    second: bag_back1
+  - first:
+      1: 100002
+    second: bag_back2
+  - first:
+      1: 100004
+    second: bag_front1
+  - first:
+      1: 100006
+    second: bag_front2
+  - first:
+      1: 100008
+    second: bag_right1
+  - first:
+      1: 100010
+    second: bag_right2
+  - first:
+      1: 100012
+    second: ball_on_a_club1
+  - first:
+      1: 100014
+    second: ball_on_a_club2
+  - first:
+      1: 100016
+    second: ball_on_a_club3
+  - first:
+      1: 100018
+    second: body
+  - first:
+      1: 100020
+    second: body 1
+  - first:
+      1: 100022
+    second: body1
+  - first:
+      1: 100024
+    second: body10
+  - first:
+      1: 100026
+    second: body11
+  - first:
+      1: 100028
+    second: body12
+  - first:
+      1: 100030
+    second: body13
+  - first:
+      1: 100032
+    second: body14
+  - first:
+      1: 100034
+    second: body15
+  - first:
+      1: 100036
+    second: body16
+  - first:
+      1: 100038
+    second: body17
+  - first:
+      1: 100040
+    second: body18
+  - first:
+      1: 100042
+    second: body2
+  - first:
+      1: 100044
+    second: body3
+  - first:
+      1: 100046
+    second: body4
+  - first:
+      1: 100048
+    second: body5
+  - first:
+      1: 100050
+    second: body6
+  - first:
+      1: 100052
+    second: body7
+  - first:
+      1: 100054
+    second: body8
+  - first:
+      1: 100056
+    second: body9
+  - first:
+      1: 100058
+    second: chain1
+  - first:
+      1: 100060
+    second: chain10
+  - first:
+      1: 100062
+    second: chain11
+  - first:
+      1: 100064
+    second: chain12
+  - first:
+      1: 100066
+    second: chain2
+  - first:
+      1: 100068
+    second: chain3
+  - first:
+      1: 100070
+    second: chain4
+  - first:
+      1: 100072
+    second: chain5
+  - first:
+      1: 100074
+    second: chain6
+  - first:
+      1: 100076
+    second: chain7
+  - first:
+      1: 100078
+    second: chain8
+  - first:
+      1: 100080
+    second: chain9
+  - first:
+      1: 100082
+    second: Crusader_tank_Ctrl_ChestEndEffector
+  - first:
+      1: 100084
+    second: Crusader_tank_Ctrl_ChestOriginEffector
+  - first:
+      1: 100086
+    second: Crusader_tank_Ctrl_Head
+  - first:
+      1: 100088
+    second: Crusader_tank_Ctrl_HeadEffector
+  - first:
+      1: 100090
+    second: Crusader_tank_Ctrl_Hips
+  - first:
+      1: 100092
+    second: Crusader_tank_Ctrl_HipsEffector
+  - first:
+      1: 100094
+    second: Crusader_tank_Ctrl_LeftAnkleEffector
+  - first:
+      1: 100096
+    second: Crusader_tank_Ctrl_LeftArm
+  - first:
+      1: 100098
+    second: Crusader_tank_Ctrl_LeftElbowEffector
+  - first:
+      1: 100100
+    second: Crusader_tank_Ctrl_LeftFoot
+  - first:
+      1: 100102
+    second: Crusader_tank_Ctrl_LeftFootEffector
+  - first:
+      1: 100104
+    second: Crusader_tank_Ctrl_LeftForeArm
+  - first:
+      1: 100106
+    second: Crusader_tank_Ctrl_LeftHand
+  - first:
+      1: 100108
+    second: Crusader_tank_Ctrl_LeftHandIndex1
+  - first:
+      1: 100110
+    second: Crusader_tank_Ctrl_LeftHandIndex2
+  - first:
+      1: 100112
+    second: Crusader_tank_Ctrl_LeftHandIndex3
+  - first:
+      1: 100114
+    second: Crusader_tank_Ctrl_LeftHandIndex4
+  - first:
+      1: 100116
+    second: Crusader_tank_Ctrl_LeftHandIndexEffector
+  - first:
+      1: 100118
+    second: Crusader_tank_Ctrl_LeftHandMiddle1
+  - first:
+      1: 100120
+    second: Crusader_tank_Ctrl_LeftHandMiddle2
+  - first:
+      1: 100122
+    second: Crusader_tank_Ctrl_LeftHandMiddle3
+  - first:
+      1: 100124
+    second: Crusader_tank_Ctrl_LeftHandMiddle4
+  - first:
+      1: 100126
+    second: Crusader_tank_Ctrl_LeftHandMiddleEffector
+  - first:
+      1: 100128
+    second: Crusader_tank_Ctrl_LeftHandPinky1
+  - first:
+      1: 100130
+    second: Crusader_tank_Ctrl_LeftHandPinky2
+  - first:
+      1: 100132
+    second: Crusader_tank_Ctrl_LeftHandPinky3
+  - first:
+      1: 100134
+    second: Crusader_tank_Ctrl_LeftHandPinky4
+  - first:
+      1: 100136
+    second: Crusader_tank_Ctrl_LeftHandPinkyEffector
+  - first:
+      1: 100138
+    second: Crusader_tank_Ctrl_LeftHandRing1
+  - first:
+      1: 100140
+    second: Crusader_tank_Ctrl_LeftHandRing2
+  - first:
+      1: 100142
+    second: Crusader_tank_Ctrl_LeftHandRing3
+  - first:
+      1: 100144
+    second: Crusader_tank_Ctrl_LeftHandRing4
+  - first:
+      1: 100146
+    second: Crusader_tank_Ctrl_LeftHandRingEffector
+  - first:
+      1: 100148
+    second: Crusader_tank_Ctrl_LeftHandThumb1
+  - first:
+      1: 100150
+    second: Crusader_tank_Ctrl_LeftHandThumb2
+  - first:
+      1: 100152
+    second: Crusader_tank_Ctrl_LeftHandThumb3
+  - first:
+      1: 100154
+    second: Crusader_tank_Ctrl_LeftHandThumb4
+  - first:
+      1: 100156
+    second: Crusader_tank_Ctrl_LeftHandThumbEffector
+  - first:
+      1: 100158
+    second: Crusader_tank_Ctrl_LeftHipEffector
+  - first:
+      1: 100160
+    second: Crusader_tank_Ctrl_LeftKneeEffector
+  - first:
+      1: 100162
+    second: Crusader_tank_Ctrl_LeftLeg
+  - first:
+      1: 100164
+    second: Crusader_tank_Ctrl_LeftShoulder
+  - first:
+      1: 100166
+    second: Crusader_tank_Ctrl_LeftShoulderEffector
+  - first:
+      1: 100168
+    second: Crusader_tank_Ctrl_LeftToeBase
+  - first:
+      1: 100170
+    second: Crusader_tank_Ctrl_LeftUpLeg
+  - first:
+      1: 100172
+    second: Crusader_tank_Ctrl_LeftWristEffector
+  - first:
+      1: 100174
+    second: Crusader_tank_Ctrl_Neck
+  - first:
+      1: 100176
+    second: Crusader_tank_Ctrl_Reference
+  - first:
+      1: 100178
+    second: Crusader_tank_Ctrl_RightAnkleEffector
+  - first:
+      1: 100180
+    second: Crusader_tank_Ctrl_RightArm
+  - first:
+      1: 100182
+    second: Crusader_tank_Ctrl_RightElbowEffector
+  - first:
+      1: 100184
+    second: Crusader_tank_Ctrl_RightFoot
+  - first:
+      1: 100186
+    second: Crusader_tank_Ctrl_RightFootEffector
+  - first:
+      1: 100188
+    second: Crusader_tank_Ctrl_RightForeArm
+  - first:
+      1: 100190
+    second: Crusader_tank_Ctrl_RightHand
+  - first:
+      1: 100192
+    second: Crusader_tank_Ctrl_RightHandIndex1
+  - first:
+      1: 100194
+    second: Crusader_tank_Ctrl_RightHandIndex2
+  - first:
+      1: 100196
+    second: Crusader_tank_Ctrl_RightHandIndex3
+  - first:
+      1: 100198
+    second: Crusader_tank_Ctrl_RightHandIndex4
+  - first:
+      1: 100200
+    second: Crusader_tank_Ctrl_RightHandIndexEffector
+  - first:
+      1: 100202
+    second: Crusader_tank_Ctrl_RightHandMiddle1
+  - first:
+      1: 100204
+    second: Crusader_tank_Ctrl_RightHandMiddle2
+  - first:
+      1: 100206
+    second: Crusader_tank_Ctrl_RightHandMiddle3
+  - first:
+      1: 100208
+    second: Crusader_tank_Ctrl_RightHandMiddle4
+  - first:
+      1: 100210
+    second: Crusader_tank_Ctrl_RightHandMiddleEffector
+  - first:
+      1: 100212
+    second: Crusader_tank_Ctrl_RightHandPinky1
+  - first:
+      1: 100214
+    second: Crusader_tank_Ctrl_RightHandPinky2
+  - first:
+      1: 100216
+    second: Crusader_tank_Ctrl_RightHandPinky3
+  - first:
+      1: 100218
+    second: Crusader_tank_Ctrl_RightHandPinky4
+  - first:
+      1: 100220
+    second: Crusader_tank_Ctrl_RightHandPinkyEffector
+  - first:
+      1: 100222
+    second: Crusader_tank_Ctrl_RightHandRing1
+  - first:
+      1: 100224
+    second: Crusader_tank_Ctrl_RightHandRing2
+  - first:
+      1: 100226
+    second: Crusader_tank_Ctrl_RightHandRing3
+  - first:
+      1: 100228
+    second: Crusader_tank_Ctrl_RightHandRing4
+  - first:
+      1: 100230
+    second: Crusader_tank_Ctrl_RightHandRingEffector
+  - first:
+      1: 100232
+    second: Crusader_tank_Ctrl_RightHandThumb1
+  - first:
+      1: 100234
+    second: Crusader_tank_Ctrl_RightHandThumb2
+  - first:
+      1: 100236
+    second: Crusader_tank_Ctrl_RightHandThumb3
+  - first:
+      1: 100238
+    second: Crusader_tank_Ctrl_RightHandThumb4
+  - first:
+      1: 100240
+    second: Crusader_tank_Ctrl_RightHandThumbEffector
+  - first:
+      1: 100242
+    second: Crusader_tank_Ctrl_RightHipEffector
+  - first:
+      1: 100244
+    second: Crusader_tank_Ctrl_RightKneeEffector
+  - first:
+      1: 100246
+    second: Crusader_tank_Ctrl_RightLeg
+  - first:
+      1: 100248
+    second: Crusader_tank_Ctrl_RightShoulder
+  - first:
+      1: 100250
+    second: Crusader_tank_Ctrl_RightShoulderEffector
+  - first:
+      1: 100252
+    second: Crusader_tank_Ctrl_RightToeBase
+  - first:
+      1: 100254
+    second: Crusader_tank_Ctrl_RightUpLeg
+  - first:
+      1: 100256
+    second: Crusader_tank_Ctrl_RightWristEffector
+  - first:
+      1: 100258
+    second: Crusader_tank_Ctrl_Spine
+  - first:
+      1: 100260
+    second: Crusader_tank_Ctrl_Spine1
+  - first:
+      1: 100262
+    second: Crusader_tank_Ctrl_Spine2
+  - first:
+      1: 100264
+    second: Crusader_tank_Head
+  - first:
+      1: 100266
+    second: Crusader_tank_Hips
+  - first:
+      1: 100268
+    second: Crusader_tank_LeftArm
+  - first:
+      1: 100270
+    second: Crusader_tank_LeftArm_shoulder1
+  - first:
+      1: 100272
+    second: Crusader_tank_LeftArm_shoulder2
+  - first:
+      1: 100274
+    second: Crusader_tank_LeftFoot
+  - first:
+      1: 100276
+    second: Crusader_tank_LeftForeArm
+  - first:
+      1: 100278
+    second: Crusader_tank_LeftHand
+  - first:
+      1: 100280
+    second: Crusader_tank_LeftHandIndex1
+  - first:
+      1: 100282
+    second: Crusader_tank_LeftHandIndex2
+  - first:
+      1: 100284
+    second: Crusader_tank_LeftHandIndex3
+  - first:
+      1: 100286
+    second: Crusader_tank_LeftHandIndex4
+  - first:
+      1: 100288
+    second: Crusader_tank_LeftHandMiddle1
+  - first:
+      1: 100290
+    second: Crusader_tank_LeftHandMiddle2
+  - first:
+      1: 100292
+    second: Crusader_tank_LeftHandMiddle3
+  - first:
+      1: 100294
+    second: Crusader_tank_LeftHandMiddle4
+  - first:
+      1: 100296
+    second: Crusader_tank_LeftHandPinky1
+  - first:
+      1: 100298
+    second: Crusader_tank_LeftHandPinky2
+  - first:
+      1: 100300
+    second: Crusader_tank_LeftHandPinky3
+  - first:
+      1: 100302
+    second: Crusader_tank_LeftHandPinky4
+  - first:
+      1: 100304
+    second: Crusader_tank_LeftHandRing1
+  - first:
+      1: 100306
+    second: Crusader_tank_LeftHandRing2
+  - first:
+      1: 100308
+    second: Crusader_tank_LeftHandRing3
+  - first:
+      1: 100310
+    second: Crusader_tank_LeftHandRing4
+  - first:
+      1: 100312
+    second: Crusader_tank_LeftHandThumb1
+  - first:
+      1: 100314
+    second: Crusader_tank_LeftHandThumb2
+  - first:
+      1: 100316
+    second: Crusader_tank_LeftHandThumb3
+  - first:
+      1: 100318
+    second: Crusader_tank_LeftHandThumb4
+  - first:
+      1: 100320
+    second: Crusader_tank_LeftLeg
+  - first:
+      1: 100322
+    second: Crusader_tank_LeftShoulder
+  - first:
+      1: 100324
+    second: Crusader_tank_LeftToeBase
+  - first:
+      1: 100326
+    second: Crusader_tank_LeftUpLeg
+  - first:
+      1: 100328
+    second: Crusader_tank_Neck
+  - first:
+      1: 100330
+    second: Crusader_tank_Reference
+  - first:
+      1: 100332
+    second: Crusader_tank_RightArm
+  - first:
+      1: 100334
+    second: Crusader_tank_rightArm_shoulder2_1
+  - first:
+      1: 100336
+    second: Crusader_tank_rightArm_shoulder2_2
+  - first:
+      1: 100338
+    second: Crusader_tank_RightFoot
+  - first:
+      1: 100340
+    second: Crusader_tank_RightForeArm
+  - first:
+      1: 100342
+    second: Crusader_tank_RightHand
+  - first:
+      1: 100344
+    second: Crusader_tank_RightHandIndex1
+  - first:
+      1: 100346
+    second: Crusader_tank_RightHandIndex2
+  - first:
+      1: 100348
+    second: Crusader_tank_RightHandIndex3
+  - first:
+      1: 100350
+    second: Crusader_tank_RightHandIndex4
+  - first:
+      1: 100352
+    second: Crusader_tank_RightHandMiddle1
+  - first:
+      1: 100354
+    second: Crusader_tank_RightHandMiddle2
+  - first:
+      1: 100356
+    second: Crusader_tank_RightHandMiddle3
+  - first:
+      1: 100358
+    second: Crusader_tank_RightHandMiddle4
+  - first:
+      1: 100360
+    second: Crusader_tank_RightHandPinky1
+  - first:
+      1: 100362
+    second: Crusader_tank_RightHandPinky2
+  - first:
+      1: 100364
+    second: Crusader_tank_RightHandPinky3
+  - first:
+      1: 100366
+    second: Crusader_tank_RightHandPinky4
+  - first:
+      1: 100368
+    second: Crusader_tank_RightHandRing1
+  - first:
+      1: 100370
+    second: Crusader_tank_RightHandRing2
+  - first:
+      1: 100372
+    second: Crusader_tank_RightHandRing3
+  - first:
+      1: 100374
+    second: Crusader_tank_RightHandRing4
+  - first:
+      1: 100376
+    second: Crusader_tank_RightHandThumb1
+  - first:
+      1: 100378
+    second: Crusader_tank_RightHandThumb2
+  - first:
+      1: 100380
+    second: Crusader_tank_RightHandThumb3
+  - first:
+      1: 100382
+    second: Crusader_tank_RightHandThumb4
+  - first:
+      1: 100384
+    second: Crusader_tank_RightLeg
+  - first:
+      1: 100386
+    second: Crusader_tank_RightShoulder
+  - first:
+      1: 100388
+    second: Crusader_tank_RightToeBase
+  - first:
+      1: 100390
+    second: Crusader_tank_RightUpLeg
+  - first:
+      1: 100392
+    second: Crusader_tank_Spine
+  - first:
+      1: 100394
+    second: Crusader_tank_Spine1
+  - first:
+      1: 100396
+    second: Crusader_tank_Spine2
+  - first:
+      1: 100398
+    second: //RootNode
+  - first:
+      1: 100400
+    second: flap_under_the_knee_left1
+  - first:
+      1: 100402
+    second: flap_under_the_knee_left2
+  - first:
+      1: 100404
+    second: flap_under_the_knee_right1
+  - first:
+      1: 100406
+    second: flap_under_the_knee_right2
+  - first:
+      1: 100408
+    second: heel_flap_left1
+  - first:
+      1: 100410
+    second: heel_flap_left2
+  - first:
+      1: 100412
+    second: heel_flap_right1
+  - first:
+      1: 100414
+    second: heel_flap_right2
+  - first:
+      1: 100416
+    second: hip_flap_left1
+  - first:
+      1: 100418
+    second: hip_flap_left2
+  - first:
+      1: 100420
+    second: hip_flap_right1
+  - first:
+      1: 100422
+    second: hip_flap_right2
+  - first:
+      1: 100424
+    second: knee_pad_left1_1
+  - first:
+      1: 100426
+    second: knee_pad_left1_2
+  - first:
+      1: 100428
+    second: knee_pad_right1
+  - first:
+      1: 100430
+    second: knee_pad_right2
+  - first:
+      1: 100432
+    second: shield1
+  - first:
+      1: 100434
+    second: shield2
+  - first:
+      1: 100436
+    second: shield3
+  - first:
+      1: 100438
+    second: stick_of_a_club1
+  - first:
+      1: 100440
+    second: toga_left_back1
+  - first:
+      1: 100442
+    second: toga_left_back2
+  - first:
+      1: 100444
+    second: toga_left_back3
+  - first:
+      1: 100446
+    second: toga_left_front1_1
+  - first:
+      1: 100448
+    second: toga_left_front1_2
+  - first:
+      1: 100450
+    second: toga_left_front1_3
+  - first:
+      1: 100452
+    second: toga_mid_back1
+  - first:
+      1: 100454
+    second: toga_mid_back2
+  - first:
+      1: 100456
+    second: toga_mid_back3
+  - first:
+      1: 100458
+    second: toga_mid_front3_4
+  - first:
+      1: 100460
+    second: toga_mid_front3_5
+  - first:
+      1: 100462
+    second: toga_mid_front3_6
+  - first:
+      1: 100464
+    second: toga_right_back1
+  - first:
+      1: 100466
+    second: toga_right_back2
+  - first:
+      1: 100468
+    second: toga_right_back3
+  - first:
+      1: 100470
+    second: toga_right_front1
+  - first:
+      1: 100472
+    second: toga_right_front2
+  - first:
+      1: 100474
+    second: toga_right_front3
+  - first:
+      1: 100476
+    second: weapon
+  - first:
+      1: 100478
+    second: weapon1
+  - first:
+      1: 100480
+    second: weapon2
+  - first:
+      1: 100482
+    second: weapon3
+  - first:
+      1: 100484
+    second: weapon4
+  - first:
+      1: 100486
+    second: weapon5
+  - first:
+      1: 100488
+    second: weapon6
+  - first:
+      1: 100490
+    second: weapon7
+  - first:
+      4: 400000
+    second: bag_back1
+  - first:
+      4: 400002
+    second: bag_back2
+  - first:
+      4: 400004
+    second: bag_front1
+  - first:
+      4: 400006
+    second: bag_front2
+  - first:
+      4: 400008
+    second: bag_right1
+  - first:
+      4: 400010
+    second: bag_right2
+  - first:
+      4: 400012
+    second: ball_on_a_club1
+  - first:
+      4: 400014
+    second: ball_on_a_club2
+  - first:
+      4: 400016
+    second: ball_on_a_club3
+  - first:
+      4: 400018
+    second: body
+  - first:
+      4: 400020
+    second: body 1
+  - first:
+      4: 400022
+    second: body1
+  - first:
+      4: 400024
+    second: body10
+  - first:
+      4: 400026
+    second: body11
+  - first:
+      4: 400028
+    second: body12
+  - first:
+      4: 400030
+    second: body13
+  - first:
+      4: 400032
+    second: body14
+  - first:
+      4: 400034
+    second: body15
+  - first:
+      4: 400036
+    second: body16
+  - first:
+      4: 400038
+    second: body17
+  - first:
+      4: 400040
+    second: body18
+  - first:
+      4: 400042
+    second: body2
+  - first:
+      4: 400044
+    second: body3
+  - first:
+      4: 400046
+    second: body4
+  - first:
+      4: 400048
+    second: body5
+  - first:
+      4: 400050
+    second: body6
+  - first:
+      4: 400052
+    second: body7
+  - first:
+      4: 400054
+    second: body8
+  - first:
+      4: 400056
+    second: body9
+  - first:
+      4: 400058
+    second: chain1
+  - first:
+      4: 400060
+    second: chain10
+  - first:
+      4: 400062
+    second: chain11
+  - first:
+      4: 400064
+    second: chain12
+  - first:
+      4: 400066
+    second: chain2
+  - first:
+      4: 400068
+    second: chain3
+  - first:
+      4: 400070
+    second: chain4
+  - first:
+      4: 400072
+    second: chain5
+  - first:
+      4: 400074
+    second: chain6
+  - first:
+      4: 400076
+    second: chain7
+  - first:
+      4: 400078
+    second: chain8
+  - first:
+      4: 400080
+    second: chain9
+  - first:
+      4: 400082
+    second: Crusader_tank_Ctrl_ChestEndEffector
+  - first:
+      4: 400084
+    second: Crusader_tank_Ctrl_ChestOriginEffector
+  - first:
+      4: 400086
+    second: Crusader_tank_Ctrl_Head
+  - first:
+      4: 400088
+    second: Crusader_tank_Ctrl_HeadEffector
+  - first:
+      4: 400090
+    second: Crusader_tank_Ctrl_Hips
+  - first:
+      4: 400092
+    second: Crusader_tank_Ctrl_HipsEffector
+  - first:
+      4: 400094
+    second: Crusader_tank_Ctrl_LeftAnkleEffector
+  - first:
+      4: 400096
+    second: Crusader_tank_Ctrl_LeftArm
+  - first:
+      4: 400098
+    second: Crusader_tank_Ctrl_LeftElbowEffector
+  - first:
+      4: 400100
+    second: Crusader_tank_Ctrl_LeftFoot
+  - first:
+      4: 400102
+    second: Crusader_tank_Ctrl_LeftFootEffector
+  - first:
+      4: 400104
+    second: Crusader_tank_Ctrl_LeftForeArm
+  - first:
+      4: 400106
+    second: Crusader_tank_Ctrl_LeftHand
+  - first:
+      4: 400108
+    second: Crusader_tank_Ctrl_LeftHandIndex1
+  - first:
+      4: 400110
+    second: Crusader_tank_Ctrl_LeftHandIndex2
+  - first:
+      4: 400112
+    second: Crusader_tank_Ctrl_LeftHandIndex3
+  - first:
+      4: 400114
+    second: Crusader_tank_Ctrl_LeftHandIndex4
+  - first:
+      4: 400116
+    second: Crusader_tank_Ctrl_LeftHandIndexEffector
+  - first:
+      4: 400118
+    second: Crusader_tank_Ctrl_LeftHandMiddle1
+  - first:
+      4: 400120
+    second: Crusader_tank_Ctrl_LeftHandMiddle2
+  - first:
+      4: 400122
+    second: Crusader_tank_Ctrl_LeftHandMiddle3
+  - first:
+      4: 400124
+    second: Crusader_tank_Ctrl_LeftHandMiddle4
+  - first:
+      4: 400126
+    second: Crusader_tank_Ctrl_LeftHandMiddleEffector
+  - first:
+      4: 400128
+    second: Crusader_tank_Ctrl_LeftHandPinky1
+  - first:
+      4: 400130
+    second: Crusader_tank_Ctrl_LeftHandPinky2
+  - first:
+      4: 400132
+    second: Crusader_tank_Ctrl_LeftHandPinky3
+  - first:
+      4: 400134
+    second: Crusader_tank_Ctrl_LeftHandPinky4
+  - first:
+      4: 400136
+    second: Crusader_tank_Ctrl_LeftHandPinkyEffector
+  - first:
+      4: 400138
+    second: Crusader_tank_Ctrl_LeftHandRing1
+  - first:
+      4: 400140
+    second: Crusader_tank_Ctrl_LeftHandRing2
+  - first:
+      4: 400142
+    second: Crusader_tank_Ctrl_LeftHandRing3
+  - first:
+      4: 400144
+    second: Crusader_tank_Ctrl_LeftHandRing4
+  - first:
+      4: 400146
+    second: Crusader_tank_Ctrl_LeftHandRingEffector
+  - first:
+      4: 400148
+    second: Crusader_tank_Ctrl_LeftHandThumb1
+  - first:
+      4: 400150
+    second: Crusader_tank_Ctrl_LeftHandThumb2
+  - first:
+      4: 400152
+    second: Crusader_tank_Ctrl_LeftHandThumb3
+  - first:
+      4: 400154
+    second: Crusader_tank_Ctrl_LeftHandThumb4
+  - first:
+      4: 400156
+    second: Crusader_tank_Ctrl_LeftHandThumbEffector
+  - first:
+      4: 400158
+    second: Crusader_tank_Ctrl_LeftHipEffector
+  - first:
+      4: 400160
+    second: Crusader_tank_Ctrl_LeftKneeEffector
+  - first:
+      4: 400162
+    second: Crusader_tank_Ctrl_LeftLeg
+  - first:
+      4: 400164
+    second: Crusader_tank_Ctrl_LeftShoulder
+  - first:
+      4: 400166
+    second: Crusader_tank_Ctrl_LeftShoulderEffector
+  - first:
+      4: 400168
+    second: Crusader_tank_Ctrl_LeftToeBase
+  - first:
+      4: 400170
+    second: Crusader_tank_Ctrl_LeftUpLeg
+  - first:
+      4: 400172
+    second: Crusader_tank_Ctrl_LeftWristEffector
+  - first:
+      4: 400174
+    second: Crusader_tank_Ctrl_Neck
+  - first:
+      4: 400176
+    second: Crusader_tank_Ctrl_Reference
+  - first:
+      4: 400178
+    second: Crusader_tank_Ctrl_RightAnkleEffector
+  - first:
+      4: 400180
+    second: Crusader_tank_Ctrl_RightArm
+  - first:
+      4: 400182
+    second: Crusader_tank_Ctrl_RightElbowEffector
+  - first:
+      4: 400184
+    second: Crusader_tank_Ctrl_RightFoot
+  - first:
+      4: 400186
+    second: Crusader_tank_Ctrl_RightFootEffector
+  - first:
+      4: 400188
+    second: Crusader_tank_Ctrl_RightForeArm
+  - first:
+      4: 400190
+    second: Crusader_tank_Ctrl_RightHand
+  - first:
+      4: 400192
+    second: Crusader_tank_Ctrl_RightHandIndex1
+  - first:
+      4: 400194
+    second: Crusader_tank_Ctrl_RightHandIndex2
+  - first:
+      4: 400196
+    second: Crusader_tank_Ctrl_RightHandIndex3
+  - first:
+      4: 400198
+    second: Crusader_tank_Ctrl_RightHandIndex4
+  - first:
+      4: 400200
+    second: Crusader_tank_Ctrl_RightHandIndexEffector
+  - first:
+      4: 400202
+    second: Crusader_tank_Ctrl_RightHandMiddle1
+  - first:
+      4: 400204
+    second: Crusader_tank_Ctrl_RightHandMiddle2
+  - first:
+      4: 400206
+    second: Crusader_tank_Ctrl_RightHandMiddle3
+  - first:
+      4: 400208
+    second: Crusader_tank_Ctrl_RightHandMiddle4
+  - first:
+      4: 400210
+    second: Crusader_tank_Ctrl_RightHandMiddleEffector
+  - first:
+      4: 400212
+    second: Crusader_tank_Ctrl_RightHandPinky1
+  - first:
+      4: 400214
+    second: Crusader_tank_Ctrl_RightHandPinky2
+  - first:
+      4: 400216
+    second: Crusader_tank_Ctrl_RightHandPinky3
+  - first:
+      4: 400218
+    second: Crusader_tank_Ctrl_RightHandPinky4
+  - first:
+      4: 400220
+    second: Crusader_tank_Ctrl_RightHandPinkyEffector
+  - first:
+      4: 400222
+    second: Crusader_tank_Ctrl_RightHandRing1
+  - first:
+      4: 400224
+    second: Crusader_tank_Ctrl_RightHandRing2
+  - first:
+      4: 400226
+    second: Crusader_tank_Ctrl_RightHandRing3
+  - first:
+      4: 400228
+    second: Crusader_tank_Ctrl_RightHandRing4
+  - first:
+      4: 400230
+    second: Crusader_tank_Ctrl_RightHandRingEffector
+  - first:
+      4: 400232
+    second: Crusader_tank_Ctrl_RightHandThumb1
+  - first:
+      4: 400234
+    second: Crusader_tank_Ctrl_RightHandThumb2
+  - first:
+      4: 400236
+    second: Crusader_tank_Ctrl_RightHandThumb3
+  - first:
+      4: 400238
+    second: Crusader_tank_Ctrl_RightHandThumb4
+  - first:
+      4: 400240
+    second: Crusader_tank_Ctrl_RightHandThumbEffector
+  - first:
+      4: 400242
+    second: Crusader_tank_Ctrl_RightHipEffector
+  - first:
+      4: 400244
+    second: Crusader_tank_Ctrl_RightKneeEffector
+  - first:
+      4: 400246
+    second: Crusader_tank_Ctrl_RightLeg
+  - first:
+      4: 400248
+    second: Crusader_tank_Ctrl_RightShoulder
+  - first:
+      4: 400250
+    second: Crusader_tank_Ctrl_RightShoulderEffector
+  - first:
+      4: 400252
+    second: Crusader_tank_Ctrl_RightToeBase
+  - first:
+      4: 400254
+    second: Crusader_tank_Ctrl_RightUpLeg
+  - first:
+      4: 400256
+    second: Crusader_tank_Ctrl_RightWristEffector
+  - first:
+      4: 400258
+    second: Crusader_tank_Ctrl_Spine
+  - first:
+      4: 400260
+    second: Crusader_tank_Ctrl_Spine1
+  - first:
+      4: 400262
+    second: Crusader_tank_Ctrl_Spine2
+  - first:
+      4: 400264
+    second: Crusader_tank_Head
+  - first:
+      4: 400266
+    second: Crusader_tank_Hips
+  - first:
+      4: 400268
+    second: Crusader_tank_LeftArm
+  - first:
+      4: 400270
+    second: Crusader_tank_LeftArm_shoulder1
+  - first:
+      4: 400272
+    second: Crusader_tank_LeftArm_shoulder2
+  - first:
+      4: 400274
+    second: Crusader_tank_LeftFoot
+  - first:
+      4: 400276
+    second: Crusader_tank_LeftForeArm
+  - first:
+      4: 400278
+    second: Crusader_tank_LeftHand
+  - first:
+      4: 400280
+    second: Crusader_tank_LeftHandIndex1
+  - first:
+      4: 400282
+    second: Crusader_tank_LeftHandIndex2
+  - first:
+      4: 400284
+    second: Crusader_tank_LeftHandIndex3
+  - first:
+      4: 400286
+    second: Crusader_tank_LeftHandIndex4
+  - first:
+      4: 400288
+    second: Crusader_tank_LeftHandMiddle1
+  - first:
+      4: 400290
+    second: Crusader_tank_LeftHandMiddle2
+  - first:
+      4: 400292
+    second: Crusader_tank_LeftHandMiddle3
+  - first:
+      4: 400294
+    second: Crusader_tank_LeftHandMiddle4
+  - first:
+      4: 400296
+    second: Crusader_tank_LeftHandPinky1
+  - first:
+      4: 400298
+    second: Crusader_tank_LeftHandPinky2
+  - first:
+      4: 400300
+    second: Crusader_tank_LeftHandPinky3
+  - first:
+      4: 400302
+    second: Crusader_tank_LeftHandPinky4
+  - first:
+      4: 400304
+    second: Crusader_tank_LeftHandRing1
+  - first:
+      4: 400306
+    second: Crusader_tank_LeftHandRing2
+  - first:
+      4: 400308
+    second: Crusader_tank_LeftHandRing3
+  - first:
+      4: 400310
+    second: Crusader_tank_LeftHandRing4
+  - first:
+      4: 400312
+    second: Crusader_tank_LeftHandThumb1
+  - first:
+      4: 400314
+    second: Crusader_tank_LeftHandThumb2
+  - first:
+      4: 400316
+    second: Crusader_tank_LeftHandThumb3
+  - first:
+      4: 400318
+    second: Crusader_tank_LeftHandThumb4
+  - first:
+      4: 400320
+    second: Crusader_tank_LeftLeg
+  - first:
+      4: 400322
+    second: Crusader_tank_LeftShoulder
+  - first:
+      4: 400324
+    second: Crusader_tank_LeftToeBase
+  - first:
+      4: 400326
+    second: Crusader_tank_LeftUpLeg
+  - first:
+      4: 400328
+    second: Crusader_tank_Neck
+  - first:
+      4: 400330
+    second: Crusader_tank_Reference
+  - first:
+      4: 400332
+    second: Crusader_tank_RightArm
+  - first:
+      4: 400334
+    second: Crusader_tank_rightArm_shoulder2_1
+  - first:
+      4: 400336
+    second: Crusader_tank_rightArm_shoulder2_2
+  - first:
+      4: 400338
+    second: Crusader_tank_RightFoot
+  - first:
+      4: 400340
+    second: Crusader_tank_RightForeArm
+  - first:
+      4: 400342
+    second: Crusader_tank_RightHand
+  - first:
+      4: 400344
+    second: Crusader_tank_RightHandIndex1
+  - first:
+      4: 400346
+    second: Crusader_tank_RightHandIndex2
+  - first:
+      4: 400348
+    second: Crusader_tank_RightHandIndex3
+  - first:
+      4: 400350
+    second: Crusader_tank_RightHandIndex4
+  - first:
+      4: 400352
+    second: Crusader_tank_RightHandMiddle1
+  - first:
+      4: 400354
+    second: Crusader_tank_RightHandMiddle2
+  - first:
+      4: 400356
+    second: Crusader_tank_RightHandMiddle3
+  - first:
+      4: 400358
+    second: Crusader_tank_RightHandMiddle4
+  - first:
+      4: 400360
+    second: Crusader_tank_RightHandPinky1
+  - first:
+      4: 400362
+    second: Crusader_tank_RightHandPinky2
+  - first:
+      4: 400364
+    second: Crusader_tank_RightHandPinky3
+  - first:
+      4: 400366
+    second: Crusader_tank_RightHandPinky4
+  - first:
+      4: 400368
+    second: Crusader_tank_RightHandRing1
+  - first:
+      4: 400370
+    second: Crusader_tank_RightHandRing2
+  - first:
+      4: 400372
+    second: Crusader_tank_RightHandRing3
+  - first:
+      4: 400374
+    second: Crusader_tank_RightHandRing4
+  - first:
+      4: 400376
+    second: Crusader_tank_RightHandThumb1
+  - first:
+      4: 400378
+    second: Crusader_tank_RightHandThumb2
+  - first:
+      4: 400380
+    second: Crusader_tank_RightHandThumb3
+  - first:
+      4: 400382
+    second: Crusader_tank_RightHandThumb4
+  - first:
+      4: 400384
+    second: Crusader_tank_RightLeg
+  - first:
+      4: 400386
+    second: Crusader_tank_RightShoulder
+  - first:
+      4: 400388
+    second: Crusader_tank_RightToeBase
+  - first:
+      4: 400390
+    second: Crusader_tank_RightUpLeg
+  - first:
+      4: 400392
+    second: Crusader_tank_Spine
+  - first:
+      4: 400394
+    second: Crusader_tank_Spine1
+  - first:
+      4: 400396
+    second: Crusader_tank_Spine2
+  - first:
+      4: 400398
+    second: //RootNode
+  - first:
+      4: 400400
+    second: flap_under_the_knee_left1
+  - first:
+      4: 400402
+    second: flap_under_the_knee_left2
+  - first:
+      4: 400404
+    second: flap_under_the_knee_right1
+  - first:
+      4: 400406
+    second: flap_under_the_knee_right2
+  - first:
+      4: 400408
+    second: heel_flap_left1
+  - first:
+      4: 400410
+    second: heel_flap_left2
+  - first:
+      4: 400412
+    second: heel_flap_right1
+  - first:
+      4: 400414
+    second: heel_flap_right2
+  - first:
+      4: 400416
+    second: hip_flap_left1
+  - first:
+      4: 400418
+    second: hip_flap_left2
+  - first:
+      4: 400420
+    second: hip_flap_right1
+  - first:
+      4: 400422
+    second: hip_flap_right2
+  - first:
+      4: 400424
+    second: knee_pad_left1_1
+  - first:
+      4: 400426
+    second: knee_pad_left1_2
+  - first:
+      4: 400428
+    second: knee_pad_right1
+  - first:
+      4: 400430
+    second: knee_pad_right2
+  - first:
+      4: 400432
+    second: shield1
+  - first:
+      4: 400434
+    second: shield2
+  - first:
+      4: 400436
+    second: shield3
+  - first:
+      4: 400438
+    second: stick_of_a_club1
+  - first:
+      4: 400440
+    second: toga_left_back1
+  - first:
+      4: 400442
+    second: toga_left_back2
+  - first:
+      4: 400444
+    second: toga_left_back3
+  - first:
+      4: 400446
+    second: toga_left_front1_1
+  - first:
+      4: 400448
+    second: toga_left_front1_2
+  - first:
+      4: 400450
+    second: toga_left_front1_3
+  - first:
+      4: 400452
+    second: toga_mid_back1
+  - first:
+      4: 400454
+    second: toga_mid_back2
+  - first:
+      4: 400456
+    second: toga_mid_back3
+  - first:
+      4: 400458
+    second: toga_mid_front3_4
+  - first:
+      4: 400460
+    second: toga_mid_front3_5
+  - first:
+      4: 400462
+    second: toga_mid_front3_6
+  - first:
+      4: 400464
+    second: toga_right_back1
+  - first:
+      4: 400466
+    second: toga_right_back2
+  - first:
+      4: 400468
+    second: toga_right_back3
+  - first:
+      4: 400470
+    second: toga_right_front1
+  - first:
+      4: 400472
+    second: toga_right_front2
+  - first:
+      4: 400474
+    second: toga_right_front3
+  - first:
+      4: 400476
+    second: weapon
+  - first:
+      4: 400478
+    second: weapon1
+  - first:
+      4: 400480
+    second: weapon2
+  - first:
+      4: 400482
+    second: weapon3
+  - first:
+      4: 400484
+    second: weapon4
+  - first:
+      4: 400486
+    second: weapon5
+  - first:
+      4: 400488
+    second: weapon6
+  - first:
+      4: 400490
+    second: weapon7
+  - first:
+      43: 4300000
+    second: body
+  - first:
+      43: 4300002
+    second: body1
+  - first:
+      43: 4300004
+    second: body2
+  - first:
+      43: 4300006
+    second: body3
+  - first:
+      43: 4300008
+    second: body4
+  - first:
+      43: 4300010
+    second: body5
+  - first:
+      43: 4300012
+    second: body6
+  - first:
+      43: 4300014
+    second: body7
+  - first:
+      43: 4300016
+    second: body8
+  - first:
+      43: 4300018
+    second: body9
+  - first:
+      43: 4300020
+    second: body10
+  - first:
+      43: 4300022
+    second: body11
+  - first:
+      43: 4300024
+    second: body12
+  - first:
+      43: 4300026
+    second: body13
+  - first:
+      43: 4300028
+    second: body14
+  - first:
+      43: 4300030
+    second: body15
+  - first:
+      43: 4300032
+    second: body16
+  - first:
+      43: 4300034
+    second: body17
+  - first:
+      43: 4300036
+    second: body18
+  - first:
+      43: 4300038
+    second: weapon1
+  - first:
+      43: 4300040
+    second: weapon2
+  - first:
+      43: 4300042
+    second: weapon3
+  - first:
+      43: 4300044
+    second: weapon4
+  - first:
+      43: 4300046
+    second: weapon5
+  - first:
+      43: 4300048
+    second: weapon6
+  - first:
+      43: 4300050
+    second: weapon7
+  - first:
+      74: 7400000
+    second: walk
+  - first:
+      95: 9500000
+    second: //RootNode
+  - first:
+      137: 13700000
+    second: body 1
+  - first:
+      137: 13700002
+    second: body1
+  - first:
+      137: 13700004
+    second: body10
+  - first:
+      137: 13700006
+    second: body11
+  - first:
+      137: 13700008
+    second: body12
+  - first:
+      137: 13700010
+    second: body13
+  - first:
+      137: 13700012
+    second: body14
+  - first:
+      137: 13700014
+    second: body15
+  - first:
+      137: 13700016
+    second: body16
+  - first:
+      137: 13700018
+    second: body17
+  - first:
+      137: 13700020
+    second: body18
+  - first:
+      137: 13700022
+    second: body2
+  - first:
+      137: 13700024
+    second: body3
+  - first:
+      137: 13700026
+    second: body4
+  - first:
+      137: 13700028
+    second: body5
+  - first:
+      137: 13700030
+    second: body6
+  - first:
+      137: 13700032
+    second: body7
+  - first:
+      137: 13700034
+    second: body8
+  - first:
+      137: 13700036
+    second: body9
+  - first:
+      137: 13700038
+    second: weapon1
+  - first:
+      137: 13700040
+    second: weapon2
+  - first:
+      137: 13700042
+    second: weapon3
+  - first:
+      137: 13700044
+    second: weapon4
+  - first:
+      137: 13700046
+    second: weapon5
+  - first:
+      137: 13700048
+    second: weapon6
+  - first:
+      137: 13700050
+    second: weapon7
+  externalObjects: {}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 3
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: walk
+      takeName: Take 001
+      internalID: 7400000
+      firstFrame: 1
+      lastFrame: 60
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 1
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 0
+    importVisibility: 0
+    importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
+    nodeNameCollisionStrategy: 0
+    fileIdsGeneration: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    meshOptimizationFlags: -1
+    indexFormat: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 0
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 0
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 1
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton:
+    - name: crusadershield@walk(Clone)
+      parentName: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: body
+      parentName: crusadershield@walk(Clone)
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: body 1
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body1
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body2
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body3
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body4
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body5
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body6
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body7
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body8
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body9
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body10
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body11
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body12
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body13
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body14
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body15
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body16
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body17
+      parentName: body
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: body18
+      parentName: body
+      position: {x: 0.0058495966, y: 0.05155361, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon
+      parentName: crusadershield@walk(Clone)
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: weapon1
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon2
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon3
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon4
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon5
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon6
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: weapon7
+      parentName: weapon
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1.0421444, y: 1.0421444, z: 1.0421444}
+    - name: Crusader_tank_Reference
+      parentName: crusadershield@walk(Clone)
+      position: {x: -0, y: 0.023140034, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Hips
+      parentName: Crusader_tank_Reference
+      position: {x: 1.6308956e-17, y: 1.0071683, z: 2.6517065e-17}
+      rotation: {x: -0, y: -0.000000011170748, z: -0, w: 1}
+      scale: {x: 0.9999999, y: 1, z: 0.9999999}
+    - name: Crusader_tank_LeftUpLeg
+      parentName: Crusader_tank_Hips
+      position: {x: -0.1100625, y: -0.062699966, z: -9.68421e-10}
+      rotation: {x: -0.000000011170748, y: 0.000000011170748, z: -0.000000005585374, w: 1}
+      scale: {x: 0.99999994, y: 0.99999994, z: 0.99999994}
+    - name: Crusader_tank_LeftLeg
+      parentName: Crusader_tank_LeftUpLeg
+      position: {x: -0.04770594, y: -0.4535554, z: -0.01703815}
+      rotation: {x: 0.000000011170748, y: -0, z: 0.000000003490859, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_LeftFoot
+      parentName: Crusader_tank_LeftLeg
+      position: {x: -0.059096217, y: -0.4490187, z: -0.087702006}
+      rotation: {x: 1.7454305e-10, y: -0.000000022341498, z: 0.000000002639962, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_LeftToeBase
+      parentName: Crusader_tank_LeftFoot
+      position: {x: -0.03154028, y: -0.07104723, z: 0.15542267}
+      rotation: {x: -0, y: -0, z: 3.899553e-18, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: heel_flap_left1
+      parentName: Crusader_tank_LeftFoot
+      position: {x: 0.0067572678, y: -0.040320367, z: -0.08728557}
+      rotation: {x: -0.48759198, y: 0.5655979, z: 0.46823677, w: -0.47234255}
+      scale: {x: 1.0000014, y: 1.0000033, z: 1.0000035}
+    - name: heel_flap_left2
+      parentName: heel_flap_left1
+      position: {x: -0.112240426, y: 0, z: 3.5527136e-17}
+      rotation: {x: -0, y: -0, z: 0.000000029802319, w: 1}
+      scale: {x: 1.0000049, y: 1.0000001, z: 1.000004}
+    - name: knee_pad_left1_1
+      parentName: Crusader_tank_LeftLeg
+      position: {x: -0.029684067, y: -0.018011415, z: 0.09603187}
+      rotation: {x: -0.50467813, y: -0.5629186, z: 0.37806672, w: 0.534311}
+      scale: {x: 1, y: 1.0000045, z: 1.0000035}
+    - name: knee_pad_left1_2
+      parentName: knee_pad_left1_1
+      position: {x: -0.1431724, y: 1.4210854e-16, z: -8.881784e-18}
+      rotation: {x: -0.080253296, y: 0.07505905, z: -0.67893964, w: 0.7259246}
+      scale: {x: 1.0000054, y: 1.0000023, z: 1.0000051}
+    - name: flap_under_the_knee_left1
+      parentName: Crusader_tank_LeftLeg
+      position: {x: -0.011284987, y: -0.067617975, z: -0.118162245}
+      rotation: {x: -0.46479043, y: 0.55278337, z: 0.5141273, w: -0.46268082}
+      scale: {x: 1.000003, y: 1.000005, z: 1.0000001}
+    - name: flap_under_the_knee_left2
+      parentName: flap_under_the_knee_left1
+      position: {x: -0.123737864, y: 1.7763568e-17, z: -2.842171e-16}
+      rotation: {x: -0, y: -0, z: -0.000000029802322, w: 1}
+      scale: {x: 1.0000039, y: 1.0000012, z: 1.0000036}
+    - name: Crusader_tank_RightUpLeg
+      parentName: Crusader_tank_Hips
+      position: {x: 0.1100625, y: -0.062699966, z: 9.684209e-10}
+      rotation: {x: 6.981717e-10, y: 0.000000011170748, z: 7.8544327e-10, w: 1}
+      scale: {x: 1.0000004, y: 1.0000004, z: 1.0000002}
+    - name: Crusader_tank_RightLeg
+      parentName: Crusader_tank_RightUpLeg
+      position: {x: 0.047706068, y: -0.453555, z: -0.017038971}
+      rotation: {x: -6.9817174e-10, y: 0.000000005585374, z: -0.0000000035781302, w: 1}
+      scale: {x: 0.9999999, y: 0.9999999, z: 1}
+    - name: Crusader_tank_RightFoot
+      parentName: Crusader_tank_RightLeg
+      position: {x: 0.059096258, y: -0.4490193, z: -0.0877021}
+      rotation: {x: 1.110223e-16, y: -0, z: 0.0000000036654018, w: 1}
+      scale: {x: 1.0000001, y: 1.0000001, z: 1.0000001}
+    - name: Crusader_tank_RightToeBase
+      parentName: Crusader_tank_RightFoot
+      position: {x: 0.0315403, y: -0.0710472, z: 0.15542251}
+      rotation: {x: -0.0000000027926879, y: -0.000000033512244, z: -0.0000000019199724, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 1}
+    - name: heel_flap_right1
+      parentName: Crusader_tank_RightFoot
+      position: {x: -0.006757743, y: -0.040320333, z: -0.087285966}
+      rotation: {x: -0.47234255, y: -0.46823677, z: 0.5655979, w: 0.48759198}
+      scale: {x: 1.000003, y: 1.000003, z: 1.000003}
+    - name: heel_flap_right2
+      parentName: heel_flap_right1
+      position: {x: 0.11224057, y: -0.00000060695277, z: -0.0000006132957}
+      rotation: {x: -0, y: -0, z: -0.000000014901159, w: 1}
+      scale: {x: 1.000003, y: 1.0000032, z: 1.0000036}
+    - name: knee_pad_right1
+      parentName: Crusader_tank_RightLeg
+      position: {x: 0.02968441, y: -0.018011075, z: 0.09603184}
+      rotation: {x: 0.534311, y: -0.37806675, z: -0.5629186, w: 0.5046781}
+      scale: {x: 0.9999998, y: 1.000004, z: 1}
+    - name: knee_pad_right2
+      parentName: knee_pad_right1
+      position: {x: 0.14317273, y: -0.00000002151038, z: 0.0000007145975}
+      rotation: {x: 0.0802534, y: -0.07505905, z: 0.67893964, w: -0.7259246}
+      scale: {x: 1.0000049, y: 1.0000088, z: 1.0000021}
+    - name: flap_under_the_knee_right1
+      parentName: Crusader_tank_RightLeg
+      position: {x: 0.011285411, y: -0.06761807, z: -0.11816186}
+      rotation: {x: -0.46268076, y: -0.5141273, z: 0.55278337, w: 0.46479043}
+      scale: {x: 0.9999961, y: 1, z: 0.9999986}
+    - name: flap_under_the_knee_right2
+      parentName: flap_under_the_knee_right1
+      position: {x: 0.123737626, y: 0.00000024350524, z: 0.00000037271084}
+      rotation: {x: -0, y: -0, z: -0.000000014901161, w: 1}
+      scale: {x: 0.99999756, y: 1, z: 0.9999973}
+    - name: Crusader_tank_Spine
+      parentName: Crusader_tank_Hips
+      position: {x: 1.2758885e-17, y: 0.07, z: 3.2328872e-17}
+      rotation: {x: 9.748878e-19, y: -0, z: 4.3635734e-10, w: 1}
+      scale: {x: 0.99999994, y: 1, z: 0.99999994}
+    - name: Crusader_tank_Spine1
+      parentName: Crusader_tank_Spine
+      position: {x: -4.9506316e-10, y: 0.18208109, z: -3.3192382e-10}
+      rotation: {x: 0.0000000013963435, y: 0.000000009774404, z: 1.5272505e-10, w: 1}
+      scale: {x: 1.0000002, y: 1.0000002, z: 1.0000004}
+    - name: Crusader_tank_Spine2
+      parentName: Crusader_tank_Spine1
+      position: {x: 0.0000000031397729, y: 0.18208116, z: 0.0000000023537812}
+      rotation: {x: -0.000000006981718, y: 0.0000000041890305, z: 0.000000002727233, w: 1}
+      scale: {x: 1.0000004, y: 1.0000002, z: 1.0000001}
+    - name: Crusader_tank_LeftShoulder
+      parentName: Crusader_tank_Spine2
+      position: {x: -0.12774564, y: 0.0739682, z: -0.031493273}
+      rotation: {x: 0.000000004284437, y: 0.12919565, z: -0.052526437, w: 0.990227}
+      scale: {x: 1.0000004, y: 1.0000002, z: 1.0000001}
+    - name: Crusader_tank_LeftArm
+      parentName: Crusader_tank_LeftShoulder
+      position: {x: -0.11762771, y: -0.030249972, z: -0.07440398}
+      rotation: {x: 0.082482815, y: -0.07756388, z: -0.27829203, w: 0.9537998}
+      scale: {x: 1, y: 1.0000001, z: 1.0000001}
+    - name: Crusader_tank_LeftForeArm
+      parentName: Crusader_tank_LeftArm
+      position: {x: -0.1869343, y: -0.17074703, z: -0.007815752}
+      rotation: {x: 0.13818331, y: -0.17161475, z: 0.052199688, w: 0.97402716}
+      scale: {x: 1.0000001, y: 1.0000001, z: 1.0000001}
+    - name: Crusader_tank_LeftHand
+      parentName: Crusader_tank_LeftForeArm
+      position: {x: -0.20679276, y: -0.13042721, z: 0.11862266}
+      rotation: {x: -0.016341954, y: -0.01899679, z: -0.049375787, w: 0.99846596}
+      scale: {x: 1.0000002, y: 1.0000002, z: 1.0000004}
+    - name: Crusader_tank_LeftHandThumb1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.010280715, y: -0.016322225, z: 0.06471603}
+      rotation: {x: 0.02849605, y: -0.13616058, z: -0.025430435, w: 0.9899503}
+      scale: {x: 1, y: 1, z: 1.0000002}
+    - name: Crusader_tank_LeftHandThumb2
+      parentName: Crusader_tank_LeftHandThumb1
+      position: {x: 0.007640247, y: -0.004173177, z: 0.03090582}
+      rotation: {x: -0.09813265, y: 0.026988642, z: 0.027903907, w: 0.9944159}
+      scale: {x: 0.99999994, y: 0.99999994, z: 0.9999998}
+    - name: Crusader_tank_LeftHandThumb3
+      parentName: Crusader_tank_LeftHandThumb2
+      position: {x: 0.004436494, y: -0.011664912, z: 0.026884243}
+      rotation: {x: 0.00000004468299, y: -0.00000004468299, z: 0.000000089365976, w: 1}
+      scale: {x: 1.0000002, y: 1.0000004, z: 1.0000002}
+    - name: Crusader_tank_LeftHandThumb4
+      parentName: Crusader_tank_LeftHandThumb3
+      position: {x: 0.0032511454, y: -0.012985978, z: 0.02571551}
+      rotation: {x: -0.00000005585374, y: 0.000000022341498, z: -0.000000044682984, w: 1}
+      scale: {x: 1.0000001, y: 1.0000002, z: 1.0000004}
+    - name: Crusader_tank_LeftHandIndex1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.05716581, y: -0.0587732, z: 0.08358885}
+      rotation: {x: 0.027147023, y: -0.037443824, z: -0.020235071, w: 0.998725}
+      scale: {x: 1.0000004, y: 1.0000002, z: 1.0000002}
+    - name: Crusader_tank_LeftHandIndex2
+      parentName: Crusader_tank_LeftHandIndex1
+      position: {x: -0.013035051, y: -0.02141928, z: 0.022147562}
+      rotation: {x: 0.000000011170229, y: -0.000010617796, z: -0.0000000041891495, w: 1}
+      scale: {x: 1.0000002, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandIndex3
+      parentName: Crusader_tank_LeftHandIndex2
+      position: {x: -0.011348709, y: -0.020429993, z: 0.018901}
+      rotation: {x: -0.00000002234191, y: 0.00007973122, z: -0.000000011168964, w: 1}
+      scale: {x: 0.9999998, y: 1, z: 1.0000002}
+    - name: Crusader_tank_LeftHandIndex4
+      parentName: Crusader_tank_LeftHandIndex3
+      position: {x: -0.011338315, y: -0.022447111, z: 0.018351216}
+      rotation: {x: -0.000000011167847, y: -0.00026051304, z: 0.000000011156194, w: 1}
+      scale: {x: 0.99999875, y: 1.0000005, z: 0.99999875}
+    - name: Crusader_tank_LeftHandMiddle1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.06784421, y: -0.07972811, z: 0.056513388}
+      rotation: {x: -3.5527137e-15, y: -0.000000022341498, z: -0.000000012567091, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    - name: Crusader_tank_LeftHandMiddle2
+      parentName: Crusader_tank_LeftHandMiddle1
+      position: {x: -0.016712984, y: -0.02492147, z: 0.0136188185}
+      rotation: {x: -0.019834878, y: -0.016216762, z: -0.05401685, w: 0.9982113}
+      scale: {x: 1.0000002, y: 1.0000004, z: 1.0000002}
+    - name: Crusader_tank_LeftHandMiddle3
+      parentName: Crusader_tank_LeftHandMiddle2
+      position: {x: -0.0094982255, y: -0.02385964, z: 0.010650832}
+      rotation: {x: -0.00000003909762, y: -0.000000033512244, z: 0.000000055853743, w: 1}
+      scale: {x: 1.000001, y: 1.0000008, z: 1.0000005}
+    - name: Crusader_tank_LeftHandMiddle4
+      parentName: Crusader_tank_LeftHandMiddle3
+      position: {x: -0.009069435, y: -0.025892211, z: 0.012885316}
+      rotation: {x: 0.00000006702449, y: -0, z: 0.0000000111707505, w: 1}
+      scale: {x: 1.0000004, y: 1.0000005, z: 1.0000001}
+    - name: Crusader_tank_LeftHandRing1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.06997475, y: -0.092201866, z: 0.024910642}
+      rotation: {x: -0.088620216, y: 0.04259159, z: -0.04630086, w: 0.9940767}
+      scale: {x: 1.0000005, y: 1.0000002, z: 1.0000002}
+    - name: Crusader_tank_LeftHandRing2
+      parentName: Crusader_tank_LeftHandRing1
+      position: {x: -0.014566755, y: -0.025146054, z: 0.004749385}
+      rotation: {x: -0.015862564, y: -0.000690572, z: -0.052307785, w: 0.9985048}
+      scale: {x: 1.0000005, y: 1.0000004, z: 1.0000006}
+    - name: Crusader_tank_LeftHandRing3
+      parentName: Crusader_tank_LeftHandRing2
+      position: {x: -0.009441609, y: -0.026494164, z: 0.0032129465}
+      rotation: {x: -0.000000016756125, y: -3.5527137e-15, z: 3.853679e-16, w: 1}
+      scale: {x: 1.0000006, y: 1.000001, z: 1.0000004}
+    - name: Crusader_tank_LeftHandRing4
+      parentName: Crusader_tank_LeftHandRing3
+      position: {x: -0.007037057, y: -0.024989914, z: 0.0037577562}
+      rotation: {x: 1.7763568e-15, y: 0.000000022341498, z: 0.000000011170752, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 1.0000004}
+    - name: Crusader_tank_LeftHandPinky1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.06462893, y: -0.0967543, z: -0.00965383}
+      rotation: {x: -0.23242015, y: 0.12073505, z: -0.108689085, w: 0.95895284}
+      scale: {x: 1.0000001, y: 1, z: 1}
+    - name: Crusader_tank_LeftHandPinky2
+      parentName: Crusader_tank_LeftHandPinky1
+      position: {x: -0.009369807, y: -0.021442706, z: -0.0037828188}
+      rotation: {x: 0.016253779, y: 0.00916728, z: -0.092222765, w: 0.99556357}
+      scale: {x: 1.0000001, y: 1.0000002, z: 1}
+    - name: Crusader_tank_LeftHandPinky3
+      parentName: Crusader_tank_LeftHandPinky2
+      position: {x: -0.0032364218, y: -0.021517765, z: -0.0027093755}
+      rotation: {x: -0.000000033512247, y: -0.000000011170746, z: -0.0000000055853735, w: 1}
+      scale: {x: 1.0000006, y: 1.0000005, z: 1}
+    - name: Crusader_tank_LeftHandPinky4
+      parentName: Crusader_tank_LeftHandPinky3
+      position: {x: -0.0028743695, y: -0.019102167, z: -0.0020044595}
+      rotation: {x: 0.000000011170748, y: 0.000000011170745, z: -0.000000016756122, w: 1}
+      scale: {x: 1.0000005, y: 1.0000006, z: 1.0000001}
+    - name: shield1
+      parentName: Crusader_tank_LeftHand
+      position: {x: -0.019439278, y: 0.055206656, z: -0.033979155}
+      rotation: {x: 0.000000011170747, y: -0.000000022341498, z: -0.00000002792687, w: 1}
+      scale: {x: 1.0000005, y: 1, z: 1.0000006}
+    - name: shield2
+      parentName: shield1
+      position: {x: -0.0022388652, y: -0.4114142, z: -0.0065849386}
+      rotation: {x: -0, y: -0, z: 2.4957122e-16, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    - name: shield3
+      parentName: shield1
+      position: {x: -0.0026588652, y: 0.30996877, z: -0.009452938}
+      rotation: {x: -0, y: -0, z: 2.4957122e-16, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    - name: Crusader_tank_LeftArm_shoulder1
+      parentName: Crusader_tank_LeftArm
+      position: {x: -0.054658026, y: 0.04217945, z: 0.005408476}
+      rotation: {x: -0.008087787, y: -0.05993511, z: 0.43116713, w: 0.9002429}
+      scale: {x: 1.0000001, y: 1.0000025, z: 1}
+    - name: Crusader_tank_LeftArm_shoulder2
+      parentName: Crusader_tank_LeftArm_shoulder1
+      position: {x: -0.09791454, y: 0, z: -3.5527136e-17}
+      rotation: {x: -0.11322145, y: -0.010727499, z: -0.43193677, w: 0.8947047}
+      scale: {x: 1.0000026, y: 1, z: 0.99999857}
+    - name: Crusader_tank_RightShoulder
+      parentName: Crusader_tank_Spine2
+      position: {x: 0.12774566, y: 0.073968224, z: -0.03149327}
+      rotation: {x: 0.0000000012463534, y: -0.12919563, z: 0.052526217, w: 0.99022704}
+      scale: {x: 1.0000004, y: 1.0000002, z: 1.0000001}
+    - name: Crusader_tank_RightArm
+      parentName: Crusader_tank_RightShoulder
+      position: {x: 0.117627695, y: -0.030249912, z: -0.07440399}
+      rotation: {x: 0.0824829, y: 0.077563964, z: 0.27829245, w: 0.9537996}
+      scale: {x: 1.0000002, y: 1.0000002, z: 1.0000002}
+    - name: Crusader_tank_RightForeArm
+      parentName: Crusader_tank_RightArm
+      position: {x: 0.18693458, y: -0.17074741, z: -0.007815718}
+      rotation: {x: 0.13818368, y: 0.17161497, z: -0.052200135, w: 0.9740271}
+      scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    - name: Crusader_tank_RightHand
+      parentName: Crusader_tank_RightForeArm
+      position: {x: 0.20679246, y: -0.13042687, z: 0.11862271}
+      rotation: {x: -0.016341917, y: 0.01899679, z: 0.04937563, w: 0.9984659}
+      scale: {x: 1.0000001, y: 1, z: 1}
+    - name: Crusader_tank_RightHandThumb1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.010280729, y: -0.01632231, z: 0.064716004}
+      rotation: {x: 0.028497249, y: 0.1361617, z: 0.025430597, w: 0.9899502}
+      scale: {x: 1, y: 0.9999998, z: 1.0000001}
+    - name: Crusader_tank_RightHandThumb2
+      parentName: Crusader_tank_RightHandThumb1
+      position: {x: -0.0076402426, y: -0.0041731927, z: 0.030905852}
+      rotation: {x: -0.09813585, y: -0.026987573, z: -0.027904324, w: 0.9944156}
+      scale: {x: 1, y: 1.0000001, z: 0.99999994}
+    - name: Crusader_tank_RightHandThumb3
+      parentName: Crusader_tank_RightHandThumb2
+      position: {x: -0.0044364966, y: -0.011664884, z: 0.026884193}
+      rotation: {x: 0.000000022341496, y: 0.0000000027926887, z: -0.000000008378061, w: 1}
+      scale: {x: 1.0000002, y: 1.0000004, z: 1.0000005}
+    - name: Crusader_tank_RightHandThumb4
+      parentName: Crusader_tank_RightHandThumb3
+      position: {x: -0.0032511668, y: -0.012985963, z: 0.02571552}
+      rotation: {x: -0.000000022341496, y: 0.0000000027926887, z: 0.0000000055853753, w: 1}
+      scale: {x: 1.0000002, y: 1.0000001, z: 1.0000002}
+    - name: Crusader_tank_RightHandIndex1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.057165813, y: -0.058773283, z: 0.08358881}
+      rotation: {x: 0.027147675, y: 0.037444547, z: 0.020235544, w: 0.9987249}
+      scale: {x: 1, y: 1.0000004, z: 1.0000005}
+    - name: Crusader_tank_RightHandIndex2
+      parentName: Crusader_tank_RightHandIndex1
+      position: {x: 0.013035017, y: -0.021419289, z: 0.022147574}
+      rotation: {x: 2.6822988e-13, y: -0.0000106226835, z: 0.0000000027922091, w: 1}
+      scale: {x: 1.0000006, y: 1.0000002, z: 1.0000002}
+    - name: Crusader_tank_RightHandIndex3
+      parentName: Crusader_tank_RightHandIndex2
+      position: {x: 0.011349495, y: -0.020430002, z: 0.018900534}
+      rotation: {x: 0.000000033508428, y: 0.0000797417, z: 0.000000008378956, w: 1}
+      scale: {x: 0.9999997, y: 0.99999994, z: 0.99999994}
+    - name: Crusader_tank_RightHandIndex4
+      parentName: Crusader_tank_RightHandIndex3
+      position: {x: 0.011330878, y: -0.022447126, z: 0.01835578}
+      rotation: {x: 1.4725998e-11, y: -0.00026050746, z: -0.000000044677183, w: 1}
+      scale: {x: 0.99999875, y: 1, z: 0.99999887}
+    - name: Crusader_tank_RightHandMiddle1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.06784427, y: -0.07972821, z: 0.05651329}
+      rotation: {x: 0.00000003071956, y: -0.000000050268365, z: -0.0000000048872044, w: 1}
+      scale: {x: 1, y: 1.0000004, z: 1.0000002}
+    - name: Crusader_tank_RightHandMiddle2
+      parentName: Crusader_tank_RightHandMiddle1
+      position: {x: 0.016712898, y: -0.024921507, z: 0.013618844}
+      rotation: {x: -0.019837417, y: 0.016207898, z: 0.05402364, w: 0.998211}
+      scale: {x: 1.0000001, y: 1, z: 0.99999994}
+    - name: Crusader_tank_RightHandMiddle3
+      parentName: Crusader_tank_RightHandMiddle2
+      position: {x: 0.00949845, y: -0.0238596, z: 0.010650603}
+      rotation: {x: -0.000000022340643, y: 0.00007974938, z: -0.000000018150685, w: 1}
+      scale: {x: 0.9999998, y: 1, z: 1}
+    - name: Crusader_tank_RightHandMiddle4
+      parentName: Crusader_tank_RightHandMiddle3
+      position: {x: 0.009066837, y: -0.025892174, z: 0.012887101}
+      rotation: {x: 0.000000022367157, y: -0.0002605354, z: -5.8152324e-12, w: 1}
+      scale: {x: 0.9999991, y: 1.0000001, z: 0.99999934}
+    - name: Crusader_tank_RightHandRing1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.06997472, y: -0.09220186, z: 0.02491053}
+      rotation: {x: -0.0886196, y: -0.042590797, z: 0.04630132, w: 0.9940769}
+      scale: {x: 0.99999994, y: 1.0000002, z: 1.0000002}
+    - name: Crusader_tank_RightHandRing2
+      parentName: Crusader_tank_RightHandRing1
+      position: {x: 0.014566799, y: -0.025146047, z: 0.0047493866}
+      rotation: {x: -0.015862713, y: 0.0006795598, z: 0.052308332, w: 0.9985048}
+      scale: {x: 1.0000005, y: 1.0000004, z: 1.0000005}
+    - name: Crusader_tank_RightHandRing3
+      parentName: Crusader_tank_RightHandRing2
+      position: {x: 0.009441672, y: -0.026494183, z: 0.0032127297}
+      rotation: {x: -0.00000006702858, y: 0.00007972005, z: 0.0000000111689715, w: 1}
+      scale: {x: 1.0000004, y: 1.0000004, z: 1}
+    - name: Crusader_tank_RightHandRing4
+      parentName: Crusader_tank_RightHandRing3
+      position: {x: 0.007036282, y: -0.024989855, z: 0.0037591578}
+      rotation: {x: 0.000000022351351, y: -0.0002604907, z: -0.000000055859577, w: 1}
+      scale: {x: 0.9999983, y: 1.0000005, z: 0.99999875}
+    - name: Crusader_tank_RightHandPinky1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.064628966, y: -0.09675433, z: -0.009653924}
+      rotation: {x: -0.2324184, y: -0.12073426, z: 0.108687855, w: 0.95895356}
+      scale: {x: 1.0000001, y: 1.0000006, z: 1.0000004}
+    - name: Crusader_tank_RightHandPinky2
+      parentName: Crusader_tank_RightHandPinky1
+      position: {x: 0.009369831, y: -0.021442689, z: -0.003782839}
+      rotation: {x: 0.016253583, y: -0.009177792, z: 0.092219844, w: 0.9955637}
+      scale: {x: 1.0000004, y: 1.0000004, z: 1.0000001}
+    - name: Crusader_tank_RightHandPinky3
+      parentName: Crusader_tank_RightHandPinky2
+      position: {x: 0.0032363327, y: -0.021517782, z: -0.0027094623}
+      rotation: {x: -0.000000008380585, y: 0.00007975914, z: 0.00000005009316, w: 1}
+      scale: {x: 1.0000002, y: 1.0000002, z: 1.0000002}
+    - name: Crusader_tank_RightHandPinky4
+      parentName: Crusader_tank_RightHandPinky3
+      position: {x: 0.0028747825, y: -0.01910217, z: -0.0020038858}
+      rotation: {x: 0.0000000027888953, y: -0.00026050187, z: -0.00000001151911, w: 1}
+      scale: {x: 0.9999983, y: 1.0000002, z: 0.99999875}
+    - name: stick_of_a_club1
+      parentName: Crusader_tank_RightHand
+      position: {x: 0.020271838, y: -0.08870323, z: -0.021303482}
+      rotation: {x: 0.000000019548809, y: -0.000000008378059, z: 0.000000034210416, w: 1}
+      scale: {x: 1.0000001, y: 1.0000002, z: 1.0000006}
+    - name: chain1
+      parentName: stick_of_a_club1
+      position: {x: 0.0032907506, y: -0.22996879, z: -0.00066639617}
+      rotation: {x: -0.000000011170749, y: -0.000000019548807, z: -0.0000000108216645, w: 1}
+      scale: {x: 1.0000001, y: 1, z: 1}
+    - name: chain2
+      parentName: chain1
+      position: {x: 0.00015994174, y: -0.03986903, z: 0.0013213404}
+      rotation: {x: -0, y: -0, z: -2.1837481e-16, w: 1}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: chain3
+      parentName: chain2
+      position: {x: -0.00025642326, y: -0.03721646, z: -0.001179716}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: chain4
+      parentName: chain3
+      position: {x: -0.0019593944, y: -0.03688799, z: 0.0018546182}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: chain5
+      parentName: chain4
+      position: {x: 0.0017804713, y: -0.036801357, z: -0.0013538074}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: chain6
+      parentName: chain5
+      position: {x: -0.001969957, y: -0.03909606, z: 0.0003140208}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: chain7
+      parentName: chain6
+      position: {x: 0.0025950286, y: -0.037678115, z: 0.00033813535}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: chain8
+      parentName: chain7
+      position: {x: -0.003949404, y: -0.0379591, z: 0.0038966713}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: chain9
+      parentName: chain8
+      position: {x: -0.00086501543, y: -0.03656703, z: -0.00046146841}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1.0000001}
+    - name: chain10
+      parentName: chain9
+      position: {x: -0.0003869809, y: -0.03783611, z: 0.0013946617}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain11
+      parentName: chain10
+      position: {x: 0.0005840714, y: -0.03851652, z: -0.0010024802}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: chain12
+      parentName: chain11
+      position: {x: -0.0038353342, y: -0.035718992, z: 0.0059750546}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: ball_on_a_club1
+      parentName: chain12
+      position: {x: 0.0035039978, y: -0.037856426, z: -0.00054466084}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: ball_on_a_club2
+      parentName: ball_on_a_club1
+      position: {x: -0.0016560426, y: -0.09335903, z: -0.0032512422}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: ball_on_a_club3
+      parentName: ball_on_a_club2
+      position: {x: -0.00028432053, y: -0.09705453, z: -0.0004530097}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_rightArm_shoulder2_1
+      parentName: Crusader_tank_RightArm
+      position: {x: 0.054657996, y: 0.042180866, z: 0.005408089}
+      rotation: {x: 0.9002429, y: -0.4311671, z: -0.059935138, w: 0.008087784}
+      scale: {x: 1.0000002, y: 1.0000024, z: 1.0000042}
+    - name: Crusader_tank_rightArm_shoulder2_2
+      parentName: Crusader_tank_rightArm_shoulder2_1
+      position: {x: 0.097916566, y: 0.0000022595668, z: -0.00000035194776}
+      rotation: {x: -0.113221474, y: -0.010727465, z: -0.43193677, w: 0.8947047}
+      scale: {x: 1, y: 1.0000007, z: 1.0000067}
+    - name: Crusader_tank_Neck
+      parentName: Crusader_tank_Spine2
+      position: {x: -0.000000033162717, y: 0.18208452, z: -0.03769897}
+      rotation: {x: 0.0000000055853744, y: 0.000000002792687, z: -0.0000000034908585, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Head
+      parentName: Crusader_tank_Neck
+      position: {x: 3.8547593e-10, y: 0.22869846, z: 0.011916037}
+      rotation: {x: -0, y: 0.000000005585374, z: -0.0000000019199724, w: 1}
+      scale: {x: 1.0000001, y: 1.0000001, z: 1.0000001}
+    - name: hip_flap_left1
+      parentName: Crusader_tank_Spine
+      position: {x: -0.18709484, y: -0.024710946, z: -0.004903755}
+      rotation: {x: 0.031374395, y: 0.026201949, z: 0.633532, w: 0.772636}
+      scale: {x: 1, y: 1, z: 0.99999845}
+    - name: hip_flap_left2
+      parentName: hip_flap_left1
+      position: {x: -0.24127696, y: -5.684342e-16, z: 0}
+      rotation: {x: 0.060591817, y: 0.03640782, z: -0.6305201, w: 0.7729473}
+      scale: {x: 1.0000015, y: 0.99999696, z: 1.0000006}
+    - name: hip_flap_right1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.18709499, y: -0.024708683, z: -0.00490376}
+      rotation: {x: -0.00023787422, y: 0.0002901095, z: 0.77327156, w: 0.634075}
+      scale: {x: 1.0000092, y: 1.0000082, z: 0.9999985}
+    - name: hip_flap_right2
+      parentName: hip_flap_right1
+      position: {x: -0.241279, y: 2.842171e-16, z: 0}
+      rotation: {x: 0.63052154, y: -0.7729462, z: 0.060591873, w: 0.036407705}
+      scale: {x: 1.0000002, y: 1.0000193, z: 1.000019}
+    - name: bag_back1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.09243032, y: 0.086509086, z: -0.16264758}
+      rotation: {x: 0.25317216, y: 0.49567133, z: 0.5847678, w: 0.59013593}
+      scale: {x: 1.0000006, y: 1.0000001, z: 1}
+    - name: bag_back2
+      parentName: bag_back1
+      position: {x: -0.06636588, y: 5.3290704e-17, z: 0}
+      rotation: {x: -0, y: -0, z: -0, w: 1}
+      scale: {x: 1.000004, y: 1.0000004, z: 1.0000005}
+    - name: bag_right1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.16683227, y: 0.09135488, z: -0.09852652}
+      rotation: {x: 0.18563253, y: 0.22148159, z: 0.70861423, w: 0.6437021}
+      scale: {x: 1.0000055, y: 1.0000001, z: 0.99999964}
+    - name: bag_right2
+      parentName: bag_right1
+      position: {x: -0.085250236, y: 3.5527136e-17, z: 3.5527136e-17}
+      rotation: {x: -0, y: -0, z: -0.0000000074505797, w: 1}
+      scale: {x: 1.0000001, y: 1.0000002, z: 1.0000001}
+    - name: bag_front1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.15801725, y: 0.1292043, z: 0.08564507}
+      rotation: {x: -0.30262944, y: -0.17015924, z: 0.61283654, w: 0.709854}
+      scale: {x: 1.0000012, y: 1.0000032, z: 1}
+    - name: bag_front2
+      parentName: bag_front1
+      position: {x: -0.0686622, y: -2.6645352e-17, z: 7.105427e-17}
+      rotation: {x: 0.47373378, y: -0.4737337, z: 0.5249537, w: 0.52495366}
+      scale: {x: 1.0000116, y: 1.0000094, z: 1.000006}
+    - name: toga_mid_front3_4
+      parentName: Crusader_tank_Spine
+      position: {x: -0.010610109, y: -0.055828683, z: 0.117153}
+      rotation: {x: -0.05670079, y: 0.00655245, z: 0.70232606, w: 0.7095634}
+      scale: {x: 1.0000001, y: 0.9999968, z: 1}
+    - name: toga_mid_front3_5
+      parentName: toga_mid_front3_4
+      position: {x: -0.17358181, y: -0.000000023094344, z: 0.0000003533117}
+      rotation: {x: 0.03275414, y: -0.027413514, z: 0.009225026, w: 0.9990449}
+      scale: {x: 1.0000091, y: 1.0000057, z: 1}
+    - name: toga_mid_front3_6
+      parentName: toga_mid_front3_5
+      position: {x: -0.22619285, y: 0.0000000100160396, z: -0.00000037260492}
+      rotation: {x: 0.00000004097819, y: 0.00000002235174, z: -4.0745357e-10, w: 1}
+      scale: {x: 1.0000031, y: 1.0000001, z: 1}
+    - name: toga_left_front1_1
+      parentName: Crusader_tank_Spine
+      position: {x: -0.113510996, y: -0.055828683, z: 0.117153}
+      rotation: {x: -0.69600296, y: 0.7159964, z: -0.006812006, w: -0.053690296}
+      scale: {x: 1.0000001, y: 0.9999985, z: 1.0000033}
+    - name: toga_left_front1_2
+      parentName: toga_left_front1_1
+      position: {x: 0.17358181, y: 0.000000023094344, z: -0.0000003533117}
+      rotation: {x: 0.032754146, y: -0.027413543, z: 0.009224892, w: 0.99904484}
+      scale: {x: 1.0000061, y: 1.0000049, z: 1.0000083}
+    - name: toga_left_front1_3
+      parentName: toga_left_front1_2
+      position: {x: 0.22619285, y: -0.000000010016041, z: 0.00000037260492}
+      rotation: {x: -0, y: -0, z: -4.656613e-10, w: 1}
+      scale: {x: 1.0000031, y: 1.000003, z: 1.0000068}
+    - name: toga_right_front1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.113510996, y: -0.055828683, z: 0.11715343}
+      rotation: {x: -0.053690284, y: 0.0068120225, z: 0.7159963, w: 0.6960031}
+      scale: {x: 1.000006, y: 1.0000052, z: 1}
+    - name: toga_right_front2
+      parentName: toga_right_front1
+      position: {x: -0.1735818, y: 0, z: 3.5527136e-17}
+      rotation: {x: 0.032754138, y: -0.027413547, z: 0.00922519, w: 0.99904484}
+      scale: {x: 1.0000029, y: 1.0000064, z: 1.0000043}
+    - name: toga_right_front3
+      parentName: toga_right_front2
+      position: {x: -0.22619323, y: -3.5527136e-17, z: -2.1316282e-16}
+      rotation: {x: -0.000000007450581, y: 0.000000031664968, z: 2.910383e-10, w: 1}
+      scale: {x: 1.0000029, y: 1.0000058, z: 1.0000019}
+    - name: toga_right_back1
+      parentName: Crusader_tank_Spine
+      position: {x: 0.113510996, y: -0.055828683, z: -0.133157}
+      rotation: {x: 0.71474534, y: -0.69795346, z: 0.011306185, w: -0.04326986}
+      scale: {x: 1.0000005, y: 1.0000072, z: 1.0000085}
+    - name: toga_right_back2
+      parentName: toga_right_back1
+      position: {x: 0.17310266, y: 0.00000029336303, z: 0.00000015492836}
+      rotation: {x: -0.03842195, y: 0.0054448983, z: 0.0058512986, w: 0.99922967}
+      scale: {x: 1.0000061, y: 1.0000026, z: 1.0000108}
+    - name: toga_right_back3
+      parentName: toga_right_back2
+      position: {x: 0.22616656, y: -0.00000007375469, z: -0.0000005409444}
+      rotation: {x: 0.028529666, y: 0.05161319, z: -0.70061, w: 0.71110326}
+      scale: {x: 1.0000018, y: 1.0000141, z: 1.0000175}
+    - name: toga_mid_back1
+      parentName: Crusader_tank_Spine
+      position: {x: -0.0055274866, y: -0.055828683, z: -0.133157}
+      rotation: {x: 0.026008667, y: -0.0055404715, z: 0.698023, w: 0.71558136}
+      scale: {x: 0.9999999, y: 0.9999984, z: 1}
+    - name: toga_mid_back2
+      parentName: toga_mid_back1
+      position: {x: -0.17291518, y: -0.0073383627, z: 0.0005635061}
+      rotation: {x: 0.0006545019, y: 0.0060656033, z: 0.009073504, w: 0.9999402}
+      scale: {x: 1.0000005, y: 0.9999981, z: 1.000003}
+    - name: toga_mid_back3
+      parentName: toga_mid_back2
+      position: {x: -0.22609363, y: -0.0054599703, z: 0.0000005409444}
+      rotation: {x: 0.028529618, y: 0.05161315, z: -0.70061004, w: 0.7111032}
+      scale: {x: 1.0000002, y: 0.99999684, z: 0.9999998}
+    - name: toga_left_back1
+      parentName: Crusader_tank_Spine
+      position: {x: -0.11351055, y: -0.055827517, z: -0.13315707}
+      rotation: {x: 0.043269876, y: 0.011306201, z: 0.6979535, w: 0.7147453}
+      scale: {x: 1.0000005, y: 1.0000062, z: 0.99999976}
+    - name: toga_left_back2
+      parentName: toga_left_back1
+      position: {x: -0.1731037, y: -8.8817837e-17, z: -3.5527136e-17}
+      rotation: {x: -0.03842196, y: 0.005444903, z: 0.005851345, w: 0.99922967}
+      scale: {x: 1.0000085, y: 1.000006, z: 0.9999999}
+    - name: toga_left_back3
+      parentName: toga_left_back2
+      position: {x: -0.22616704, y: -1.065814e-15, z: 1.2434498e-15}
+      rotation: {x: 0.028529644, y: 0.051613178, z: -0.7006101, w: 0.7111032}
+      scale: {x: 0.99999875, y: 1, z: 0.99999934}
+    - name: Crusader_tank_Ctrl_Reference
+      parentName: crusadershield@walk(Clone)
+      position: {x: -0, y: 0.023140034, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_HipsEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0, y: 0.94446826, z: 0}
+      rotation: {x: 2.2686158e-16, y: 0.08764205, z: -2.433339e-16, w: 0.99615204}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftAnkleEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.10446594, y: 0.04851722, z: 0.11432876}
+      rotation: {x: -0.0006363692, y: 0.100000225, z: -0.010740678, w: 0.99492925}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightAnkleEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.11944595, y: 0.07927772, z: -0.2592246}
+      rotation: {x: 0.024475459, y: 0.054321066, z: 0.018468969, w: 0.99805266}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftWristEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.42625332, y: 1.0262221, z: -0.12439217}
+      rotation: {x: -0.041340582, y: -0.2693182, z: 0.31045306, w: 0.9107017}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightWristEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.3314005, y: 0.99984074, z: 0.08016709}
+      rotation: {x: 0.0075818184, y: -0.10221327, z: -0.35247532, w: 0.93019146}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftKneeEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.09367789, y: 0.50813967, z: 0.15218388}
+      rotation: {x: -0.0482191, y: 0.08164138, z: 0.06409721, w: 0.993429}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightKneeEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.1289139, y: 0.48949182, z: -0.048424907}
+      rotation: {x: 0.13602096, y: 0.08946964, z: -0.047558423, w: 0.9855109}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftElbowEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.29893374, y: 1.2635043, z: -0.16090046}
+      rotation: {x: 0.11651525, y: -0.10646593, z: 0.25131056, w: 0.95495147}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightElbowEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.2888261, y: 1.2268932, z: -0.06294266}
+      rotation: {x: 0.007582126, y: -0.10221102, z: -0.35247478, w: 0.93019193}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_ChestOriginEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.000044884015, y: 1.0771682, z: -0.0000019975305}
+      rotation: {x: 0.0053285896, y: 0.06094869, z: -0.00524529, w: 0.9981129}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_ChestEndEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.013372087, y: 1.5165385, z: -0.019661365}
+      rotation: {x: 0.0266261, y: -0.04288297, z: -0.022827564, w: 0.99846435}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftFootEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.10594845, y: -0.02197254, z: 0.27316114}
+      rotation: {x: -0.00063636916, y: 0.10000022, z: -0.010740678, w: 0.99492925}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightFootEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.17020202, y: 0.0023292112, z: -0.11191034}
+      rotation: {x: 0.02681752, y: 0.054364234, z: 0.01834143, w: 0.99799246}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftShoulderEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.22609204, y: 1.5018444, z: -0.11564504}
+      rotation: {x: 0.08896588, y: 0.0018357071, z: 0.26779833, w: 0.95935696}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightShoulderEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.26242152, y: 1.4785178, z: -0.07511314}
+      rotation: {x: 0.0076056947, y: -0.1022006, z: -0.3524816, w: 0.93019027}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_HeadEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.019376451, y: 1.8523064, z: 0.0055095362}
+      rotation: {x: 0.029439561, y: 0.10910594, z: 0.023796145, w: 0.9933091}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHipEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.10837168, y: 0.94446826, z: 0.019217972}
+      rotation: {x: -0.1635287, y: 0.058314208, z: 0.061326563, w: 0.9829023}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHipEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.10837168, y: 0.94446826, z: -0.01921797}
+      rotation: {x: 0.005968767, y: 0.09792349, z: -0.02476071, w: 0.994868}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandThumbEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.27438143, y: 0.9699749, z: 0.15977938}
+      rotation: {x: 0.28121358, y: 0.18184632, z: 0.24555893, w: 0.90969867}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandIndexEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.28308937, y: 0.9828928, z: 0.12239954}
+      rotation: {x: 0.14938821, y: 0.5871572, z: 0.785323, w: -0.12726878}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandMiddleEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.2912957, y: 0.9584899, z: 0.09848814}
+      rotation: {x: 0.08171099, y: 0.43153816, z: 0.8862491, w: -0.14717548}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandRingEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.29454333, y: 0.94664955, z: 0.071150675}
+      rotation: {x: 0.078583404, y: 0.15538663, z: 0.9730806, w: -0.15097623}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandPinkyEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: -0.2946976, y: 0.92992413, z: 0.034601588}
+      rotation: {x: 0.09555367, y: -0.050664682, z: 0.9826597, w: 0.15060717}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandThumbEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.34383726, y: 0.99510735, z: 0.19304596}
+      rotation: {x: 0.29011157, y: 0.015297667, z: -0.017208595, w: 0.9567158}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandIndexEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.34932223, y: 1.0296491, z: 0.14866856}
+      rotation: {x: -0.118914664, y: 0.6088675, z: 0.7617406, w: 0.18679097}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandMiddleEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.35702637, y: 1.0031639, z: 0.12925002}
+      rotation: {x: -0.052968718, y: 0.46055135, z: 0.8589314, w: 0.21754003}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandRingEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.35774565, y: 0.9894, z: 0.1062519}
+      rotation: {x: -0.057396498, y: 0.19738315, z: 0.9566634, w: 0.20625375}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandPinkyEffector
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 0.3487681, y: 0.97370774, z: 0.07343941}
+      rotation: {x: -0.05590471, y: 0.011086742, z: 0.98500663, w: -0.1628303}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_Hips
+      parentName: Crusader_tank_Ctrl_Reference
+      position: {x: 1.5088787e-17, y: 1.0071683, z: 1.2648454e-17}
+      rotation: {x: 2.0740113e-16, y: 0.08764205, z: -2.2143708e-17, w: 0.99615204}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftUpLeg
+      parentName: Crusader_tank_Ctrl_Hips
+      position: {x: -0.110062495, y: -0.062699966, z: 0}
+      rotation: {x: -0.16827422, y: -0.02805376, z: 0.046758592, w: 0.9842309}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftLeg
+      parentName: Crusader_tank_Ctrl_LeftUpLeg
+      position: {x: -0.047706097, y: -0.4535546, z: -0.017041137}
+      rotation: {x: 0.11632849, y: 0.014789856, z: 0.0126165645, w: 0.99302053}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftFoot
+      parentName: Crusader_tank_Ctrl_LeftLeg
+      position: {x: -0.059096143, y: -0.44901854, z: -0.087701894}
+      rotation: {x: 0.054629024, y: 0.01867441, z: -0.06967233, w: 0.99589795}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftToeBase
+      parentName: Crusader_tank_Ctrl_LeftFoot
+      position: {x: -0.03154026, y: -0.0710472, z: 0.15542251}
+      rotation: {x: 2.2365468e-32, y: -0, z: -1.2246467e-16, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightUpLeg
+      parentName: Crusader_tank_Ctrl_Hips
+      position: {x: 0.110062495, y: -0.062699966, z: 0}
+      rotation: {x: 0.00811588, y: 0.010354404, z: -0.024142317, w: 0.999622}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightLeg
+      parentName: Crusader_tank_Ctrl_RightUpLeg
+      position: {x: 0.047706097, y: -0.4535546, z: -0.017041137}
+      rotation: {x: 0.13188237, y: -0.0044100694, z: -0.010126779, w: 0.99120384}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightFoot
+      parentName: Crusader_tank_Ctrl_RightLeg
+      position: {x: 0.059096143, y: -0.44901854, z: -0.087701894}
+      rotation: {x: -0.11587107, y: -0.03208523, z: 0.060468182, w: 0.99090266}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightToeBase
+      parentName: Crusader_tank_Ctrl_RightFoot
+      position: {x: 0.03154026, y: -0.0710472, z: 0.15542251}
+      rotation: {x: 0.002346695, y: -0.000000023452529, z: -0.000000014331497, w: 0.99999726}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_Spine
+      parentName: Crusader_tank_Ctrl_Hips
+      position: {x: -0, y: 0.07, z: 0}
+      rotation: {x: 0.005745965, y: -0.025845094, z: -0.004595007, w: 0.9996389}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_Spine1
+      parentName: Crusader_tank_Ctrl_Spine
+      position: {x: -0, y: 0.18208106, z: 0}
+      rotation: {x: 0.011480684, y: -0.05180773, z: -0.008390678, w: 0.99855584}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_Spine2
+      parentName: Crusader_tank_Ctrl_Spine1
+      position: {x: -0, y: 0.18208115, z: 0}
+      rotation: {x: 0.011480677, y: -0.051969033, z: -0.0073260884, w: 0.99855584}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftShoulder
+      parentName: Crusader_tank_Ctrl_Spine2
+      position: {x: -0.1277456, y: 0.0739682, z: -0.031493258}
+      rotation: {x: 9.7144515e-17, y: 9.4370575e-33, z: 9.7144515e-17, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftArm
+      parentName: Crusader_tank_Ctrl_LeftShoulder
+      position: {x: -0.1176274, y: -0.030249938, z: -0.07440383}
+      rotation: {x: 0.07449079, y: 0.051236913, z: 0.28537795, w: 0.95414114}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftForeArm
+      parentName: Crusader_tank_Ctrl_LeftArm
+      position: {x: -0.18693447, y: -0.17074707, z: -0.00781579}
+      rotation: {x: -0.00215112, y: -0.11273635, z: -0.004952169, w: 0.99361026}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHand
+      parentName: Crusader_tank_Ctrl_LeftForeArm
+      position: {x: -0.2067926, y: -0.13042702, z: 0.11862262}
+      rotation: {x: -0.18021871, y: -0.11366525, z: 0.10337972, w: 0.97155243}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandThumb1
+      parentName: Crusader_tank_Ctrl_LeftHand
+      position: {x: -0.010280724, y: -0.01632225, z: 0.064716004}
+      rotation: {x: 0.3006312, y: -0.0023729864, z: -0.04020332, w: 0.9528898}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandThumb2
+      parentName: Crusader_tank_Ctrl_LeftHandThumb1
+      position: {x: 0.007640228, y: -0.0041732024, z: 0.030905843}
+      rotation: {x: 0.00010336787, y: 0.001481277, z: 0.0006257163, w: 0.99999875}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandThumb3
+      parentName: Crusader_tank_Ctrl_LeftHandThumb2
+      position: {x: 0.004436493, y: -0.011664886, z: 0.026884202}
+      rotation: {x: 0.000090570145, y: 0.0014404985, z: 0.000716002, w: 0.99999875}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandThumb4
+      parentName: Crusader_tank_Ctrl_LeftHandThumb3
+      position: {x: 0.0032511519, y: -0.012985992, z: 0.025715522}
+      rotation: {x: 0.00000006858918, y: -1.9412657e-15, z: -0.00000002817634, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandIndex1
+      parentName: Crusader_tank_Ctrl_LeftHand
+      position: {x: -0.057165794, y: -0.058773194, z: 0.08358884}
+      rotation: {x: 0.12011367, y: 0.21400265, z: 0.37321076, w: 0.8947007}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandIndex2
+      parentName: Crusader_tank_Ctrl_LeftHandIndex1
+      position: {x: -0.013035049, y: -0.021419296, z: 0.02214755}
+      rotation: {x: 0.13578959, y: 0.24444024, z: 0.345753, w: 0.8956925}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandIndex3
+      parentName: Crusader_tank_Ctrl_LeftHandIndex2
+      position: {x: -0.011349105, y: -0.020429993, z: 0.018900756}
+      rotation: {x: 0.118163966, y: 0.23401222, z: 0.35918123, w: 0.89569217}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandIndex4
+      parentName: Crusader_tank_Ctrl_LeftHandIndex3
+      position: {x: -0.01133461, y: -0.022447128, z: 0.01835353}
+      rotation: {x: -0.000000055965494, y: -1.5361579e-15, z: 0.00000003067192, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandMiddle1
+      parentName: Crusader_tank_Ctrl_LeftHand
+      position: {x: -0.0678442, y: -0.07972809, z: 0.056513365}
+      rotation: {x: 0.045143183, y: 0.19149478, z: 0.40077105, w: 0.8948041}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandMiddle2
+      parentName: Crusader_tank_Ctrl_LeftHandMiddle1
+      position: {x: -0.01671295, y: -0.024921494, z: 0.013618817}
+      rotation: {x: 0.063005656, y: 0.15827087, z: 0.41074023, w: 0.895697}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandMiddle3
+      parentName: Crusader_tank_Ctrl_LeftHandMiddle2
+      position: {x: -0.009498214, y: -0.023859633, z: 0.010650835}
+      rotation: {x: 0.062491838, y: 0.17840663, z: 0.40248358, w: 0.8956969}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandMiddle4
+      parentName: Crusader_tank_Ctrl_LeftHandMiddle3
+      position: {x: -0.009069443, y: -0.025892181, z: 0.012885265}
+      rotation: {x: 0.00000008363418, y: 0.00000004181709, z: -3.6499937e-15, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandRing1
+      parentName: Crusader_tank_Ctrl_LeftHand
+      position: {x: -0.069974706, y: -0.092201844, z: 0.02491062}
+      rotation: {x: 0.0064174267, y: 0.070002586, z: 0.43984166, w: 0.89531994}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandRing2
+      parentName: Crusader_tank_Ctrl_LeftHandRing1
+      position: {x: -0.014566802, y: -0.025146026, z: 0.0047493814}
+      rotation: {x: 0.016951267, y: 0.047567103, z: 0.44205543, w: 0.8955652}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandRing3
+      parentName: Crusader_tank_Ctrl_LeftHandRing2
+      position: {x: -0.009441605, y: -0.026494216, z: 0.003212943}
+      rotation: {x: 0.017275732, y: 0.06134957, z: 0.44034183, w: 0.89556515}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandRing4
+      parentName: Crusader_tank_Ctrl_LeftHandRing3
+      position: {x: -0.007037048, y: -0.024989853, z: 0.0037577343}
+      rotation: {x: 1.3070745e-32, y: 5.89806e-17, z: -2.2161092e-16, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandPinky1
+      parentName: Crusader_tank_Ctrl_LeftHand
+      position: {x: -0.064628944, y: -0.0967543, z: -0.009653831}
+      rotation: {x: -0.009539257, y: -0.030452264, z: 0.35668135, w: 0.93368095}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandPinky2
+      parentName: Crusader_tank_Ctrl_LeftHandPinky1
+      position: {x: -0.009369812, y: -0.021442719, z: -0.0037828314}
+      rotation: {x: -0.006577559, y: -0.043732315, z: 0.35517645, w: 0.93375266}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandPinky3
+      parentName: Crusader_tank_Ctrl_LeftHandPinky2
+      position: {x: -0.003236389, y: -0.02151779, z: -0.0027093922}
+      rotation: {x: -0.0054968405, y: -0.036530174, z: 0.3560076, w: 0.93375266}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_LeftHandPinky4
+      parentName: Crusader_tank_Ctrl_LeftHandPinky3
+      position: {x: -0.0028743744, y: -0.019102173, z: -0.0020044683}
+      rotation: {x: -2.7755576e-17, y: -1.1622647e-16, z: 1.06902334e-16, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightShoulder
+      parentName: Crusader_tank_Ctrl_Spine2
+      position: {x: 0.1277456, y: 0.0739682, z: -0.031493258}
+      rotation: {x: 9.7144515e-17, y: -9.4370575e-33, z: -9.7144515e-17, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightArm
+      parentName: Crusader_tank_Ctrl_RightShoulder
+      position: {x: 0.1176274, y: -0.030249938, z: -0.07440383}
+      rotation: {x: -0.029640209, y: -0.07222526, z: -0.32845396, w: 0.94128793}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightForeArm
+      parentName: Crusader_tank_Ctrl_RightArm
+      position: {x: 0.18693447, y: -0.17074707, z: -0.00781579}
+      rotation: {x: -0.000017565664, y: -0.000017772381, z: 0.00000941947, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHand
+      parentName: Crusader_tank_Ctrl_RightForeArm
+      position: {x: 0.2067926, y: -0.13042702, z: 0.11862262}
+      rotation: {x: 0.0000004525071, y: -0.0000022654986, z: -0.0000006233064, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandThumb1
+      parentName: Crusader_tank_Ctrl_RightHand
+      position: {x: 0.010280724, y: -0.01632225, z: 0.064716004}
+      rotation: {x: 0.3415216, y: -0.113986276, z: -0.026083136, w: 0.93257165}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandThumb2
+      parentName: Crusader_tank_Ctrl_RightHandThumb1
+      position: {x: -0.007640228, y: -0.0041732024, z: 0.030905843}
+      rotation: {x: -0.009086976, y: 0.13036035, z: 0.05506312, w: 0.9898948}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandThumb3
+      parentName: Crusader_tank_Ctrl_RightHandThumb2
+      position: {x: -0.004436493, y: -0.011664886, z: 0.026884202}
+      rotation: {x: 0.020605892, y: 0.21240304, z: 0.11000233, w: 0.97075224}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandThumb4
+      parentName: Crusader_tank_Ctrl_RightHandThumb3
+      position: {x: -0.0032511519, y: -0.012985992, z: 0.025715522}
+      rotation: {x: 0.00000016820732, y: -0.0000001112936, z: -0.00000014761558, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandIndex1
+      parentName: Crusader_tank_Ctrl_RightHand
+      position: {x: 0.057165794, y: -0.058773194, z: 0.08358884}
+      rotation: {x: 0.15341009, y: -0.2986105, z: -0.5378412, w: 0.7733201}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandIndex2
+      parentName: Crusader_tank_Ctrl_RightHandIndex1
+      position: {x: 0.013035049, y: -0.021419296, z: 0.02214755}
+      rotation: {x: 0.12285656, y: -0.22115849, z: -0.31282216, w: 0.9154985}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandIndex3
+      parentName: Crusader_tank_Ctrl_RightHandIndex2
+      position: {x: 0.011349105, y: -0.020429993, z: 0.018900756}
+      rotation: {x: 0.09200813, y: -0.2062439, z: -0.31972903, w: 0.92020184}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandIndex4
+      parentName: Crusader_tank_Ctrl_RightHandIndex3
+      position: {x: 0.01133461, y: -0.022447128, z: 0.01835353}
+      rotation: {x: -0.00000031437716, y: -0.00000010163181, z: 0.000000050693696, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandMiddle1
+      parentName: Crusader_tank_Ctrl_RightHand
+      position: {x: 0.0678442, y: -0.07972809, z: 0.056513365}
+      rotation: {x: 0.06027407, y: -0.25291204, z: -0.5862546, w: 0.7672732}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandMiddle2
+      parentName: Crusader_tank_Ctrl_RightHandMiddle1
+      position: {x: 0.01671295, y: -0.024921494, z: 0.013618817}
+      rotation: {x: 0.055974085, y: -0.14060766, z: -0.36490074, w: 0.91866416}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandMiddle3
+      parentName: Crusader_tank_Ctrl_RightHandMiddle2
+      position: {x: 0.009498214, y: -0.023859633, z: 0.010650835}
+      rotation: {x: 0.0478477, y: -0.15736121, z: -0.35923943, w: 0.91863763}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandMiddle4
+      parentName: Crusader_tank_Ctrl_RightHandMiddle3
+      position: {x: 0.009069443, y: -0.025892181, z: 0.012885265}
+      rotation: {x: -0.00000033159878, y: 0.00000015574815, z: 0.00000012983213, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandRing1
+      parentName: Crusader_tank_Ctrl_RightHand
+      position: {x: 0.069974706, y: -0.092201844, z: 0.02491062}
+      rotation: {x: 0.01449802, y: -0.104234226, z: -0.6418829, w: 0.7595468}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandRing2
+      parentName: Crusader_tank_Ctrl_RightHandRing1
+      position: {x: 0.014566802, y: -0.025146026, z: 0.0047493814}
+      rotation: {x: 0.014518311, y: -0.04073991, z: -0.37860847, w: 0.92454594}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandRing3
+      parentName: Crusader_tank_Ctrl_RightHandRing2
+      position: {x: 0.009441605, y: -0.026494216, z: 0.003212943}
+      rotation: {x: 0.0060716104, y: -0.049822126, z: -0.3738256, w: 0.92614}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandRing4
+      parentName: Crusader_tank_Ctrl_RightHandRing3
+      position: {x: 0.007037048, y: -0.024989853, z: 0.0037577343}
+      rotation: {x: -2.7755576e-17, y: 3.469447e-17, z: 0.000000015109622, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandPinky1
+      parentName: Crusader_tank_Ctrl_RightHand
+      position: {x: 0.064628944, y: -0.0967543, z: -0.009653831}
+      rotation: {x: -0.0023736288, y: 0.05323639, z: -0.6837231, w: 0.7277933}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandPinky2
+      parentName: Crusader_tank_Ctrl_RightHandPinky1
+      position: {x: 0.009369812, y: -0.021442719, z: -0.0037828314}
+      rotation: {x: -0.0028276865, y: 0.018800076, z: -0.15268636, w: 0.9880918}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandPinky3
+      parentName: Crusader_tank_Ctrl_RightHandPinky2
+      position: {x: 0.003236389, y: -0.02151779, z: -0.0027093922}
+      rotation: {x: 0.012361727, y: 0.014953559, z: -0.20880327, w: 0.9777652}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_RightHandPinky4
+      parentName: Crusader_tank_Ctrl_RightHandPinky3
+      position: {x: 0.0028743744, y: -0.019102173, z: -0.0020044683}
+      rotation: {x: 0.000000017791344, y: 0.0000000026771285, z: -0.000000023647758, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_Neck
+      parentName: Crusader_tank_Ctrl_Spine2
+      position: {x: -0, y: 0.18208098, z: -0.03769832}
+      rotation: {x: 0.0022344708, y: 0.07623277, z: 0.020975824, w: 0.9968669}
+      scale: {x: 1, y: 1, z: 1}
+    - name: Crusader_tank_Ctrl_Head
+      parentName: Crusader_tank_Ctrl_Neck
+      position: {x: -0, y: 0.22869675, z: 0.011915945}
+      rotation: {x: -0.00076048647, y: 0.07623422, z: 0.021080155, w: 0.9968668}
+      scale: {x: 1, y: 1, z: 1}
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 1
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 1
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 0
+  importBlendShapeDeformPercent: 0
+  remapMaterialsIfMaterialImportModeIsNone: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
