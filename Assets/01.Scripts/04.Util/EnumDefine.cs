@@ -1,6 +1,7 @@
 ﻿#region Unit Enum
 public enum UnitState
 {
+    // 공통 또는 Player 상태
     Idle,
     Move,
     Sprint,
@@ -12,6 +13,15 @@ public enum UnitState
     Riposte,
     GetHit,
     Die,
+
+    // 에너미 공통 확장 상태
+    Chase,      // 플레이어 추격
+    Return,     // 활동 반경 이탈 시 스폰 지점 복귀
+
+    // 크리처 전용 특화 상태
+    Crawl,      // 포복 이동 순찰
+    Alert,      // 발소리 감지 기상 및 수색
+    Roar        // 발견 표효 및 동료 호출
 }
 
 public enum UnitId
@@ -20,7 +30,7 @@ public enum UnitId
     Player,
 
     // 11번부터 각 Enemy의 고유 명사
-    Enemy = 11,
+    NightmareCreature = 11,
 
     // 101번부터 BossEnemy의 고유 명사
     Dragon = 101,
@@ -72,8 +82,32 @@ public enum AnimParamType
 
 public enum AnimStateType
 {
+    // 플레이어 및 공통
     Idle,
     Move,
-    Stun
+    Stun,
+
+    // Enemy 공통
+    BattleIdle,
+    Walk,
+    Run,
+    Hit1,
+    Hit2,
+    Death1,
+    Death2,
+
+    // 공격 패턴
+    Attack1,
+    Attack2,
+    Attack3,
+    Bite,
+    PowerAttack,
+
+    // 크리처 전용 특수 상태
+    Crawl,
+    CrawlIdle,
+    CrawlToState,
+    StateToCrawl,
+    Roar
 }
 #endregion
