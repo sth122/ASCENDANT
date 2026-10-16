@@ -55,9 +55,12 @@ public class PlayerAttackState : PlayerActionState
             owner.transform.rotation = UnityEngine.Quaternion.LookRotation(owner.CurrentMoveDirection);
         }
 
+        // 4. Root Motion 활성화 (클립의 전진 변위가 Rigidbody를 직접 추진하도록 권한 부여)
+        _animController.SetRootMotion(true);
+
         EnableAttackEvent();
 
-        // 4. 1타 실행
+        // 5. 1타 실행
         ExecuteAttackStep();
     }
 
@@ -99,7 +102,7 @@ public class PlayerAttackState : PlayerActionState
 
         float normalizedTime = stateInfo.normalizedTime;
 
-        // 4. [콤보 연계 판정] 3타 미만이고 아직 다음 타수로 승급하지 않았을 때
+        // 4. 콤보 연계 판정 3타 미만이고 아직 다음 타수로 승급하지 않았을 때
         if (_comboStep < MaxComboStep && !_hasAdvancedThisStep)
         {
             // 80% 진행 시점에 도달했을 때, 미리 예약된 입력이 있거나 실시간 버퍼 입력이 있다면 승급
@@ -125,6 +128,8 @@ public class PlayerAttackState : PlayerActionState
     {
         base.Exit();
 
+        // 공격이 종료되면 Root Motion을 회수하여 일반 이동 제어권 복원
+        _animController.SetRootMotion(false);
         _animController.WeaponHitbox?.CloseHitBox();
         DisableAttackEvent();
 

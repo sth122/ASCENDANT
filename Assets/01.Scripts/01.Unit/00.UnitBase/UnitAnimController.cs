@@ -3,18 +3,12 @@
 /// <summary>
 /// Unit 애니메이션 제어 추상 컴포넌트
 /// </summary>
-public class UnitAnimController : MonoBehaviour, IAnimationCombatEvent
+public class UnitAnimController : MonoBehaviour
 {
     [field: SerializeField] protected Animator _animator;
     [field: SerializeField] protected AnimationDataSO _animData;
 
     public Animator AnimatorInstance => _animator;
-
-    public event System.Action OnComboWindowOpenEvent;
-    public event System.Action OnComboWindowCloseEvent;
-    public event System.Action OnHitboxOpenEvent;
-    public event System.Action OnHitboxCloseEvent;
-    public event System.Action OnActionCompletedEvent;
 
     protected virtual void Awake()
     {
@@ -92,13 +86,5 @@ public class UnitAnimController : MonoBehaviour, IAnimationCombatEvent
             _animator.CrossFadeInFixedTime(hash, duration);
         }
     }
-    #endregion
-
-    #region MyRegion
-    public void Anim_OnComboWindowOpen() => OnComboWindowOpenEvent?.Invoke();
-    public void Anim_OnComboWindowClose() => OnComboWindowCloseEvent?.Invoke();
-    public void Anim_OnHitboxOpen() => OnHitboxOpenEvent?.Invoke();
-    public void Anim_OnHitboxClose() => OnHitboxCloseEvent?.Invoke();
-    public void Anim_OnActionCompleted() => OnActionCompletedEvent?.Invoke();
     #endregion
 }
