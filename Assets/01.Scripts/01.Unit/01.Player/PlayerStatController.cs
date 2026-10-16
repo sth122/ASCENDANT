@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using Util = DebugLogger<PlayerStatController>;
 
 /// <summary>
 /// Player 전용 확장 스탯 컴포넌트
@@ -33,6 +34,10 @@ public class PlayerStatController : UnitStatController
             _currentHp = _maxHp;
             _maxStamina = playerStat.CalculateMaxStamina();
             _currentStamina = _maxStamina;
+        }
+        else
+        {
+            Util.LogWarning($"{gameObject.name}: 전달된 스탯이 PlayerStat과 일치하지 않음");
         }
         StaminaRegenLoopAsync(_cts.Token).Forget();
     }

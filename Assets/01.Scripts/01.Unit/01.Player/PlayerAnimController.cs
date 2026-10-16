@@ -1,8 +1,6 @@
-﻿using UnityEngine;
-
-public class PlayerAnimController : UnitAnimController, IAnimationCombatEvent
+﻿public class PlayerAnimController : UnitAnimController, IAnimationCombatEvent
 {
-    [SerializeField] private WeaponSweepHitbox _weaponHitbox;
+    [UnityEngine.SerializeField] private WeaponSweepHitbox _weaponHitbox;
     public WeaponSweepHitbox WeaponHitbox => _weaponHitbox;
     public event System.Action OnComboWindowOpenEvent;
     public event System.Action OnComboWindowCloseEvent;
