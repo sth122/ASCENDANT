@@ -32,7 +32,7 @@ public class UnitBaseStat
     }
 }
 
-
+#region PlayerStat
 /// <summary>
 /// Player 전용 확장 스탯 클래스
 /// Player 조작에 필요한 기동력 ( 달리기, 회전, 점프, 구르기 ) 및
@@ -83,7 +83,7 @@ public class PlayerStat : UnitBaseStat
     /// </summary>
     public void ConsumeSouls(int amount)
     {
-        if (amount <= 0 || CurrentSouls < amount)  return;
+        if (amount <= 0 || CurrentSouls < amount) return;
         CurrentSouls -= amount;
     }
 
@@ -115,6 +115,9 @@ public class PlayerStat : UnitBaseStat
     }
 }
 
+#endregion
+
+#region Boss
 /// <summary>
 /// UnitBaseStat을 상속받아 추후 구현하게 될 보스 전용 스탯 클래스
 /// </summary>
@@ -123,3 +126,70 @@ public class BossGimmickStat : UnitBaseStat
 {
 
 }
+#endregion
+
+#region EnemyStat
+
+/// <summary>
+/// 일반 및 정예 에너미 전용 확장 기본 스탯 데이터 클래스
+/// </summary>
+[System.Serializable]
+public class EnemyStat : UnitBaseStat
+{
+    #region 전투 스탯 (Combat)
+    [field: Header("Enemy Combat Stats")]
+    [field: SerializeField] public float AttackPower { get; protected set; }
+    [field: SerializeField] public float BasePoiseDamage { get; protected set; }
+    [field: SerializeField] public float AttackRange { get; protected set; }
+    [field: SerializeField] public float AttackCooldown { get; protected set; }
+    #endregion
+
+    #region 기동 및 활동 영역 스탯 (Locomotion & Leash)
+    [field: Header("Enemy Locomotion & Leash Stats")]
+    [field: SerializeField] public float ChaseSpeed { get; protected set; }
+    [field: SerializeField] public float PatrolSpeed { get; protected set; }
+    [field: SerializeField] public float MaxLeashDistance { get; protected set; }
+    #endregion
+
+    #region 지각 센서 스탯 (Perception Sensors)
+    [field: Header("Enemy Perception Sensor Stats")]
+    [field: SerializeField] public float SightRadius { get; protected set; }
+    [field: Range(0f, 360f)]
+    [field: SerializeField] public float SightAngle { get; protected set; }
+    [field: SerializeField] public float HearingRadius { get; protected set; }
+    #endregion
+
+    /// <summary>
+    /// 원본 ScriptableObject 데이터 보호를 위한 깊은 복사(Deep Copy) 메서드
+    /// 런타임 상태에서 버프/디버프 등에 의해 스탯이 변조되어도 원본 에셋이 유지되도록 처리
+    /// </summary>
+    public override UnitBaseStat Clone()
+    {
+        EnemyStat clonedStat = new EnemyStat();
+
+        // 1. UnitBaseStat 공통 수치 복제
+        clonedStat.MaxHp = this.MaxHp;
+        clonedStat.Poise = this.Poise;
+        clonedStat.DropSouls = this.DropSouls;
+        clonedStat.WalkSpeed = this.WalkSpeed;
+
+        // 2. Enemy 전투 수치 복제
+        clonedStat.AttackPower = this.AttackPower;
+        clonedStat.BasePoiseDamage = this.BasePoiseDamage;
+        clonedStat.AttackRange = this.AttackRange;
+        clonedStat.AttackCooldown = this.AttackCooldown;
+
+        // 3. Enemy 기동 및 리쉬 수치 복제
+        clonedStat.ChaseSpeed = this.ChaseSpeed;
+        clonedStat.PatrolSpeed = this.PatrolSpeed;
+        clonedStat.MaxLeashDistance = this.MaxLeashDistance;
+
+        // 4. Enemy 지각 센서 수치 복제
+        clonedStat.SightRadius = this.SightRadius;
+        clonedStat.SightAngle = this.SightAngle;
+        clonedStat.HearingRadius = this.HearingRadius;
+
+        return clonedStat;
+    }
+}
+#endregion

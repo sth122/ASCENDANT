@@ -6,9 +6,6 @@ public class PlayerAnimController : UnitAnimController, IAnimationCombatEvent
     public WeaponSweepHitbox WeaponHitbox => _weaponHitbox;
     public event System.Action OnComboWindowOpenEvent;
     public event System.Action OnComboWindowCloseEvent;
-    public event System.Action OnHitboxOpenEvent;
-    public event System.Action OnHitboxCloseEvent;
-    public event System.Action OnActionCompletedEvent;
     protected override void Awake()
     {
         base.Awake();
@@ -16,11 +13,8 @@ public class PlayerAnimController : UnitAnimController, IAnimationCombatEvent
             _weaponHitbox = GetComponentInChildren<WeaponSweepHitbox>();
     }
 
-    #region MyRegion
+    #region IAnimationCombatEvent 구현부
     public void Anim_OnComboWindowOpen() => OnComboWindowOpenEvent?.Invoke();
     public void Anim_OnComboWindowClose() => OnComboWindowCloseEvent?.Invoke();
-    public void Anim_OnHitboxOpen() => OnHitboxOpenEvent?.Invoke();
-    public void Anim_OnHitboxClose() => OnHitboxCloseEvent?.Invoke();
-    public void Anim_OnActionCompleted() => OnActionCompletedEvent?.Invoke();
     #endregion
 }

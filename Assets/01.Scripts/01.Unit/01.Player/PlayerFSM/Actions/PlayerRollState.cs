@@ -56,17 +56,6 @@ public class PlayerRollState : PlayerActionState
         ExecuteRollAsync(token).Forget();
     }
 
-    public override void FixedUpdate()
-    {
-        base.FixedUpdate();
-
-        //_rollTimer += UnityEngine.Time.fixedDeltaTime;
-        //float normalizedTime = UnityEngine.Mathf.Clamp01(_rollTimer / RollTotalDuration);
-
-        //// 물리 엔진으로 직접 전진 속도를 부드럽게 주입
-        //owner.ApplyRollAPI(_rollDirection, _rollSpeed, normalizedTime);
-    }
-
     public override void Exit()
     {
         base.Exit();

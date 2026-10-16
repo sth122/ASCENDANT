@@ -3,10 +3,14 @@
 /// <summary>
 /// Unit 애니메이션 제어 추상 컴포넌트
 /// </summary>
-public class UnitAnimController : MonoBehaviour
+public class UnitAnimController : MonoBehaviour, IAnimationHitBoxEvent, IAnimationActionEvent
 {
     [field: SerializeField] protected Animator _animator;
     [field: SerializeField] protected AnimationDataSO _animData;
+
+    public event System.Action OnHitboxOpenEvent;
+    public event System.Action OnHitboxCloseEvent;
+    public event System.Action OnActionCompletedEvent;
 
     public Animator AnimatorInstance => _animator;
 
@@ -24,10 +28,10 @@ public class UnitAnimController : MonoBehaviour
         SetRootMotion(false);
     }
 
-    #region MyRegion
+    #region Animator 공통 사용 구현부
     /// <summary>
     /// 애니메이터의 Root Motion 활성화/비활성화 전환
-    /// 구르기, 공격 등 액션 모션 실행 시 true로 전환하여 애니메이션 궤적을 물리 엔진에 적용
+    /// 애니메이션 궤적을 물리 엔진에 적용
     /// </summary>
     public void SetRootMotion(bool isEnabled) => _animator.applyRootMotion = isEnabled;
 
@@ -86,5 +90,11 @@ public class UnitAnimController : MonoBehaviour
             _animator.CrossFadeInFixedTime(hash, duration);
         }
     }
+    #endregion
+
+    #region 공통 IAnimationHitBoxEvent, IAnimationActionEvent 구현부
+    public void Anim_OnHitboxOpen() => OnHitboxOpenEvent?.Invoke();
+    public void Anim_OnHitboxClose() => OnHitboxCloseEvent?.Invoke();
+    public void Anim_OnActionCompleted() => OnActionCompletedEvent?.Invoke();
     #endregion
 }
