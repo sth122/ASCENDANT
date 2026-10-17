@@ -131,7 +131,7 @@ public class BossGimmickStat : UnitBaseStat
 #region EnemyStat
 
 /// <summary>
-/// 일반 및 정예 에너미 전용 확장 기본 스탯 데이터 클래스
+/// 일반 Enemy 전용 확장 기본 스탯 데이터 클래스
 /// </summary>
 [System.Serializable]
 public class EnemyStat : UnitBaseStat
@@ -148,6 +148,7 @@ public class EnemyStat : UnitBaseStat
     [field: Header("Enemy Locomotion & Leash Stats")]
     [field: SerializeField] public float ChaseSpeed { get; protected set; }
     [field: SerializeField] public float PatrolSpeed { get; protected set; }
+    [field: Tooltip("최대 추적 범위")]
     [field: SerializeField] public float MaxLeashDistance { get; protected set; }
     #endregion
 
