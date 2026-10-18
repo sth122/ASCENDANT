@@ -5,31 +5,14 @@
 /// 공통적인 스탯만 가지고 있고, 플레이어 및 특수 유닛에 종속적이 스탯은 하위 클래스에서 구현
 /// </summary>
 [System.Serializable]
-public class UnitBaseStat
+public abstract class UnitBaseStat
 {
-    [Header("Life & defense")]
+    [field: Header("Unit Base Common Stats")]
     [field: SerializeField] public float MaxHp { get; protected set; }
     [field: SerializeField] public float Poise { get; protected set; }
-
-    [Header("Drop Rewards")]
-    [field: SerializeField] public int DropSouls { get; protected set; }
-
-    [Header("Basic Movement Physics")]
     [field: SerializeField] public float WalkSpeed { get; protected set; }
 
-    /// <summary>
-    /// 원본 SO 훼손을 막기 위한 복제 메서드
-    /// </summary>
-    public virtual UnitBaseStat Clone()
-    {
-        return new UnitBaseStat
-        {
-            MaxHp = this.MaxHp,
-            Poise = this.Poise,
-            DropSouls = this.DropSouls,
-            WalkSpeed = this.WalkSpeed,
-        };
-    }
+    public abstract UnitBaseStat Clone();
 }
 
 #region PlayerStat
@@ -42,10 +25,10 @@ public class UnitBaseStat
 public class PlayerStat : UnitBaseStat
 {
     [field: Header("Player Movement Physics")]
-    [field: SerializeField] public float SprintSpeed { get; protected set; }
-    [field: SerializeField] public float RotationSpeed { get; protected set; }
-    [field: SerializeField] public float JumpForce { get; protected set; }
-    [field: SerializeField] public float RollForce { get; protected set; }
+    [field: SerializeField] public float SprintSpeed { get; private set; }
+    [field: SerializeField] public float RotationSpeed { get; private set; }
+    [field: SerializeField] public float JumpForce { get; private set; }
+    [field: SerializeField] public float RollForce { get; private set; }
 
     [field: Header("Level & Souls")]
     [field: SerializeField] public int SoulLevel { get; private set; }
@@ -97,7 +80,6 @@ public class PlayerStat : UnitBaseStat
             // 부모 필드 복사
             MaxHp = this.MaxHp,
             Poise = this.Poise,
-            DropSouls = this.DropSouls,
             WalkSpeed = this.WalkSpeed,
 
             // 플레이어 고유 필드 복사
@@ -124,7 +106,10 @@ public class PlayerStat : UnitBaseStat
 [System.Serializable]
 public class BossGimmickStat : UnitBaseStat
 {
-
+    public override UnitBaseStat Clone()
+    {
+        return new BossGimmickStat { };
+    }
 }
 #endregion
 
@@ -136,6 +121,11 @@ public class BossGimmickStat : UnitBaseStat
 [System.Serializable]
 public class EnemyStat : UnitBaseStat
 {
+    #region 처치 보상
+    [field: Header("Enemy Reward Stats")]
+    [field: SerializeField] public int DropSouls { get; protected set; }
+    #endregion
+
     #region 전투 스탯 (Combat)
     [field: Header("Enemy Combat Stats")]
     [field: SerializeField] public float AttackPower { get; protected set; }
@@ -166,31 +156,32 @@ public class EnemyStat : UnitBaseStat
     /// </summary>
     public override UnitBaseStat Clone()
     {
-        EnemyStat clonedStat = new EnemyStat();
+        return new EnemyStat
+        {
+            // 1. UnitBaseStat 공통 수치 복제
+            MaxHp = this.MaxHp,
+            Poise = this.Poise,
+            WalkSpeed = this.WalkSpeed,
 
-        // 1. UnitBaseStat 공통 수치 복제
-        clonedStat.MaxHp = this.MaxHp;
-        clonedStat.Poise = this.Poise;
-        clonedStat.DropSouls = this.DropSouls;
-        clonedStat.WalkSpeed = this.WalkSpeed;
+            // 2. Enemy 처치 보상 수치 복제
+            DropSouls = this.DropSouls,
 
-        // 2. Enemy 전투 수치 복제
-        clonedStat.AttackPower = this.AttackPower;
-        clonedStat.BasePoiseDamage = this.BasePoiseDamage;
-        clonedStat.AttackRange = this.AttackRange;
-        clonedStat.AttackCooldown = this.AttackCooldown;
+            // 3. Enemy 전투 수치 복제
+            AttackPower = this.AttackPower,
+            BasePoiseDamage = this.BasePoiseDamage,
+            AttackRange = this.AttackRange,
+            AttackCooldown = this.AttackCooldown,
 
-        // 3. Enemy 기동 및 리쉬 수치 복제
-        clonedStat.ChaseSpeed = this.ChaseSpeed;
-        clonedStat.PatrolSpeed = this.PatrolSpeed;
-        clonedStat.MaxLeashDistance = this.MaxLeashDistance;
+            // 4. Enemy 기동 및 리쉬 수치 복제
+            ChaseSpeed = this.ChaseSpeed,
+            PatrolSpeed = this.PatrolSpeed,
+            MaxLeashDistance = this.MaxLeashDistance,
 
-        // 4. Enemy 지각 센서 수치 복제
-        clonedStat.SightRadius = this.SightRadius;
-        clonedStat.SightAngle = this.SightAngle;
-        clonedStat.HearingRadius = this.HearingRadius;
-
-        return clonedStat;
+            // 5. Enemy 지각 센서 수치 복제
+            SightRadius = this.SightRadius,
+            SightAngle = this.SightAngle,
+            HearingRadius = this.HearingRadius
+        };
     }
 }
 #endregion

@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-public class PlayerSprintState : PlayerMoveState
+﻿public class PlayerSprintState : PlayerGroundState
 {
     // 기획 밸런스 수치
     private const float SprintStaminaCostPerSec = 16.0f; // 초당 스태미나 소모량
@@ -22,11 +20,18 @@ public class PlayerSprintState : PlayerMoveState
 
         UpdateSprintLocomotionAnimation();
     }
+    public override void Update()
+    {
+        base.Update();
+        UpdateSprintLocomotionAnimation();
+    }
 
     public override void FixedUpdate()
     {
+        base.FixedUpdate();
+
         // 1. 이동 입력 방향 확인
-        Vector3 moveDir = owner.CurrentMoveDirection;
+        UnityEngine.Vector3 moveDir = owner.CurrentMoveDirection;
         if (moveDir.sqrMagnitude <= 0.001f)
         {
             owner.StopMovementAPI();
@@ -35,7 +40,7 @@ public class PlayerSprintState : PlayerMoveState
         }
 
         // 2. 실시간 스태미나 지속 차감
-        float staminaCost = SprintStaminaCostPerSec * Time.fixedDeltaTime;
+        float staminaCost = SprintStaminaCostPerSec * UnityEngine.Time.fixedDeltaTime;
         if (_playerStatController != null)
         {
             if (!_playerStatController.HasEnoughStamina(staminaCost))
@@ -48,26 +53,17 @@ public class PlayerSprintState : PlayerMoveState
             _playerStatController.ConsumeStamina(staminaCost);
         }
 
-        // 3. 스프린트 물리 이동 실행
-        float sprintSpeed = _playerStatController != null
-            ? _playerStatController.MotionStats.SprintSpeed.Value
-            : 8.5f;
+        // 3. 스프린트 물리 이동 실행 - 움직이지 않으면 해당 부분 문제인거 체크
+        float sprintSpeed = _playerStatController != null && _playerStatController.PlayerMotionStats != null
+            ? _playerStatController.PlayerMotionStats.SprintSpeed.Value            : 0f;
 
         owner.MoveAPI(moveDir, sprintSpeed);
 
         // 4. 회전 제어 (락온 중이라도 전력 질주 시에는 이동 진행 방향을 바라보며 뜀)
-        owner.RotateTowardsAPI(moveDir, owner.GetPlayerStat().RotationSpeed, Time.fixedDeltaTime);
-
-        // 5. 애니메이션 블렌딩 수치 갱신
-        UpdateSprintLocomotionAnimation();
+        owner.RotateTowardsAPI(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
     }
 
-    public override void Exit()
-    {
-        base.Exit();
-    }
-
-    protected override void HandleMoveInputChanged(Vector2 moveInput)
+    protected override void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)
     {
         if (moveInput.sqrMagnitude <= 0.01f)
         {
@@ -86,9 +82,9 @@ public class PlayerSprintState : PlayerMoveState
 
     private void UpdateSprintLocomotionAnimation()
     {
-        _animController.SetBool(AnimParamType.IsLockOn, false);
-        _animController.SetFloat(AnimParamType.MoveX, 0f);
+        _playerAnimController.SetBool(AnimParamType.IsLockOn, false);
+        _playerAnimController.SetFloat(AnimParamType.MoveX, 0f);
         // 달리기 상태에서는 MoveZ 블렌드 트리를 전력 질주(1.0f) 수치로 고정
-        _animController.SetFloat(AnimParamType.MoveZ, 1.0f);
+        _playerAnimController.SetFloat(AnimParamType.MoveZ, 1.0f);
     }
 }

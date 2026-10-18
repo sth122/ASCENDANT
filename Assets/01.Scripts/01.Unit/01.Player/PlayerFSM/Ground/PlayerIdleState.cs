@@ -13,8 +13,8 @@ public class PlayerIdleState : PlayerGroundState
         // 이전 상태 잔여 관성 정지
         owner.StopMovementAPI();
 
-        _animController.SetFloat(AnimParamType.MoveX, 0f);
-        _animController.SetFloat(AnimParamType.MoveZ, 0f);
+        _playerAnimController.SetFloat(AnimParamType.MoveX, 0f);
+        _playerAnimController.SetFloat(AnimParamType.MoveZ, 0f);
     }
 
     protected override void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)

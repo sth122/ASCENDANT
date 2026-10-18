@@ -13,4 +13,43 @@ MonoBehaviour:
   m_Name: CreatureAnimSO
   m_EditorClassIdentifier: Assembly-CSharp::AnimationDataSO
   _parameters: []
-  _states: []
+  _states:
+  - StateType: 15
+    StateName: crawl
+    CrossFadeDuration: 0
+  - StateType: 16
+    StateName: crawl_idle
+    CrossFadeDuration: 0
+  - StateType: 17
+    StateName: crawl_to_state
+    CrossFadeDuration: 0.15
+  - StateType: 18
+    StateName: state_to_crawl
+    CrossFadeDuration: 0.15
+  - StateType: 3
+    StateName: Battle Idle
+    CrossFadeDuration: 0.15
+  - StateType: 4
+    StateName: walk
+    CrossFadeDuration: 0.15
+  - StateType: 5
+    StateName: run
+    CrossFadeDuration: 0.15
+  - StateType: 19
+    StateName: roar
+    CrossFadeDuration: 0.15
+  - StateType: 10
+    StateName: attack1
+    CrossFadeDuration: 0.15
+  - StateType: 11
+    StateName: attack2
+    CrossFadeDuration: 0.15
+  - StateType: 12
+    StateName: attack3
+    CrossFadeDuration: 0.15
+  - StateType: 6
+    StateName: hit1
+    CrossFadeDuration: 0.15
+  - StateType: 8
+    StateName: death1
+    CrossFadeDuration: 0.15

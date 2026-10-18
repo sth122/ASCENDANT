@@ -12,6 +12,6 @@
         owner.InputReader.DisablePlayerInput();
 
         // Any State -> death 트리거 발동
-        _animController.SetTrigger(AnimParamType.Die);
+        _playerAnimController.SetTrigger(AnimParamType.Die);
     }
 }

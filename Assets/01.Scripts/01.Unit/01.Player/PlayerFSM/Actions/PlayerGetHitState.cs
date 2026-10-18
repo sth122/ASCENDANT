@@ -15,7 +15,7 @@ public class PlayerGetHitState : PlayerActionState
         CanRotate = false;
         owner.StopMovementAPI();
 
-        _animController.SetTrigger(AnimParamType.GetHit);
+        _playerAnimController.SetTrigger(AnimParamType.GetHit);
 
         ResetToken();
         _hitCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(owner.destroyCancellationToken);

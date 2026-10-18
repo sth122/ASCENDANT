@@ -7,7 +7,7 @@ public class PlayerJumpState : PlayerBaseState
 {  
     private const float JumpStaminaCost = 12.0f;
     private const float AirControlFactor = 0.4f;    // 공중 이동 제어 감쇠율
-    private const float JumpCooldown = 0.15f;       // 도약 직후 즉시 찾지 판정도니는 것 방지
+    private const float JumpCooldown = 0.15f;       // 도약 직후 즉시 착지 판정되는 것 방지
     private float _tiemInAir = 0f;
 
     public PlayerJumpState(PlayerController owner, PlayerStateMachine stateMachine)
@@ -22,10 +22,13 @@ public class PlayerJumpState : PlayerBaseState
 
         // 1. 스태미나 차감
         _playerStatController?.ConsumeStamina(JumpStaminaCost);
-        _animController.SetTrigger(AnimParamType.Jump);
+        _playerAnimController.SetTrigger(AnimParamType.Jump);
 
-        // 2. JumpForce 반영
-        owner.ApplyJumpAPI(_playerStatController.MotionStats.JumpForce.Value);
+        // 2. JumpForce 반영  - 점프하지 않으면 해당 부분 문제인거 체크
+        float jumpForce = _playerStatController != null && _playerStatController.PlayerMotionStats != null ?
+            _playerStatController.PlayerMotionStats.JumpForce.Value : 0.0f;
+
+        owner.ApplyJumpAPI(jumpForce);
     }
 
     public override void Update()

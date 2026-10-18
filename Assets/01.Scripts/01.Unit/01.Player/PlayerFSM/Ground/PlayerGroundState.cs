@@ -9,22 +9,14 @@ public class PlayerGroundState : PlayerBaseState
     {
         base.Enter();
         // 상태 입장 시 커맨드 이벤트 구독
-        owner.InputReader.OnCommandInputEvent -= HandleCommandInput;
-        owner.InputReader.OnMoveInputChanged -= HandleMoveInputChanged;
-        owner.InputReader.OnSprintChanged -= HandleSprintChanged;
-
-        owner.InputReader.OnCommandInputEvent += HandleCommandInput;
-        owner.InputReader.OnMoveInputChanged += HandleMoveInputChanged;
-        owner.InputReader.OnSprintChanged += HandleSprintChanged;
+        SubscribeEvent();
     }
 
     public override void Exit()
     {
         base.Exit();
         // 상태 탈출 시 커맨드 이벤트 구독 해제
-        owner.InputReader.OnCommandInputEvent -= HandleCommandInput;
-        owner.InputReader.OnMoveInputChanged -= HandleMoveInputChanged;
-        owner.InputReader.OnSprintChanged -= HandleSprintChanged;
+        UnsubscribeEvent();
     }
 
     /// <summary>
@@ -73,4 +65,18 @@ public class PlayerGroundState : PlayerBaseState
 
     protected virtual void HandleMoveInputChanged(UnityEngine.Vector2 moveInput) { }
     protected virtual void HandleSprintChanged(bool isSprinting) { }
+
+    private void SubscribeEvent()
+    {
+        UnsubscribeEvent();
+        owner.InputReader.OnCommandInputEvent += HandleCommandInput;
+        owner.InputReader.OnMoveInputChanged += HandleMoveInputChanged;
+        owner.InputReader.OnSprintChanged += HandleSprintChanged;
+    }
+    private void UnsubscribeEvent()
+    {
+        owner.InputReader.OnCommandInputEvent -= HandleCommandInput;
+        owner.InputReader.OnMoveInputChanged -= HandleMoveInputChanged;
+        owner.InputReader.OnSprintChanged -= HandleSprintChanged;
+    }
 }

@@ -5,16 +5,18 @@
 /// </summary>
 public class PlayerRiposteState : PlayerActionState
 {
-    private const float RiposteDamage = 150.0f;
-    private const float RiposteDuration = 1.8f; // 처형 모션 총 시간
+    private const float RiposteDamageMultiplier = 3.5f;
+    private const float RiposteDuration = 1.8f;
     private UnityEngine.Transform _targetEnemy;
+    private UnitStatController _targetEnemyStat;
 
     public PlayerRiposteState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
 
-    public void SetRiposteTarget(UnityEngine.Transform targetEnemy)
+    public void SetRiposteTarget(UnityEngine.Transform targetEnemy, UnitStatController enemyStat)
     {
         _targetEnemy = targetEnemy;
+        _targetEnemyStat = enemyStat;
     }
 
     public override void Enter()
@@ -37,7 +39,7 @@ public class PlayerRiposteState : PlayerActionState
         }
 
         // 2. 애니메이터 Riposte 트리거 작동
-        _animController.SetTrigger(AnimParamType.Riposte);
+        _playerAnimController.SetTrigger(AnimParamType.Riposte);
 
         // 3. 비동기 처형 타이머 가동 (모션 중 무적)
         System.Threading.CancellationToken token = CreateActionToken();
@@ -48,7 +50,7 @@ public class PlayerRiposteState : PlayerActionState
     {
         base.Exit();
         _targetEnemy = null;
-        _animController.ResetTrigger(AnimParamType.Riposte);
+        _playerAnimController.ResetTrigger(AnimParamType.Riposte);
     }
     private async UniTaskVoid ExecuteRiposteAsync(System.Threading.CancellationToken token)
     {
@@ -59,8 +61,12 @@ public class PlayerRiposteState : PlayerActionState
 
         if (_targetEnemy != null && _targetEnemy.TryGetComponent(out IDamageable damageable))
         {
-            DamageContext context = new DamageContext(owner.gameObject, RiposteDamage, 100f,
-                _targetEnemy.position, owner.transform.forward);
+            // 처형 임시 데미지 - 추후 PlayerCombatModule과 같은 것으로 분리해야함
+            float playerBaseAttack = 40.0f;
+            float finalRiposteDamage = playerBaseAttack * RiposteDamageMultiplier;
+
+            DamageContext context = new DamageContext(owner.gameObject, finalRiposteDamage, 100f,
+                _targetEnemy.position, owner.transform.forward, isParryable: false);
             damageable.ApplyDamage(context);
         }
 
@@ -68,6 +74,11 @@ public class PlayerRiposteState : PlayerActionState
         bool canceledFinish = await UniTask.Delay((int)((RiposteDuration * 0.55f) * 1000f),
             cancellationToken: token).SuppressCancellationThrow();
         if (canceledFinish) return;
+
+        if(_targetEnemyStat != null)
+        {
+            _targetEnemyStat.RestorePoiseToMax();
+        }
 
         CompleteActionAndEvaluateTransition();
     }

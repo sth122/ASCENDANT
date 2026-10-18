@@ -19,6 +19,11 @@ public class PlayerMoveState : PlayerGroundState
 
         UpdateLocomotionAnimation();
     }
+    public override void Update()
+    {
+        base.Update();
+        UpdateLocomotionAnimation();
+    }
 
     public override void FixedUpdate()
     {
@@ -32,10 +37,9 @@ public class PlayerMoveState : PlayerGroundState
             return;
         }
 
-        // 일반 걷기 물리 이동
-        float walkSpeed = _playerStatController != null
-            ? _playerStatController.MotionStats.WalkSpeed.Value
-            : 4.5f;
+        // 일반 걷기 물리 이동 - 움직이지 않으면 해당 부분 문제인거 체크
+        float walkSpeed = _playerStatController != null && _playerStatController.PlayerMotionStats != null
+            ? _playerStatController.MotionStats.WalkSpeed.Value : 0f;
 
         owner.MoveAPI(moveDir, walkSpeed);
 
@@ -56,15 +60,13 @@ public class PlayerMoveState : PlayerGroundState
             // 비 락온 시 진행 방향으로 회전
             owner.RotateTowardsAPI(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
         }
-
-        UpdateLocomotionAnimation();
     }
 
     public override void Exit()
     {
         base.Exit();
-        _animController.SetFloat(AnimParamType.MoveX, 0f);
-        _animController.SetFloat(AnimParamType.MoveZ, 0f);
+        _playerAnimController.SetFloat(AnimParamType.MoveX, 0f);
+        _playerAnimController.SetFloat(AnimParamType.MoveZ, 0f);
     }
 
     protected override void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)
@@ -87,21 +89,21 @@ public class PlayerMoveState : PlayerGroundState
     private void UpdateLocomotionAnimation()
     {
         bool isLockOn = owner.CurrentLockOnTarget != null;
-        _animController.SetBool(AnimParamType.IsLockOn, isLockOn);
+        _playerAnimController.SetBool(AnimParamType.IsLockOn, isLockOn);
 
         UnityEngine.Vector2 input = owner.InputReader.MoveInput;
 
         if (isLockOn)
         {
             // Lock-On 시 입력 방향을 그대로 전달하여 8방향 Strafe 블렌딩
-            _animController.SetFloat(AnimParamType.MoveX, input.x * 0.5f);
-            _animController.SetFloat(AnimParamType.MoveZ, input.y * 0.5f);
+            _playerAnimController.SetFloat(AnimParamType.MoveX, input.x * 0.5f);
+            _playerAnimController.SetFloat(AnimParamType.MoveZ, input.y * 0.5f);
         }
         else
         {
             // 일반 걷기 시 전방(MoveZ) 수치만 사용
-            _animController.SetFloat(AnimParamType.MoveX, 0f);
-            _animController.SetFloat(AnimParamType.MoveZ, input.magnitude * 0.5f);
+            _playerAnimController.SetFloat(AnimParamType.MoveX, 0f);
+            _playerAnimController.SetFloat(AnimParamType.MoveZ, input.magnitude * 0.5f);
         }
     }
 }

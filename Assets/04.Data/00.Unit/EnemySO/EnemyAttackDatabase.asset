@@ -16,5 +16,26 @@ MonoBehaviour:
   - UnitIdentifier: 11
     Attacks:
     - AnimState: 10
+      AttackData:
+        _attackAnimStateType: 10
+        _damageMultiplier: 1
+        _poiseMultiplier: 1
+        _attackRange: 2
+        _attackCooldown: 2.5
+        _isParryable: 1
     - AnimState: 11
+      AttackData:
+        _attackAnimStateType: 11
+        _damageMultiplier: 1.2
+        _poiseMultiplier: 1
+        _attackRange: 2
+        _attackCooldown: 2.5
+        _isParryable: 1
     - AnimState: 12
+      AttackData:
+        _attackAnimStateType: 12
+        _damageMultiplier: 1.5
+        _poiseMultiplier: 2
+        _attackRange: 1.6
+        _attackCooldown: 4
+        _isParryable: 0

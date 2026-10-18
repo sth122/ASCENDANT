@@ -16,16 +16,16 @@ MonoBehaviour:
   - Id: 11
     Value:
       <MaxHp>k__BackingField: 100
-      <Poise>k__BackingField: 20
+      <Poise>k__BackingField: 60
+      <WalkSpeed>k__BackingField: 3
       <DropSouls>k__BackingField: 10
-      <WalkSpeed>k__BackingField: 4
-      <AttackPower>k__BackingField: 100
-      <BasePoiseDamage>k__BackingField: 100
-      <AttackRange>k__BackingField: 1
+      <AttackPower>k__BackingField: 25
+      <BasePoiseDamage>k__BackingField: 20
+      <AttackRange>k__BackingField: 12
       <AttackCooldown>k__BackingField: 2
-      <ChaseSpeed>k__BackingField: 0
-      <PatrolSpeed>k__BackingField: 0
-      <MaxLeashDistance>k__BackingField: 15
-      <SightRadius>k__BackingField: 7
+      <ChaseSpeed>k__BackingField: 4.5
+      <PatrolSpeed>k__BackingField: 2
+      <MaxLeashDistance>k__BackingField: 25
+      <SightRadius>k__BackingField: 12
       <SightAngle>k__BackingField: 120
-      <HearingRadius>k__BackingField: 5
+      <HearingRadius>k__BackingField: 8

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Util = DebugLogger<StateMachine<System.Type>>;
 
 // 모든 FSM 범용 제네릭 상태 머신
@@ -8,9 +7,9 @@ public class StateMachine<T> where T : class
 {
     protected IState currentState;
     public IState CurrentState => currentState;
-    
+
     protected int currentStateKey = -1;
-    public int  CurrentStateKey => currentStateKey;
+    public int CurrentStateKey => currentStateKey;
 
     // (int)Enum 키를 저장하는 딕셔너리
     protected readonly Dictionary<int, IState> stateDictionary = new Dictionary<int, IState>();
@@ -38,7 +37,7 @@ public class StateMachine<T> where T : class
         if (!forceReenter && CurrentState != null && currentStateKey == newKey)
             return;
 
-        if(stateDictionary.TryGetValue(newKey, out IState newState))
+        if (stateDictionary.TryGetValue(newKey, out IState newState))
         {
             currentState?.Exit();
             currentStateKey = newKey;
@@ -74,17 +73,11 @@ public class StateMachine<T> where T : class
 #region UnitStateMachine
 public abstract class UnitStateMachine<T> : StateMachine<T> where T : UnitController<T>
 {
-    public void AddState(UnitState stateKey, IState state)
-    {
-        base.AddState((int)stateKey, state);
-    }
-    public void ChangeState(UnitState newStateKey, bool _forceReenter = false)
-    {
-        base.ChangeState((int)newStateKey, _forceReenter);
-    }
-    public void Initialize(UnitState stateKey)
-    {
-        base.Initialize((int)stateKey);
-    }
+    public void AddState(UnitState stateKey, IState state) 
+        => base.AddState((int)stateKey, state);
+    public void ChangeState(UnitState newStateKey, bool _forceReenter = false) 
+        => base.ChangeState((int)newStateKey, _forceReenter);
+
+    public void Initialize(UnitState stateKey) => base.Initialize((int)stateKey);
 }
 #endregion

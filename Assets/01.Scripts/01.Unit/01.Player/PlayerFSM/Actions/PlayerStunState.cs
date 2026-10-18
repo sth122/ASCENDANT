@@ -1,7 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
-public class PlayerStunState : PlayerActionState
+﻿public class PlayerStunState : PlayerActionState
 {
-    private System.Threading.CancellationTokenSource _stunCts;
     private const float StunDuration = 1.0f;
 
     public PlayerStunState(PlayerController owner, PlayerStateMachine stateMachine) : base(owner, stateMachine) { }
@@ -13,32 +11,28 @@ public class PlayerStunState : PlayerActionState
         CanRotate = false;
         
         owner.StopMovementAPI();
-        _animController.PlayState(AnimStateType.Stun);
+        _playerAnimController.PlayState(AnimStateType.Stun);
 
-        ResetToken();
-        _stunCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(owner.GetCancellationTokenOnDestroy());
-        ExecuteStunAsync(_stunCts.Token).Forget();
+        // 스턴 상태 진입 시 Poise 자동 회복 일시 정지
+        _playerStatController?.SetPoiseRecoveryPause(true);
+
+        ResetActionToken();
+        System.Threading.CancellationToken token = CreateActionToken();
+        ExecuteStunAsync(token).Forget();
     }
 
     public override void Exit()
     {
         base.Exit();
-        ResetToken();
+
+        // 스턴 종료 시 Poise 회복 루프 실행
+        _playerStatController?.RestorePoiseToMax();
+        ResetActionToken();
     }
 
-    private void ResetToken()
+    private async Cysharp.Threading.Tasks.UniTaskVoid ExecuteStunAsync(System.Threading.CancellationToken token)
     {
-        if( _stunCts != null )
-        {
-            _stunCts.Cancel();
-            _stunCts.Dispose();
-            _stunCts = null;
-        }
-    }
-
-    private async UniTaskVoid ExecuteStunAsync(System.Threading.CancellationToken token)
-    {
-        bool canceled = await UniTask.Delay((int)(StunDuration * 1000f), delayTiming: PlayerLoopTiming.Update,
+        bool canceled = await Cysharp.Threading.Tasks.UniTask.Delay((int)(StunDuration * 1000f),
             cancellationToken: token).SuppressCancellationThrow();
 
         if (canceled) return;

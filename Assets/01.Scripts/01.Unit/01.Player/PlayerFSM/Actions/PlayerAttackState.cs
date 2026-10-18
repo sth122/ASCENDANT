@@ -3,7 +3,7 @@
 /// </summary>
 public class PlayerAttackState : PlayerActionState
 {
-    #region 테스트 용 변수
+    #region 테스트 용 변수 - 추후 PlayerCombatModule과 같은 것으로 분리해야함
     private const float BaseDamage = 35.0f;
     private const float BasePoiseDamage = 25.0f;
     private const float AttackStaminaCost = 14.0f;
@@ -56,7 +56,7 @@ public class PlayerAttackState : PlayerActionState
         }
 
         // 4. Root Motion 활성화 (클립의 전진 변위가 Rigidbody를 직접 추진하도록 권한 부여)
-        _animController.SetRootMotion(true);
+        _playerAnimController.SetRootMotion(true);
 
         EnableAttackEvent();
 
@@ -76,7 +76,7 @@ public class PlayerAttackState : PlayerActionState
             CompleteActionAndEvaluateTransition();
             return;
         }
-        UnityEngine.Animator animator = _animController.AnimatorInstance;
+        UnityEngine.Animator animator = _playerAnimController.AnimatorInstance;
         bool isInTransition = animator.IsInTransition(0);
 
         // 2. 메카님이 트랜지션 중(0.38초 블렌딩 중)일 때는
@@ -129,13 +129,13 @@ public class PlayerAttackState : PlayerActionState
         base.Exit();
 
         // 공격이 종료되면 Root Motion을 회수하여 일반 이동 제어권 복원
-        _animController.SetRootMotion(false);
-        _animController.WeaponHitbox?.CloseHitBox();
+        _playerAnimController.SetRootMotion(false);
+        _playerAnimController.WeaponHitbox?.CloseHitBox();
         DisableAttackEvent();
 
         // 상태 탈출 시 잔여 트리거 및 콤보 스텝 초기화
-        _animController.ResetTrigger(AnimParamType.Attack);
-        _animController.SetInteger(AnimParamType.ComboStep, 0);
+        _playerAnimController.ResetTrigger(AnimParamType.Attack);
+        _playerAnimController.SetInteger(AnimParamType.ComboStep, 0);
 
         owner.InputReader.ClearCommand(InputCommandType.Attack);
 
@@ -156,8 +156,8 @@ public class PlayerAttackState : PlayerActionState
         // 스태미나 차감
         _playerStatController?.ConsumeStamina(AttackStaminaCost);
 
-        _animController.SetInteger(AnimParamType.ComboStep, _comboStep);
-        _animController.SetTrigger(AnimParamType.Attack);
+        _playerAnimController.SetInteger(AnimParamType.ComboStep, _comboStep);
+        _playerAnimController.SetTrigger(AnimParamType.Attack);
     }
 
     /// <summary>
@@ -201,10 +201,10 @@ public class PlayerAttackState : PlayerActionState
     private void HandleHitboxOpen()
     {
         float multiplier = 1.0f + (_comboStep - 1) * 0.3f;
-        _animController.WeaponHitbox.OpenHitBox(owner.gameObject, BaseDamage * multiplier, BasePoiseDamage * multiplier);
+        _playerAnimController.WeaponHitbox.OpenHitBox(owner.gameObject, BaseDamage * multiplier, BasePoiseDamage * multiplier);
     }
 
-    private void HandleHitboxClose() => _animController.WeaponHitbox?.CloseHitBox();
+    private void HandleHitboxClose() => _playerAnimController.WeaponHitbox?.CloseHitBox();
 
     private void HandleComboWindowOpen()
     {
@@ -241,7 +241,7 @@ public class PlayerAttackState : PlayerActionState
         {
             case InputCommandType.Roll:
                 // 모션 50% 이후 긴급 회피 캔슬 허용
-                if (_animController.GetCurrentNormalizedTime(0) >= InputBufferStartNormalized)
+                if (_playerAnimController.GetCurrentNormalizedTime(0) >= InputBufferStartNormalized)
                 {
                     owner.InputReader.ClearCommand(InputCommandType.Roll);
                     _playerStateMachine.ChangeState(UnitState.Roll);
@@ -250,7 +250,7 @@ public class PlayerAttackState : PlayerActionState
 
             case InputCommandType.Parry:
                 // 모션 50% 이후 긴급 가드 캔슬 허용
-                if (_animController.GetCurrentNormalizedTime(0) >= InputBufferStartNormalized)
+                if (_playerAnimController.GetCurrentNormalizedTime(0) >= InputBufferStartNormalized)
                 {
                     owner.InputReader.ClearCommand(InputCommandType.Parry);
                     _playerStateMachine.ChangeState(UnitState.Parry);
@@ -271,21 +271,21 @@ public class PlayerAttackState : PlayerActionState
     private void EnableAttackEvent()
     {
         DisableAttackEvent();
-        _animController.OnHitboxOpenEvent += HandleHitboxOpen;
-        _animController.OnHitboxCloseEvent += HandleHitboxClose;
-        _animController.OnComboWindowOpenEvent += HandleComboWindowOpen;
-        _animController.OnComboWindowCloseEvent += HandleComboWindowClose;
-        _animController.OnActionCompletedEvent += HandleActionCompleted;
+        _playerAnimController.OnHitboxOpenEvent += HandleHitboxOpen;
+        _playerAnimController.OnHitboxCloseEvent += HandleHitboxClose;
+        _playerAnimController.OnComboWindowOpenEvent += HandleComboWindowOpen;
+        _playerAnimController.OnComboWindowCloseEvent += HandleComboWindowClose;
+        _playerAnimController.OnActionCompletedEvent += HandleActionCompleted;
 
         owner.InputReader.OnCommandInputEvent += HandleCommandDuringAttack;
     }
     private void DisableAttackEvent()
     {
-        _animController.OnHitboxOpenEvent -= HandleHitboxOpen;
-        _animController.OnHitboxCloseEvent -= HandleHitboxClose;
-        _animController.OnComboWindowOpenEvent -= HandleComboWindowOpen;
-        _animController.OnComboWindowCloseEvent -= HandleComboWindowClose;
-        _animController.OnActionCompletedEvent -= HandleActionCompleted;
+        _playerAnimController.OnHitboxOpenEvent -= HandleHitboxOpen;
+        _playerAnimController.OnHitboxCloseEvent -= HandleHitboxClose;
+        _playerAnimController.OnComboWindowOpenEvent -= HandleComboWindowOpen;
+        _playerAnimController.OnComboWindowCloseEvent -= HandleComboWindowClose;
+        _playerAnimController.OnActionCompletedEvent -= HandleActionCompleted;
 
         owner.InputReader.OnCommandInputEvent -= HandleCommandDuringAttack;
     }

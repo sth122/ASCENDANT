@@ -70,3 +70,13 @@ public interface IDamageable
 {
     void ApplyDamage(in DamageContext context);
 }
+
+/// <summary>
+/// Enemy 공격 실행 전략 인터페이스
+/// </summary>
+public interface IEnemyAttackStrategy
+{
+    bool CanExecute(in EnemyAttackContext context, Transform target, in EnemyAttackData data);
+    void Execute(in EnemyAttackContext context, Transform target, in EnemyAttackData data);
+    void Stop(in EnemyAttackContext context);
+}
