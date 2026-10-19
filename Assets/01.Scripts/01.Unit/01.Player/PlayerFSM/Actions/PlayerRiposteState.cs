@@ -5,7 +5,6 @@
 /// </summary>
 public class PlayerRiposteState : PlayerActionState
 {
-    private const float RiposteDamageMultiplier = 3.5f;
     private const float RiposteDuration = 1.8f;
     private UnityEngine.Transform _targetEnemy;
     private UnitStatController _targetEnemyStat;
@@ -30,6 +29,11 @@ public class PlayerRiposteState : PlayerActionState
         // 1. 처형 대상 적을 정면으로 정렬
         if (_targetEnemy != null)
         {
+            // 적의 전방 일정 거리로 위치 보정
+            UnityEngine.Vector3 snapPos = _targetEnemy.position + _targetEnemy.forward * 1.2f;
+            snapPos.y = owner.transform.position.y;
+            owner.transform.position = snapPos;
+
             UnityEngine.Vector3 lookDirection = _targetEnemy.position - owner.transform.position;
             lookDirection.y = 0f;
             if (lookDirection.sqrMagnitude > 0.001f)
@@ -50,6 +54,7 @@ public class PlayerRiposteState : PlayerActionState
     {
         base.Exit();
         _targetEnemy = null;
+        _targetEnemyStat = null;
         _playerAnimController.ResetTrigger(AnimParamType.Riposte);
     }
     private async UniTaskVoid ExecuteRiposteAsync(System.Threading.CancellationToken token)
@@ -61,13 +66,7 @@ public class PlayerRiposteState : PlayerActionState
 
         if (_targetEnemy != null && _targetEnemy.TryGetComponent(out IDamageable damageable))
         {
-            // 처형 임시 데미지 - 추후 PlayerCombatModule과 같은 것으로 분리해야함
-            float playerBaseAttack = 40.0f;
-            float finalRiposteDamage = playerBaseAttack * RiposteDamageMultiplier;
-
-            DamageContext context = new DamageContext(owner.gameObject, finalRiposteDamage, 100f,
-                _targetEnemy.position, owner.transform.forward, isParryable: false);
-            damageable.ApplyDamage(context);
+            owner.CombatModule.ExecuteRiposteDamage(damageable, _targetEnemy.position);
         }
 
         // 전체 모션 완료 대기

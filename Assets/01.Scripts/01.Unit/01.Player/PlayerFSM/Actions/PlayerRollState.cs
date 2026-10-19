@@ -21,14 +21,9 @@ public class PlayerRollState : PlayerActionState
 
         // 1. 구르기 방향 결정 (입력 방향 우선, 무입력 시 백스탭 대용 180도 반전 - 현재 잠시 해제)
         UnityEngine.Vector3 moveInputDirection = owner.CurrentMoveDirection;
-        bool isNoInput = moveInputDirection.sqrMagnitude <= 0.001f;
+        bool isBackstep = moveInputDirection.sqrMagnitude <= 0.001f;
 
-        if (isNoInput)
-        {
-            // 임시 해제
-            //owner.Movement.Flip180Degrees();
-        }
-        else
+        if (!isBackstep)
         {
             owner.transform.rotation = UnityEngine.Quaternion.LookRotation(moveInputDirection.normalized);
         }
@@ -47,7 +42,7 @@ public class PlayerRollState : PlayerActionState
 
         // 6. 무적 시간 및 상태 복귀 비동기 타이머 가동
         System.Threading.CancellationToken token = CreateActionToken();
-        ExecuteRollAsync(isNoInput, token).Forget();
+        ExecuteRollAsync(isBackstep, token).Forget();
     }
 
     public override void Exit()

@@ -5,6 +5,8 @@ public class MeleeAttackStrategy : IEnemyAttackStrategy
 {
     private EnemyAttackContext _activeContext;
     private EnemyAttackData _activeData;
+    private bool _isHitboxOpen = false;
+
     public bool CanExecute(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data)
     {
         if (target == null || context.OwnerTransform == null) return false;
@@ -22,61 +24,61 @@ public class MeleeAttackStrategy : IEnemyAttackStrategy
     {
         _activeContext = context;
         _activeData = data;
+        _isHitboxOpen = false;
 
         // 1. 타겟 정면 응시 회전
         context.Movement.FaceTarget(target.position, 15.0f, UnityEngine.Time.deltaTime);
 
         // 2. 애니메이션 상태 재생
         context.AnimController.PlayState(data.AttackAnimStateType);
+    }
 
-        // 3. 히트박스 이벤트 구독
-        SubsribeEvents();
+    public void Update(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data, float normalizedTime)
+    {
+        // 1. 선딜레이(히트박스 열리기 전) 동안 플레이어를 유연하게 축 추적
+        if (normalizedTime < data.HitboxStartNormalized && target != null)
+        {
+            context.Movement.FaceTarget(target.position, 8.0f, UnityEngine.Time.deltaTime);
+        }
+
+        // 2. 히트박스 활성화 구간 판정
+        if (!_isHitboxOpen && normalizedTime >= data.HitboxStartNormalized && normalizedTime < data.HitboxEndNormalized)
+        {
+            OpenHitbox(in context, in data);
+        }
+        // 3. 히트박스 닫힘 구간 판정
+        else if (_isHitboxOpen && normalizedTime >= data.HitboxEndNormalized)
+        {
+            CloseHitbox(in context);
+        }
     }
 
     public void Stop(in EnemyAttackContext context)
     {
-        HandleHitboxClose();
-        UnsubscribeEvents();
+        CloseHitbox(in context);
         _activeData = default;
+        _isHitboxOpen = false;
     }
 
-    private void HandleHitboxOpen()
+    private void OpenHitbox(in EnemyAttackContext context, in EnemyAttackData data)
     {
-        if (_activeContext.MainHitbox != null)
-        {
-            // 본체 스탯과 모션 배율의 결합 연산 수행
-            float finalDamage = _activeData.CalculateFinalDamage(_activeContext.BaseAttackPower);
-            float finalPoiseDamage = _activeData.CalculateFinalPoiseDamage(_activeContext.BasePoiseDamage);
+        if (context.MainHitbox == null) return;
+        _isHitboxOpen = true;
 
-            _activeContext.MainHitbox.OpenHitBox(_activeContext.AttackerObject, finalDamage, finalPoiseDamage,
-                _activeData.IsParryable);
-        }
+        float finalDamage = data.CalculateFinalDamage(context.BaseAttackPower);
+        float finalPoiseDamage = data.CalculateFinalPoiseDamage(context.BasePoiseDamage);
+
+        context.MainHitbox.OpenHitBox(context.AttackerObject, finalDamage, finalPoiseDamage, data.IsParryable);
     }
 
-    private void HandleHitboxClose()
+    private void CloseHitbox(in EnemyAttackContext context)
     {
-        if (_activeContext.MainHitbox != null)
-        {
-            _activeContext.MainHitbox.CloseHitBox();
-        }
-    }
+        if (!_isHitboxOpen) return;
+        _isHitboxOpen = false;
 
-    private void SubsribeEvents()
-    {
-        UnsubscribeEvents();
-        if (_activeContext.AnimController != null)
+        if (context.MainHitbox != null)
         {
-            _activeContext.AnimController.OnHitboxOpenEvent += HandleHitboxOpen;
-            _activeContext.AnimController.OnHitboxCloseEvent += HandleHitboxClose;
-        }
-    }
-
-    private void UnsubscribeEvents()
-    {
-        if (_activeContext.AnimController != null)
-        {
-            _activeContext.AnimController.OnHitboxOpenEvent -= HandleHitboxOpen;
-            _activeContext.AnimController.OnHitboxCloseEvent -= HandleHitboxClose;
+            context.MainHitbox.CloseHitBox();
         }
     }
 }

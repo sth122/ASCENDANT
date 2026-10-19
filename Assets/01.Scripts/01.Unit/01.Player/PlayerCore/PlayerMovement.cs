@@ -35,8 +35,6 @@ public class PlayerMovement : UnitMovement
     /// <summary>
     /// Player 이동 + 경사면 처리
     /// </summary>
-    /// <param name="direction"></param>
-    /// <param name="speed"></param>
     public void Move(Vector3 direction, float speed)
     {
         if (direction.sqrMagnitude < 0.001f)
@@ -52,9 +50,16 @@ public class PlayerMovement : UnitMovement
         // 2. 경사면 이동 시 Y 축 물리 처리
         if (IsGrounded && CurrentSlopeAngle <= MaxSlopeAngle)
         {
-            // 평지나 내리막길에서 캐릭터가 뜨지 않고 바닥에 밀착되도록 하향 스냅 적용
-            targetVelocity.y = -0.5f;
-            _rb.linearVelocity = targetVelocity;
+            // 상향 경사 등반 시에는 경사면 y속도를 온전히 보존하고, 평지/내리막에서만 지면 밀착 스냅 적용
+            if (slopeDirection.y > 0.01f)
+            {
+                _rb.linearVelocity = targetVelocity;
+            }
+            else
+            {
+                targetVelocity.y = -0.5f;
+                _rb.linearVelocity = targetVelocity;
+            }
         }
         else
         {
@@ -93,8 +98,5 @@ public class PlayerMovement : UnitMovement
     /// <summary>
     /// 캐릭터를 즉시 180도 뒤로 회전 (백스탭 대용 반전 구르기 시 사용)
     /// </summary>
-    public void Flip180Degrees()
-    {
-        _transform.rotation = Quaternion.LookRotation(-_transform.forward);
-    }
+    public void Flip180Degrees() => _transform.rotation = Quaternion.LookRotation(-_transform.forward);
 }

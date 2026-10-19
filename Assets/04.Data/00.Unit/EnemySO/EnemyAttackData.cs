@@ -19,6 +19,14 @@ public struct EnemyAttackData
     [SerializeField] private float _attackRange;
     [SerializeField] private float _attackCooldown;
 
+    [Header("코드 타임라인 정규화 시간 (0.0 ~ 1.0)")]
+    [Tooltip("히트박스가 열리는 애니메이션 진행도 (기본 0.25)")]
+    [SerializeField] private float _hitboxStartNormalized;
+    [Tooltip("히트박스가 닫히는 애니메이션 진행도 (기본 0.60)")]
+    [SerializeField] private float _hitboxEndNormalized;
+    [Tooltip("공격 후딜레이가 끝나고 다음 상태로 전이 가능한 진행도 (기본 0.90)")]
+    [SerializeField] private float _actionEndNormalized;
+
     [Header("소울라이크 패링 메타데이터")]
     [Tooltip("패링이 허용되는 일반 패턴인지 여부")]
     [SerializeField] private bool _isParryable;
@@ -30,9 +38,14 @@ public struct EnemyAttackData
     public float AttackRange => _attackRange;
     public float AttackCooldown => _attackCooldown;
     public bool IsParryable => _isParryable;
+
+    public float HitboxStartNormalized => _hitboxStartNormalized > 0f ? _hitboxStartNormalized : 0.25f;
+    public float HitboxEndNormalized => _hitboxEndNormalized > 0f ? _hitboxEndNormalized : 0.60f;
+    public float ActionEndNormalized => _actionEndNormalized > 0f ? _actionEndNormalized : 0.90f;
     #endregion
 
-    public EnemyAttackData(AnimStateType animState, float damageMultiplier, float poiseMultiplier, float range, float cooldown, bool isParryable)
+    public EnemyAttackData(AnimStateType animState, float damageMultiplier, float poiseMultiplier, float range, 
+        float cooldown, bool isParryable, float hitboxStart = 0.25f, float hitboxEnd = 0.60f, float actionEnd = 0.90f)
     {
         _attackAnimStateType = animState;
         _damageMultiplier = damageMultiplier;
@@ -40,6 +53,9 @@ public struct EnemyAttackData
         _attackRange = range;
         _attackCooldown = cooldown;
         _isParryable = isParryable;
+        _hitboxStartNormalized = hitboxStart;
+        _hitboxEndNormalized = hitboxEnd;
+        _actionEndNormalized = actionEnd;
     }
 
     /// <summary>

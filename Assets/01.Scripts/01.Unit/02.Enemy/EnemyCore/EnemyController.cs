@@ -50,7 +50,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         _perceptionModule.OnNoiseHeard += HandleNoiseHeard;
 
         // 전투 모듈 초기화
-        _combatModule = new EnemyCombatModule(this, unitId, null, new MeleeAttackStrategy());
+        _combatModule = new EnemyCombatModule(_unitId, null, new MeleeAttackStrategy());
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         if (DataManager.Instance != null)
         {
             // 1. EnemyStatSO로부터 런타임 스탯 복제 주입
-            if (DataManager.Instance._enemyStatSO != null && DataManager.Instance._enemyStatSO.TryGetData(unitId, out EnemyStat stat))
+            if (DataManager.Instance._enemyStatSO != null && DataManager.Instance._enemyStatSO.TryGetData(_unitId, out EnemyStat stat))
             {
                 EnemyStat clonedStat = (EnemyStat)stat.Clone();
                 _enemyStatController.Init(clonedStat);
@@ -77,7 +77,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
             }
             else
             {
-                Util.LogError($"{gameObject.name}: DataManager에서 UnitId ({unitId})의 EnemyStat을 찾을 수 없습니다.");
+                Util.LogError($"{gameObject.name}: DataManager에서 UnitId ({_unitId})의 EnemyStat을 찾을 수 없습니다.");
             }
 
             // 2. EnemyAttackDatabaseSO 바인딩
@@ -160,7 +160,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     #region IDamageable 피격 수신부
     public virtual void ApplyDamage(in DamageContext context)
     {
-        //if (_stateMachine.CurrentState is EnemyDieState) return;
+        if (_stateMachine.CurrentState is EnemyDieState) return;
 
         _enemyStatController.TakeDamage(context.Damage, context.PoiseDamage);
 

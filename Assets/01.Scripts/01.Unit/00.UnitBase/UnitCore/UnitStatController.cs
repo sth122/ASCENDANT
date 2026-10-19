@@ -9,7 +9,7 @@ public class UnitStatController : MonoBehaviour
 {
     public UnitMotionStatModule MotionStats { get; protected set; }
     #region 런타임 가변 수치 ( 공통 Stat )
-    [Header("Unit Shared")]
+    [Header("Unit Shared Stats")]
     [SerializeField] protected float _currentHp;
     [SerializeField] protected float _maxHp;
     [SerializeField] protected float _currentPoise;
@@ -21,12 +21,16 @@ public class UnitStatController : MonoBehaviour
     protected const float PoiseRecoveryDelay = 4.0f;  // 마지막 피격 후 4초 뒤 회복
     protected const float PoiseRecoveryRate = 20.0f;
     protected bool _isPoiseRecoveryPaused = false;
+    protected bool _isDead = false;
 
+    #region Property
     public float CurrentHp => _currentHp;
     public float MaxHp => _maxHp;
     public float CurrentPoise => _currentPoise;
     public float MaxPoise => _maxPoise;
     public bool IsPoiseBroken => _currentPoise <= 0f;
+    public bool IsDead => _isDead;
+    #endregion
     #endregion
 
     public event System.Action OnDieEvent;
@@ -62,6 +66,7 @@ public class UnitStatController : MonoBehaviour
         _currentPoise = _maxPoise;
         _poiseRecoveryTimer = 0f;
         _isPoiseRecoveryPaused = false;
+        _isDead = false;
 
         // 3. 자식 클래스 전용 스탯 및 모듈 세팅 위임
         SetupDerivedStats(baseStat);
@@ -89,6 +94,8 @@ public class UnitStatController : MonoBehaviour
 
     public virtual void TakeDamage(float damage, float poiseDamage = 0f)
     {
+        if (_isDead) return;
+
         _currentHp = Mathf.Max(0f, _currentHp - damage);
         OnHpChanged?.Invoke(_currentHp);
 
@@ -124,9 +131,10 @@ public class UnitStatController : MonoBehaviour
     {
         while (!token.IsCancellationRequested)
         {
-            await UniTask.Yield(PlayerLoopTiming.Update, token);
+            await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
 
-            if (_currentPoise >= _maxPoise) continue;
+            // 강인도 회복 정지 상태 or 사망 or 최대치라면 보류
+            if (_isPoiseRecoveryPaused || _isDead ||_currentPoise >= _maxPoise) continue;
 
             if (_poiseRecoveryTimer > 0f)
             {
@@ -139,8 +147,5 @@ public class UnitStatController : MonoBehaviour
         }
     }
 
-    protected virtual void OnDestroy()
-    {
-        AsyncUtil.CancelAndDispose(ref _cts);
-    }
+    protected virtual void OnDestroy() => AsyncUtil.CancelAndDispose(ref _cts);
 }

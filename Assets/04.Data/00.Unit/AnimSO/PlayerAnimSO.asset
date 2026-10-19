@@ -44,12 +44,6 @@ MonoBehaviour:
   - ParamType: 14
     ParameterName: Roll
   _states:
-  - StateType: 0
-    StateName: idle1
-    CrossFadeDuration: 0.2
-  - StateType: 1
-    StateName: Move
-    CrossFadeDuration: 0.05
   - StateType: 2
     StateName: Stun
     CrossFadeDuration: 0.05

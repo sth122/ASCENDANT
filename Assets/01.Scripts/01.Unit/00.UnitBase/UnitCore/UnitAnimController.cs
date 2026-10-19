@@ -3,14 +3,10 @@
 /// <summary>
 /// 모든 Unit이 상속받는 애니메이션 제어 공통 베이스 컴포넌트
 /// </summary>
-public class UnitAnimController : MonoBehaviour, IAnimationHitBoxEvent, IAnimationActionEvent
+public class UnitAnimController : MonoBehaviour
 {
     [field: SerializeField] protected Animator _animator;
     [field: SerializeField] protected AnimationDataSO _animData;
-
-    public event System.Action OnHitboxOpenEvent;
-    public event System.Action OnHitboxCloseEvent;
-    public event System.Action OnActionCompletedEvent;
 
     public Animator AnimatorInstance => _animator;
     public AnimationDataSO AnimData => _animData;
@@ -65,6 +61,8 @@ public class UnitAnimController : MonoBehaviour, IAnimationHitBoxEvent, IAnimati
         return stateInfo.normalizedTime >= 1.0f && !_animator.IsInTransition(layerIndex);
     }
 
+    public bool IsInTransition(int layerIndex = 0) => _animator != null && _animator.IsInTransition(layerIndex);
+
     public void SetTrigger(AnimParamType paramType)
     {
         if (_animData != null)
@@ -112,11 +110,5 @@ public class UnitAnimController : MonoBehaviour, IAnimationHitBoxEvent, IAnimati
             _animator.CrossFadeInFixedTime(hash, duration);
         }
     }
-    #endregion
-
-    #region 공통 IAnimationHitBoxEvent, IAnimationActionEvent 구현부
-    public void Anim_OnHitboxOpen() => OnHitboxOpenEvent?.Invoke();
-    public void Anim_OnHitboxClose() => OnHitboxCloseEvent?.Invoke();
-    public void Anim_OnActionCompleted() => OnActionCompletedEvent?.Invoke();
     #endregion
 }

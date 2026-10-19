@@ -14,8 +14,8 @@ public class CreatureEnemyController : EnemyController
 
     protected override void Awake()
     {
+        _unitId = UnitId.NightmareCreature;
         base.Awake();
-        unitId = UnitId.NightmareCreature;
     }
 
     protected override void InitializeStateMachine()
@@ -51,7 +51,7 @@ public class CreatureEnemyController : EnemyController
     {
         if (_currentTarget == null) return;
 
-        int count = Physics.OverlapSphereNonAlloc(transform.position, _callAlliesRadius, _allyBuffer);
+        int count = Physics.OverlapSphereNonAlloc(transform.position, _callAlliesRadius, _allyBuffer, _targetLayer);
         for (int i = 0; i < count; i++)
         {
             Collider col = _allyBuffer[i];

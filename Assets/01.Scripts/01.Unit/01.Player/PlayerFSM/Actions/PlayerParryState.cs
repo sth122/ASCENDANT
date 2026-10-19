@@ -34,7 +34,6 @@ public class PlayerParryState : PlayerActionState
 
         EnableEventHandler();
 
-        ResetActionToken();
         // 3. 패링 판정 타이머
         // 부모 토큰을 사용하여 패링 유효 윈도우 비동기 카운트다운 시작
         System.Threading.CancellationToken token = CreateActionToken();
@@ -44,24 +43,6 @@ public class PlayerParryState : PlayerActionState
     public override void FixedUpdate()
     {
         base.FixedUpdate();
-
-        // 1. 회전 제어: 락온 타겟이 있으면 적 주시, 없으면 카메라 정면 주시
-        //UnityEngine.Vector3 lookDir;
-        //if (owner.CurrentLockOnTarget != null)
-        //{
-        //    lookDir = owner.CurrentLockOnTarget.position - owner.transform.position;
-        //    lookDir.y = 0f;
-        //}
-        //else
-        //{
-        //    lookDir = UnityEngine.Camera.main != null ? UnityEngine.Camera.main.transform.forward : owner.transform.forward;
-        //    lookDir.y = 0f;
-        //}
-
-        //if (lookDir.sqrMagnitude > 0.001f)
-        //{
-        //    owner.RotateTowardsAPI(lookDir.normalized, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
-        //}
 
         // 2. 가드 보행 이동 및 Strafe 파라미터 전달
         UnityEngine.Vector2 rawInput = owner.InputReader.MoveInput;
@@ -98,13 +79,13 @@ public class PlayerParryState : PlayerActionState
     /// 공격 수신 시 가드 또는 패링 분기 연산
     /// 수평면 투영(Dot Product)을 통해 높낮이 지형에 의한 판정 뚫림 완벽 차단
     /// </summary>
-    public bool TryProcessBlockOrParry(float damage, UnityEngine.GameObject attacker, out bool parrySuccess)
+    public bool TryProcessBlockOrParry(in DamageContext context, out bool parrySuccess)
     {
         parrySuccess = false;
 
-        if (attacker != null)
+        if (context.Attacker != null)
         {
-            UnityEngine.Vector3 dirToAttacker = attacker.transform.position - owner.transform.position;
+            UnityEngine.Vector3 dirToAttacker = context.Attacker.transform.position - owner.transform.position;
             dirToAttacker.y = 0f; // 수평 투영
 
             if (dirToAttacker.sqrMagnitude > 0.001f)
@@ -119,17 +100,18 @@ public class PlayerParryState : PlayerActionState
         }
 
         // 1. 패링 윈도우 적중 시 패링 카운터 발동
-        if (IsParryWindow)
+        if (IsParryWindow && context.IsParryable)
         {
             parrySuccess = true;
-            TriggerParrySuccess(attacker);
+            IsParryWindow = false;
+            TriggerParrySuccess(context.Attacker);
             return true;
         }
 
         // 2. 일반 가드 피격 시 스태미나 차감
         if (_playerStatController != null)
         {
-            bool isGuardBroken = _playerStatController.BlockAttackWithStamina(damage, ShieldStability);
+            bool isGuardBroken = _playerStatController.BlockAttackWithStamina(context.Damage, ShieldStability);
 
             if (isGuardBroken)
             {
@@ -148,13 +130,17 @@ public class PlayerParryState : PlayerActionState
         _playerAnimController.SetTrigger(AnimParamType.ParrySuccess);
 
         // 적 유닛 피격/경직 인터페이스 호출
-        if (attacker != null && attacker.TryGetComponent(out UnitStatController enemyStat))
+        if (attacker != null)
         {
-            // 상대 그로기 유발
-            enemyStat.TakeDamage(0f, 999f);
+            UnitStatController enemyStat = attacker.GetComponentInParent<UnitStatController>();
+            if (enemyStat != null)
+            {
+                // 상대 그로기 유발
+                enemyStat.TakeDamage(0f, 999f);
+            }
+     
+            // 패링 성공 연출
         }
-
-        // 패링 성공 연출
     }
 
     private async Cysharp.Threading.Tasks.UniTaskVoid ExecuteParryWindowAsync(System.Threading.CancellationToken token)

@@ -14,42 +14,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimationDataSO
   _parameters: []
   _states:
-  - StateType: 15
-    StateName: crawl
-    CrossFadeDuration: 0
-  - StateType: 16
-    StateName: crawl_idle
-    CrossFadeDuration: 0
-  - StateType: 17
-    StateName: crawl_to_state
-    CrossFadeDuration: 0.15
-  - StateType: 18
-    StateName: state_to_crawl
-    CrossFadeDuration: 0.15
   - StateType: 3
-    StateName: Battle Idle
     CrossFadeDuration: 0.15
   - StateType: 4
-    StateName: walk
     CrossFadeDuration: 0.15
   - StateType: 5
-    StateName: run
-    CrossFadeDuration: 0.15
-  - StateType: 19
-    StateName: roar
-    CrossFadeDuration: 0.15
-  - StateType: 10
-    StateName: attack1
     CrossFadeDuration: 0.15
   - StateType: 11
-    StateName: attack2
     CrossFadeDuration: 0.15
   - StateType: 12
-    StateName: attack3
+    CrossFadeDuration: 0.15
+  - StateType: 13
+    CrossFadeDuration: 0.15
+  - StateType: 14
     CrossFadeDuration: 0.15
   - StateType: 6
-    StateName: hit1
-    CrossFadeDuration: 0.15
+    CrossFadeDuration: 0.1
+  - StateType: 7
+    CrossFadeDuration: 0.1
   - StateType: 8
-    StateName: death1
+    CrossFadeDuration: 0.1
+  - StateType: 9
     CrossFadeDuration: 0.15
+  - StateType: 100
+    CrossFadeDuration: 0.05
+  - StateType: 101
+    CrossFadeDuration: 0.05
+  - StateType: 200
+    CrossFadeDuration: 0.1
+  - StateType: 201
+    CrossFadeDuration: 0.1

@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using UnityEngine.AI;
 
 /// <summary>
 /// 크리처 전용 포복 순찰 상태 (UnitState.Crawl <-> CreatureCrawlState)
@@ -59,6 +60,16 @@ public class CreatureCrawlState : EnemyBaseState
     private void PickNextPatrolPoint()
     {
         UnityEngine.Vector2 circle = UnityEngine.Random.insideUnitCircle * PatrolRadius;
-        _patrolTarget = owner.SpawnPoint + new UnityEngine.Vector3(circle.x, 0f, circle.y);
+        UnityEngine.Vector3 randomPos = owner.SpawnPoint + new UnityEngine.Vector3(circle.x, 0f, circle.y);
+
+        // 네비메시 통행 가능 좌표로 투영 보정
+        if (NavMesh.SamplePosition(randomPos, out NavMeshHit hit, 3.0f, NavMesh.AllAreas))
+        {
+            _patrolTarget = hit.position;
+        }
+        else
+        {
+            _patrolTarget = owner.SpawnPoint;
+        }
     }
 }

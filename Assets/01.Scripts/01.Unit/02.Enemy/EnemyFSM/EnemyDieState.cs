@@ -9,13 +9,16 @@ public class EnemyDieState : EnemyBaseState
     {
         base.Enter();
         owner.StopMovementAPI();
-        _enemyAnimController.PlayState(AnimStateType.Death1);
+
+        AnimStateType selectedDeathMotion = AnimStateHelper.GetRandomDeathState();
+        _enemyAnimController.PlayState(selectedDeathMotion);
 
         owner.Perception.StopSensorLoop();
 
-        if (owner.Collider != null)
+        if (owner.Collider != null && owner.Rigidbody != null)
         {
-            owner.Collider.enabled = false;
+            owner.Rigidbody.isKinematic = true;
+            owner.Collider.isTrigger = true;
         }
 
         if (owner.Movement.Agent != null)
@@ -23,6 +26,25 @@ public class EnemyDieState : EnemyBaseState
             owner.SetAgentableAPI(false);
         }
 
+        // 임시 FindAny 소울 드랍
+        DistributeRewardSouls();
+
         owner.enabled = false;
+    }
+
+    private void DistributeRewardSouls()
+    {
+        if (owner.EnemyStatController == null) return;
+
+        int rewardSouls = owner.EnemyStatController.DropSouls;
+        if (rewardSouls <= 0) return;
+
+        // 플레이어 탐색 후 소울 지급
+        PlayerController player = Object.FindAnyObjectByType<PlayerController>();
+        if (player != null && player.PlayerStatController != null && player.PlayerStatController.PlayerStatSource != null)
+        {
+            player.PlayerStatController.PlayerStatSource.AddSouls(rewardSouls);
+            DebugLogger.LogWithTag("EnemyDieState", $"처치 보상 소울 지급 완료: +{rewardSouls} Souls");
+        }
     }
 }

@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 /// <summary>
-/// Unit에 해당하는 모든 객체의 Controller 제네릭 추상 클래스
+/// Unit에 해당하는 모든 객체의 Controller 최상위 제네릭 추상 클래스
 /// </summary>
 [RequireComponent(typeof(Rigidbody), typeof(Animator), typeof(UnitStatController))]
 public abstract class UnitController<T> : MonoBehaviour, IInitable where T : UnitController<T>
 {
     #region SerializeField Variable
     [Header("Unit ID")]
-    [field: SerializeField] protected UnitId unitId;
+    [field: SerializeField] protected UnitId _unitId;
 
     [Header("Ground Check")]
     [field: SerializeField] protected LayerMask _groundLayer;
@@ -24,9 +24,10 @@ public abstract class UnitController<T> : MonoBehaviour, IInitable where T : Uni
     #endregion
 
     #region Property
-    public Collider Collider { get; private set; }
+    public Collider Collider => _collider;
     public Rigidbody Rigidbody => _rigidbody;
     public UnitStatController StatController => _statController;
+    public UnitId UnitIdentifier => _unitId;
     #endregion
 
     protected virtual void Awake()
@@ -41,8 +42,5 @@ public abstract class UnitController<T> : MonoBehaviour, IInitable where T : Uni
 
     protected abstract void InitializeStateMachine();
 
-    public virtual void Init()
-    {
-        InitializeStateMachine();
-    }
+    public virtual void Init() => InitializeStateMachine();
 }

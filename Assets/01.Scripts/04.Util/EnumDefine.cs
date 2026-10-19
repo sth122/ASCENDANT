@@ -87,14 +87,10 @@ public enum AnimStateType
     Move,
     Stun,
 
-    // Enemy 공통
+    // Enemy Locomtion 공통
     BattleIdle,
     Walk,
     Run,
-    Hit1,
-    Hit2,
-    Death1,
-    Death2,
 
     // 공격 패턴
     Attack1,
@@ -108,6 +104,14 @@ public enum AnimStateType
     CrawlIdle,
     CrawlToState,
     StateToCrawl,
-    Roar
+    Roar,
+
+    // 리액션
+    Hit1 = 100,
+    Hit2 = 101,
+
+    // 사망
+    Death1 = 200,
+    Death2 = 201
 }
 #endregion

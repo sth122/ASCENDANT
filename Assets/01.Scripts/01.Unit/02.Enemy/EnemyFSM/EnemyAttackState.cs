@@ -1,16 +1,20 @@
-﻿using Cysharp.Threading.Tasks;
-
-public class EnemyAttackState : EnemyBaseState
+﻿public class EnemyAttackState : EnemyBaseState
 {
+    private EnemyAttackData _currentPattern;
+    private float _stateTimer = 0f;
+    private const float SafetyTimeout = 3.0f; // 비정상 멈춤 방어
+
     public EnemyAttackState(EnemyController owner, EnemyStateMachine stateMachine)
         : base(owner, stateMachine) { }
 
     public override void Enter()
     {
         base.Enter();
+
+        _stateTimer = 0f;
         owner.StopMovementAPI();
 
-        EnemyAttackData pattern = owner.Combat.CurrentSelectedPattern;
+        _currentPattern = owner.Combat.CurrentSelectedPattern;
         UnityEngine.Transform target = owner.CurrentTarget;
 
         if (target == null)
@@ -19,30 +23,39 @@ public class EnemyAttackState : EnemyBaseState
             return;
         }
 
-        owner.Combat.StartAttack(target, in pattern);
-        _enemyAnimController.OnActionCompletedEvent += HandleAttackCompleted;
-
-        System.Threading.CancellationToken token = CreateStateToken();
-        WaitForAttackTimeoutAsync(token).Forget();
+        EnemyAttackContext context = owner.CreateAttackContext();
+        owner.Combat.StartAttack(in context, target, in _currentPattern);
     }
 
-    private void HandleAttackCompleted()
+    public override void Update()
     {
-        _enemyStateMachine.ChangeState((int)UnitState.Chase);
-    }
+        base.Update();
+        _stateTimer += UnityEngine.Time.deltaTime;
 
-    private async UniTaskVoid WaitForAttackTimeoutAsync(System.Threading.CancellationToken token)
-    {
-        bool isCanceled = await UniTask.Delay(2000, cancellationToken: token).SuppressCancellationThrow();
-        if (isCanceled) return;
+        if(_stateTimer >= SafetyTimeout)
+        {
+            _enemyStateMachine.ChangeState((int)UnitState.Chase);
+            return;
+        }
 
-        HandleAttackCompleted();
+        UnityEngine.Transform target = owner.CurrentTarget;
+        float normalizedTime = _enemyAnimController.GetCurrentNormalizedTime(0);
+
+        // 정규화 시간 전달
+        EnemyAttackContext context = owner.CreateAttackContext();
+        owner.Combat.UpdateAttack(in context, target, in _currentPattern, normalizedTime);
+
+        if(normalizedTime >= _currentPattern.ActionEndNormalized && !_enemyAnimController.IsInTransition(0))
+        {
+            _enemyStateMachine.ChangeState((int)UnitState.Chase);
+        }
     }
 
     public override void Exit()
     {
-        _enemyAnimController.OnActionCompletedEvent -= HandleAttackCompleted;
-        owner.Combat.StopAttack();
+        EnemyAttackContext context = owner.CreateAttackContext();
+        owner.Combat.StopAttack(in context);
+        _stateTimer = 0f;
         base.Exit();
     }
 }

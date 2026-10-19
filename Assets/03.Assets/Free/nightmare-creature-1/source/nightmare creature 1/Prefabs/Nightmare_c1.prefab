@@ -1186,7 +1186,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimController
   _animator: {fileID: 0}
-  _animData: {fileID: 0}
+  _animData: {fileID: 11400000, guid: b18e4d084080f214da74672a76e1b2c6, type: 2}
 --- !u!114 &5715599844238772566
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1243,7 +1243,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b719dfd29f1a9448a0fa71b6731bc23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreatureEnemyController
-  unitId: 11
+  _unitId: 0
   _groundLayer:
     serializedVersion: 2
     m_Bits: 256

@@ -8,14 +8,12 @@ public class AnimationDataSO : ScriptableObject
     public struct ParamEntry
     {
         public AnimParamType ParamType;
-        public string ParameterName;
     }
 
     [System.Serializable]
     public struct StateEntry
     {
         public AnimStateType StateType;
-        public string StateName;
         public float CrossFadeDuration;
     }
 
@@ -33,13 +31,13 @@ public class AnimationDataSO : ScriptableObject
 
         foreach (var p in _parameters)
         {
-            _paramHashMap[p.ParamType] = Animator.StringToHash(p.ParameterName);
+            _paramHashMap[p.ParamType] = Animator.StringToHash(p.ParamType.ToString());
         }
 
         _stateHashMap.Clear();
         foreach(var s in _states)
         {
-            _stateHashMap[s.StateType] = (Animator.StringToHash(s.StateName), s.CrossFadeDuration);
+            _stateHashMap[s.StateType] = (Animator.StringToHash(s.StateType.ToString()), s.CrossFadeDuration);
         }
         _isInitialized = true;
     }

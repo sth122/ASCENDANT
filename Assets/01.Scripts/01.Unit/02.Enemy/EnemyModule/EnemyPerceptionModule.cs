@@ -1,11 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
-using System;
 using UnityEngine;
 
 /// <summary>
 /// UniTask 기반의 비동기 주기적 틱(200ms)으로 동작하는 지각 센서 모듈
 /// </summary>
-public class EnemyPerceptionModule : IDisposable
+public class EnemyPerceptionModule : UnitBaseModule, System.IDisposable
 {
     private readonly Transform _ownerTransform;
     private readonly LayerMask _targetLayer;
@@ -18,8 +17,9 @@ public class EnemyPerceptionModule : IDisposable
     public float SightRadius { get; set; }
     public float SightAngle { get; set; }
     public float HearingRadius { get; set; }
-    public event Action<Transform> OnTargetSpotted;
-    public event Action<Vector3> OnNoiseHeard;
+
+    public event System.Action<Transform> OnTargetSpotted;
+    public event System.Action<Vector3> OnNoiseHeard;
 
     public EnemyPerceptionModule(Transform ownerTransform, LayerMask targetLayer, LayerMask obstacleLayer)
     {
@@ -55,13 +55,14 @@ public class EnemyPerceptionModule : IDisposable
     {
         if (_ownerTransform == null) return;
 
-        int hitCount = Physics.OverlapSphereNonAlloc(_ownerTransform.position, SightRadius, _overlapBuffer);
+        int hitCount = Physics.OverlapSphereNonAlloc(_ownerTransform.position, SightRadius, _overlapBuffer, _targetLayer);
 
         for(int i = 0; i < hitCount; i++)
         {
             Collider col = _overlapBuffer[i];
             PlayerController player = col.GetComponentInParent<PlayerController>();
-            if (player == null) return;
+
+            if (player == null || player.StatController.IsDead) return;
 
             Vector3 eyePos = _ownerTransform.position + Vector3.up * 1.5f;
             Vector3 targetHeadPos = player.transform.position + Vector3.up * 1.2f;
@@ -69,7 +70,7 @@ public class EnemyPerceptionModule : IDisposable
             float distanceToTarget = dirToTarget.magnitude;
 
             // 1. 시야각 및 차폐 검사
-            float angle = Vector3.Angle(targetHeadPos, dirToTarget.normalized);
+            float angle = Vector3.Angle(_ownerTransform.forward, dirToTarget.normalized);
             if (angle <= SightAngle * 0.5f)
             {
                 if (!Physics.Raycast(eyePos, dirToTarget.normalized, distanceToTarget, _obstacleLayer))
@@ -87,7 +88,7 @@ public class EnemyPerceptionModule : IDisposable
             }
         }
 
-        Array.Clear(_overlapBuffer, 0, hitCount);
+        System.Array.Clear(_overlapBuffer, 0, hitCount);
     }
 
     public void Dispose()

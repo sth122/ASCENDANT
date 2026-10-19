@@ -11,7 +11,9 @@ public class EnemyGetHitState : EnemyBaseState
     {
         base.Enter();
         owner.StopMovementAPI();
-        _enemyAnimController.PlayState(AnimStateType.Hit1);
+
+        AnimStateType selectedHitMotion = AnimStateHelper.GetRandomHitState();
+        _enemyAnimController.PlayState(selectedHitMotion);
 
         System.Threading.CancellationToken token = CreateStateToken();
         WaitForStunRecoveryAsync(token).Forget();

@@ -42,7 +42,7 @@ public class PlayerActionState : PlayerBaseState
     protected System.Threading.CancellationToken CreateActionToken()
     {
         ResetActionToken();
-        _actionCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource();
+        _actionCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(owner.destroyCancellationToken);
         return _actionCts.Token;
     }
 

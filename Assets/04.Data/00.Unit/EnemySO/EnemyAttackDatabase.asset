@@ -39,3 +39,11 @@ MonoBehaviour:
         _attackRange: 1.6
         _attackCooldown: 4
         _isParryable: 0
+    - AnimState: 13
+      AttackData:
+        _attackAnimStateType: 13
+        _damageMultiplier: 1.5
+        _poiseMultiplier: 2
+        _attackRange: 1.6
+        _attackCooldown: 4
+        _isParryable: 1

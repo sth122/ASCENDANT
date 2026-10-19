@@ -63,6 +63,37 @@ Transform:
   - {fileID: 2742732605174234134}
   m_Father: {fileID: 1477256732191300118}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &272450887761488706
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 996156633369132583}
+  m_Layer: 6
+  m_Name: hitbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &996156633369132583
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 272450887761488706}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.183, y: -0.043, z: 0.708}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8887357624683360664}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &298045869515758727
 GameObject:
   m_ObjectHideFlags: 0
@@ -169,6 +200,7 @@ Transform:
   - {fileID: 8138657943162072955}
   - {fileID: 1254264995859708768}
   - {fileID: 2071464979527174977}
+  - {fileID: 4726213732300155967}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &6154414749331959791
@@ -256,10 +288,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   unitId: 0
+  _groundLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  _targetLayer:
+    serializedVersion: 2
+    m_Bits: 0
   _runtimePlayerStat:
     <MaxHp>k__BackingField: 0
     <Poise>k__BackingField: 0
-    <DropSouls>k__BackingField: 0
     <WalkSpeed>k__BackingField: 0
     <SprintSpeed>k__BackingField: 0
     <RotationSpeed>k__BackingField: 0
@@ -271,12 +308,6 @@ MonoBehaviour:
     <Endurance>k__BackingField: 0
     <Strength>k__BackingField: 0
     <Dexterity>k__BackingField: 0
-  _groundLayer:
-    serializedVersion: 2
-    m_Bits: 256
-  _enemyLayer:
-    serializedVersion: 2
-    m_Bits: 128
   _lockOnRadius: 6.8
   _riposteRange: 2.2
 --- !u!114 &1367710400141555128
@@ -295,7 +326,6 @@ MonoBehaviour:
   _maxHp: 0
   _currentPoise: 0
   _maxPoise: 0
-  _dropSouls: 0
   _currentStamina: 0
   _maxStamina: 0
   _staminaRegenRate: 35
@@ -313,7 +343,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimController
   _animator: {fileID: 6154414749331959791}
   _animData: {fileID: 11400000, guid: 7cf5a792f59363b48beb41107a8377a1, type: 2}
-  _weaponHitbox: {fileID: 7981682499816690540}
+  _weaponHitbox: {fileID: 5235879976498268096}
 --- !u!114 &1029992816194024196
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -328,6 +358,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerUpperBodyAligner
   _spineBoneType: 8
   _rotationOffset: {x: 0, y: 0, z: 0}
+  _alignSlerpSpeed: 12
 --- !u!1 &751015693098662667
 GameObject:
   m_ObjectHideFlags: 0
@@ -369,7 +400,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1754236833952268880}
   - component: {fileID: 3388608593563143123}
-  - component: {fileID: 7981682499816690540}
   m_Layer: 6
   m_Name: Paladin_J_Nordstrom
   m_TagString: Untagged
@@ -521,24 +551,6 @@ SkinnedMeshRenderer:
     m_Center: {x: 0.7914039, y: 0.45545724, z: 0.24666308}
     m_Extent: {x: 0.15900928, y: 0.04583761, z: 0.509635}
   m_DirtyAABB: 0
---- !u!114 &7981682499816690540
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 762696862086292410}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 10f71135621d2a24fb27d6bdefd3bcec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponSweepHitbox
-  _hitPoints:
-  - {fileID: 1754236833952268880}
-  _hitRadius: 0.25
-  _targetLayer:
-    serializedVersion: 2
-    m_Bits: 0
 --- !u!1 &794685971075910772
 GameObject:
   m_ObjectHideFlags: 0
@@ -2363,7 +2375,8 @@ Transform:
   m_LocalPosition: {x: 0.007702401, y: 0.07959965, z: 0.02820829}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 996156633369132583}
   m_Father: {fileID: 2141434104236764598}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7075752500861958110
@@ -2878,6 +2891,56 @@ Transform:
   - {fileID: 3205427749018174678}
   m_Father: {fileID: 5188307269866855588}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8398495261192888608
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4726213732300155967}
+  - component: {fileID: 5235879976498268096}
+  m_Layer: 6
+  m_Name: Hitbox_Holder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4726213732300155967
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8398495261192888608}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 254720903385380245}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5235879976498268096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8398495261192888608}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10f71135621d2a24fb27d6bdefd3bcec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponSweepHitbox
+  _hitPoints:
+  - {fileID: 996156633369132583}
+  _hitRadius: 0.18
+  _targetLayer:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!1 &8665115859030281466
 GameObject:
   m_ObjectHideFlags: 0
