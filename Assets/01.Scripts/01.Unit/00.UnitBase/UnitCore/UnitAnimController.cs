@@ -67,7 +67,7 @@ public class UnitAnimController : MonoBehaviour, IAnimationHitBoxEvent, IAnimati
 
     public void SetTrigger(AnimParamType paramType)
     {
-        if (_animData == null)
+        if (_animData != null)
         {
             _animator.SetTrigger(_animData.GetParamHash(paramType));
         }
@@ -75,7 +75,7 @@ public class UnitAnimController : MonoBehaviour, IAnimationHitBoxEvent, IAnimati
 
     public void ResetTrigger(AnimParamType paramType)
     {
-        if (_animData == null)
+        if (_animData != null)
         {
             _animator.ResetTrigger(_animData.GetParamHash(paramType));
         }
@@ -83,7 +83,7 @@ public class UnitAnimController : MonoBehaviour, IAnimationHitBoxEvent, IAnimati
 
     public void SetInteger(AnimParamType paramType, int value)
     {
-        if (_animData == null)
+        if (_animData != null)
         {
             _animator.SetInteger(_animData.GetParamHash(paramType), value);
         }
@@ -91,7 +91,7 @@ public class UnitAnimController : MonoBehaviour, IAnimationHitBoxEvent, IAnimati
 
     public void SetFloat(AnimParamType paramType, float value)
     {
-        if (_animData == null)
+        if (_animData != null)
         {
             _animator.SetFloat(_animData.GetParamHash(paramType), value);
         }
@@ -99,7 +99,7 @@ public class UnitAnimController : MonoBehaviour, IAnimationHitBoxEvent, IAnimati
 
     public void SetBool(AnimParamType paramType, bool value)
     {
-        if (_animData == null)
+        if (_animData != null)
         {
             _animator.SetBool(_animData.GetParamHash(paramType), value);
         }
