@@ -11,13 +11,14 @@ public class EnemyReturnState : EnemyBaseState
     {
         base.Enter();
         owner.ClearTarget();
+        owner.SetStoppingDistanceAPI(UnitState.Patrol);
         _enemyAnimController.PlayState(AnimStateType.Walk);
     }
 
     public override void Update()
     {
         base.Update();
-        owner.MoveToDestinationAPI(owner.SpawnPoint, ReturnSpeed);
+        owner.SetDestinationAPI(owner.SpawnPoint, ReturnSpeed);
 
         Vector3 toSpawn = owner.transform.position - owner.SpawnPoint;
         toSpawn.y = 0f;

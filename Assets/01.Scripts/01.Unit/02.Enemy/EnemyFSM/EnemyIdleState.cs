@@ -33,7 +33,7 @@ public class EnemyIdleState : EnemyBaseState
             // 크리처 유닛인 경우 고유 포복 순찰(Crawl)로 복귀
             if (owner is CreatureEnemyController)
             {
-                _enemyStateMachine.ChangeState((int)UnitState.Crawl);
+                _enemyStateMachine.ChangeState((int)UnitState.Patrol);
             }
             else
             {

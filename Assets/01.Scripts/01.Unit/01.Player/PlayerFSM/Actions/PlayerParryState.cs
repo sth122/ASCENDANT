@@ -132,11 +132,11 @@ public class PlayerParryState : PlayerActionState
         // 적 유닛 피격/경직 인터페이스 호출
         if (attacker != null)
         {
-            UnitStatController enemyStat = attacker.GetComponentInParent<UnitStatController>();
-            if (enemyStat != null)
+            EnemyController enemy = attacker.GetComponentInParent<EnemyController>();
+            if (enemy != null)
             {
                 // 상대 그로기 유발
-                enemyStat.TakeDamage(0f, 999f);
+                enemy.OnParried();
             }
      
             // 패링 성공 연출

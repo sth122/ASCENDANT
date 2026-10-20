@@ -72,7 +72,11 @@ public abstract class UnitMovement
 
     public virtual void StopMovement()
     {
-        _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
+        // Enemy NavMesh 충돌 문제
+        if (_rb != null && !_rb.isKinematic)
+        {
+            _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
+        }
     }
 
     public virtual void DrawGizmos()

@@ -18,9 +18,10 @@ public class UnitStatController : MonoBehaviour
     protected System.Threading.CancellationTokenSource _cts;
 
     protected float _poiseRecoveryTimer;
-    protected const float PoiseRecoveryDelay = 4.0f;  // 마지막 피격 후 4초 뒤 회복
-    protected const float PoiseRecoveryRate = 20.0f;
+    protected const float PoiseRecoveryDelay = 5.0f;  // 마지막 피격 후 5초 뒤 회복
+    protected const float PoiseRecoveryRate = 15.0f;
     protected bool _isPoiseRecoveryPaused = false;
+    protected bool _isPoiseDepleted = false;
     protected bool _isDead = false;
 
     #region Property
@@ -29,6 +30,7 @@ public class UnitStatController : MonoBehaviour
     public float CurrentPoise => _currentPoise;
     public float MaxPoise => _maxPoise;
     public bool IsPoiseBroken => _currentPoise <= 0f;
+    public bool IsPoiseDepleted => _isPoiseDepleted;
     public bool IsDead => _isDead;
     #endregion
     #endregion
@@ -66,6 +68,7 @@ public class UnitStatController : MonoBehaviour
         _currentPoise = _maxPoise;
         _poiseRecoveryTimer = 0f;
         _isPoiseRecoveryPaused = false;
+        _isPoiseDepleted = false;
         _isDead = false;
 
         // 3. 자식 클래스 전용 스탯 및 모듈 세팅 위임
@@ -105,17 +108,23 @@ public class UnitStatController : MonoBehaviour
 
         if (_currentHp <= 0f)
         {
+            _isDead = true;
             OnDieEvent?.Invoke();
+            return;
         }
 
         if (_currentPoise <= 0f)
         {
+            _isPoiseDepleted = true;
             OnPoiseBreakEvent?.Invoke();
         }
     }
 
     public void SetPoiseRecoveryPause(bool isPause) => _isPoiseRecoveryPaused = isPause;
 
+    /// <summary>
+    /// Poise 최대치로 즉시 복구
+    /// </summary>
     public void RestorePoiseToMax()
     {
         _currentPoise = _maxPoise;
@@ -131,7 +140,8 @@ public class UnitStatController : MonoBehaviour
     {
         while (!token.IsCancellationRequested)
         {
-            await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+            bool isCanceled =  await UniTask.Yield(token).SuppressCancellationThrow();
+            if(isCanceled) return;
 
             // 강인도 회복 정지 상태 or 사망 or 최대치라면 보류
             if (_isPoiseRecoveryPaused || _isDead ||_currentPoise >= _maxPoise) continue;
@@ -143,6 +153,11 @@ public class UnitStatController : MonoBehaviour
             else
             {
                 _currentPoise = Mathf.Min(_maxPoise, _currentPoise + PoiseRecoveryRate * Time.deltaTime);
+
+                if(_currentPoise >= _maxPoise)
+                {
+                    _isPoiseDepleted = false;
+                }
             }
         }
     }

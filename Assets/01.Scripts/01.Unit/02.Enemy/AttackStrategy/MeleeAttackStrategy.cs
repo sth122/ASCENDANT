@@ -6,6 +6,7 @@ public class MeleeAttackStrategy : IEnemyAttackStrategy
     private EnemyAttackContext _activeContext;
     private EnemyAttackData _activeData;
     private bool _isHitboxOpen = false;
+    private const float TrackingRotationSpeed = 4.5f;
 
     public bool CanExecute(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data)
     {
@@ -27,7 +28,7 @@ public class MeleeAttackStrategy : IEnemyAttackStrategy
         _isHitboxOpen = false;
 
         // 1. 타겟 정면 응시 회전
-        context.Movement.FaceTarget(target.position, 15.0f, UnityEngine.Time.deltaTime);
+        context.Movement.FaceTarget(target.position, TrackingRotationSpeed, UnityEngine.Time.deltaTime);
 
         // 2. 애니메이션 상태 재생
         context.AnimController.PlayState(data.AttackAnimStateType);
@@ -38,7 +39,7 @@ public class MeleeAttackStrategy : IEnemyAttackStrategy
         // 1. 선딜레이(히트박스 열리기 전) 동안 플레이어를 유연하게 축 추적
         if (normalizedTime < data.HitboxStartNormalized && target != null)
         {
-            context.Movement.FaceTarget(target.position, 8.0f, UnityEngine.Time.deltaTime);
+            context.Movement.FaceTarget(target.position, TrackingRotationSpeed, UnityEngine.Time.deltaTime);
         }
 
         // 2. 히트박스 활성화 구간 판정

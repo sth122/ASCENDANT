@@ -37,10 +37,9 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     protected override void Awake()
     {
         base.Awake();
+
         AnimationController = GetComponent<PlayerAnimController>();
-
         CombatModule = new PlayerCombatModule(this, AnimationController.WeaponHitbox);
-
         InputReader = new PlayerInputReader();
         SubscribeInputEvents();
 
@@ -183,17 +182,33 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
             if (isBlocked) return;
         }
 
-        // 4. 일반 피격 처리
+        // 5. 일반 피격 처리
         StatController.TakeDamage(context.Damage, context.PoiseDamage);
+        if(StatController.CurrentHp <= 0f) return;
 
-        if (StatController.CurrentHp > 0f)
+        // 6. 패링 불가 공격 적중 시 GetHit
+        if(!context.IsParryable)
         {
-            // 슈퍼아머: 강인도가 남아있으면 공격/스킬 모션 유지, 고갈 시에만 경직 상태로 전이
-            if (StatController.IsPoiseBroken)
-            {
-                // 연속 피격 경직 씹힘 방지
-                _stateMachine.ChangeState((int)UnitState.GetHit, true);
-            }
+            _stateMachine.ChangeState((int)UnitState.GetHit, true);
+            return;
+        }
+
+        // 7. 공격 중일 때의 포이즈 슈퍼아머 판정
+        if (_stateMachine.CurrentState is PlayerAttackState)
+        {
+            // 포이즈가 아직 남아있고 고갈되지 않았다면 모션 유지 (슈퍼아머 버팀)
+            if (!StatController.IsPoiseBroken && !StatController.IsPoiseDepleted) return;
+
+            // 포이즈가 0으로 깨지면 공격 캔슬 후 피격 경직 발생
+            _stateMachine.ChangeState((int)UnitState.GetHit, true);
+            return;
+        }
+
+        // 8. 비공격(대기/이동/달리기) 상태에서의 피격 판정
+        // 포이즈가 한 번 깨진 후 100% 완전 회복되기 전까지는 피격 시 무조건 GetHit
+        if (StatController.IsPoiseDepleted || StatController.IsPoiseBroken)
+        {
+            _stateMachine.ChangeState((int)UnitState.GetHit, true);
         }
     }
     #endregion
@@ -360,7 +375,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     }
 
     private void HandleUnitDie() => _stateMachine.ChangeState((int)UnitState.Die);
-    private void HandlePoiseBreak() => _stateMachine.ChangeState((int)UnitState.Stun);
+    private void HandlePoiseBreak() { }
 
 #if UNITY_EDITOR
     /// <summary>

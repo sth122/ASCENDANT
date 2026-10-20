@@ -11,13 +11,16 @@ public class EnemyCombatModule : UnitBaseModule
     private IEnemyAttackStrategy _attackStrategy;
 
     private readonly Dictionary<AnimStateType, float> _patternCooldownTimers = new Dictionary<AnimStateType, float>();
-    private float _globalCooldownTimer;
+    private float _globalCooldownTimer = 0f;
     private EnemyAttackData _selectedPattern;
     private bool _hasSelectedPattern;
+    private bool _isAttacking = false;
 
     public EnemyAttackData CurrentSelectedPattern => _selectedPattern;
     public bool HasSelectedPattern => _hasSelectedPattern;
     public bool IsOnGlobalCooldown => _globalCooldownTimer > 0f;
+    public bool IsAttacking => _isAttacking;
+    public float GlobalCooldownTimer => _globalCooldownTimer;
 
     public EnemyCombatModule(UnitId unitId, EnemyAttackDatabaseSO attackDatabase, IEnemyAttackStrategy strategy)
     {
@@ -32,11 +35,18 @@ public class EnemyCombatModule : UnitBaseModule
         _attackDatabase?.InitDatabase();
     }
 
+    /// <summary>
+    /// 공격 모션이 종료된 후 쿨타임
+    /// </summary>
+    /// <param name="deltaTime"></param>
     public void TickCooldown(float deltaTime)
     {
+
+        if (_isAttacking) return;
+
         if (_globalCooldownTimer > 0f)
         {
-            _globalCooldownTimer -= deltaTime;
+            _globalCooldownTimer = UnityEngine.Mathf.Max(0f, _globalCooldownTimer - deltaTime);
         }
 
         List<AnimStateType> keys = new List<AnimStateType>(_patternCooldownTimers.Keys);
@@ -45,7 +55,7 @@ public class EnemyCombatModule : UnitBaseModule
             AnimStateType key = keys[i];
             if (_patternCooldownTimers[key] > 0f)
             {
-                _patternCooldownTimers[key] -= deltaTime;
+                _patternCooldownTimers[key] -= UnityEngine.Mathf.Max(0f, _patternCooldownTimers[key] - deltaTime);
             }
         }
     }
@@ -58,10 +68,7 @@ public class EnemyCombatModule : UnitBaseModule
         selectedData = default;
         if (IsOnGlobalCooldown || target == null || _attackDatabase == null) return false;
 
-        if (!_attackDatabase.TryGetAllAttacksForUnit(_unitId, out Dictionary<AnimStateType, EnemyAttackData> unitAttacks))
-        {
-            return false;
-        }
+        if (!_attackDatabase.TryGetAllAttacksForUnit(_unitId, out Dictionary<AnimStateType, EnemyAttackData> unitAttacks)) return false;
 
         UnityEngine.Vector3 toTarget = target.position - context.OwnerTransform.position;
         toTarget.y = 0f;
@@ -91,6 +98,7 @@ public class EnemyCombatModule : UnitBaseModule
 
     public void StartAttack(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data)
     {
+        _isAttacking = true;
         _selectedPattern = data;
         _hasSelectedPattern = true;
         _attackStrategy.Execute(in context, target, in data);
@@ -99,16 +107,39 @@ public class EnemyCombatModule : UnitBaseModule
     public void UpdateAttack(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data, float normalizedTime)
         => _attackStrategy.Update(in context, target, in data, normalizedTime);
 
-    public void StopAttack(in EnemyAttackContext context)
+    public void StopAttack(in EnemyAttackContext context, float globalCooldown)
     {
         if (_hasSelectedPattern)
         {
-            _globalCooldownTimer = 0.8f;
+            _globalCooldownTimer = UnityEngine.Mathf.Max(0.5f, globalCooldown);
+
             _patternCooldownTimers[_selectedPattern.AttackAnimStateType] = _selectedPattern.AttackCooldown;
         }
 
         _attackStrategy.Stop(in context);
+        _isAttacking = false;
         _hasSelectedPattern = false;
         _selectedPattern = default;
+    }
+    /// <summary>
+    /// 등록된 공격 패턴들 중 가장 긴 최대 사거리를 산출 (추적 대치 범위 기준점으로 사용)
+    /// </summary>
+    public float GetMaxAttackRange()
+    {
+        if (_attackDatabase == null) return 2.0f;
+        if (!_attackDatabase.TryGetAllAttacksForUnit(_unitId, out Dictionary<AnimStateType, EnemyAttackData> unitAttacks))
+        {
+            return 2.0f;
+        }
+
+        float maxRange = 1.6f;
+        foreach (var pair in unitAttacks)
+        {
+            if (pair.Value.AttackRange > maxRange)
+            {
+                maxRange = pair.Value.AttackRange;
+            }
+        }
+        return maxRange;
     }
 }

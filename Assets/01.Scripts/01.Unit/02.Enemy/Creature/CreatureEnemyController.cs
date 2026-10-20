@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEngine;
 
 /// <summary>
@@ -22,7 +24,7 @@ public class CreatureEnemyController : EnemyController
     protected override void InitializeStateMachine()
     {
         _stateMachine = new CreatureEnemyStateMachine(this);
-        _stateMachine.Initialize((int)UnitState.Crawl);
+        _stateMachine.Initialize((int)UnitState.Patrol);
     }
 
     #region MyRegion
@@ -41,6 +43,11 @@ public class CreatureEnemyController : EnemyController
         if (_currentTarget == null && _stateMachine.CurrentState is CreatureCrawlState)
         {
             _stateMachine.ChangeState((int)UnitState.Alert);
+
+            if (_stateMachine.CurrentState is CreatureAlertState alertState)
+            {
+                alertState.SetNoiseTargetPosition(noisePosition);
+            }
         }
     }
     #endregion

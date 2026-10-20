@@ -14,6 +14,13 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     [Header("타격 판정 컴포넌트")]
     [SerializeField] protected WeaponSweepHitbox _mainHitbox;
 
+    [Header("적 등급표")]
+    [SerializeField] protected EnemyTier _tier = EnemyTier.Normal;
+
+    [SerializeField] private float chaseStopping;
+    [SerializeField] private float patrolStopping;
+
+
     protected Vector3 _spawnPoint;
     protected Transform _currentTarget;
     protected EnemyMovement _enemyMovement;
@@ -21,6 +28,9 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     protected EnemyStatController _enemyStatController;
     protected EnemyPerceptionModule _perceptionModule;
     protected EnemyCombatModule _combatModule;
+
+    public bool CanBeRiposted { get; set; } = false;
+    public virtual EnemyTier Tier => _tier;
 
     #region Properties
     public EnemyMovement Movement => _enemyMovement;
@@ -36,6 +46,10 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     {
         base.Awake();
         _spawnPoint = transform.position;
+
+        _rigidbody.isKinematic = true;
+        _rigidbody.useGravity = false;
+        _rigidbody.constraints = RigidbodyConstraints.FreezeAll;
 
         NavMeshAgent agent = GetComponent<NavMeshAgent>();
         _enemyAnimController = GetComponent<EnemyAnimController>();
@@ -111,10 +125,13 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
 
     #region Movement API
     public void StopMovementAPI() => Movement.StopMovement();
-    public void MoveToDestinationAPI(Vector3 targetPosition, float speed) => Movement.MoveToDestination(targetPosition, speed);
+    public void SetDestinationAPI(Vector3 targetPosition, float speed = 4.5f) => Movement.SetDestination(targetPosition, speed);
+    public void TickLocomotionRotationAPI(float deltaTime, float speed = 4.5f) => Movement.TickLocomotionRotation(deltaTime, speed);
     public void SetAgentableAPI(bool isEnable) => Movement.Agent.enabled = isEnable;
     public void FaceTargetAPI(Vector3 targetPosition, float rotationSpeed, float deltaTime) 
         => Movement.FaceTarget(targetPosition, rotationSpeed, deltaTime);
+    public void SetStoppingDistanceAPI(UnitState state) 
+        => Movement.SetStoppingDistance(state == UnitState.Chase ? chaseStopping : patrolStopping);
     #endregion
 
     public bool IsExceedingLeashDistance(float maxDistance)
@@ -130,16 +147,13 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     public EnemyAttackContext CreateAttackContext()
     {
         float baseAtk = _enemyStatController.EnemyStatSource != null
-            ? _enemyStatController.EnemyStatSource.AttackPower
-            : 20.0f;
+            ? _enemyStatController.EnemyStatSource.AttackPower : 20.0f;
 
         float basePoise = _enemyStatController.EnemyStatSource != null
-            ? _enemyStatController.EnemyStatSource.BasePoiseDamage
-            : 15.0f;
+            ? _enemyStatController.EnemyStatSource.BasePoiseDamage : 15.0f;
 
         return new EnemyAttackContext(gameObject, transform, _enemyMovement,
-            _enemyAnimController, _mainHitbox, baseAtk, basePoise
-            );
+            _enemyAnimController, _mainHitbox, baseAtk, basePoise);
     }
 
     #region 센서 가상 콜백
@@ -175,9 +189,50 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
             return;
         }
 
-        _stateMachine.ChangeState((int)UnitState.GetHit, true);
+        // 2. 포이즈 0 도달 시 그로기/스턴 상태 전이
+        if (_enemyStatController.IsPoiseBroken)
+        {
+            _stateMachine.ChangeState((int)UnitState.Stun, true);
+            return;
+        }
+
+        // 3. 일반 피격: 스턴 중이 아닐 때는 포이즈와 상관없이 즉시 GetHit 경직 출력
+        if (_tier == EnemyTier.Normal && !(_stateMachine.CurrentState is EnemyStunState))
+        {
+            _stateMachine.ChangeState((int)UnitState.GetHit, true);
+        }
     }
     #endregion
+
+    public void OnParried(float parryPoiseDamage = 35.0f)
+    {
+        if(_stateMachine.CurrentState is EnemyDieState) return;
+
+        // 보스는 패링당해도 행동을 취소하지 않고 패턴을 그대로 진행
+        if (_tier == EnemyTier.Boss)
+        {
+            _enemyStatController.TakeDamage(0f, 10.0f); // 보스는 미세 포이즈만 차감
+            return;
+        }
+
+        // 1. 공격 즉시 강제 취소
+        EnemyAttackContext context = CreateAttackContext();
+        Combat.StopAttack(in context, 4f);
+
+        // 2. 패링 포이즈 대미지 차감
+        _enemyStatController.TakeDamage(0f, parryPoiseDamage);
+
+        // 3. 포이즈가 0이 되었다면 그로기 스턴 (앞잡 허용)
+        if (_enemyStatController.IsPoiseBroken)
+        {
+            _stateMachine.ChangeState((int)UnitState.Stun, true);
+        }
+        else
+        {
+            // 4. 포이즈가 남아있다면 앞잡 불가한 단순 패링 경직(ParryStagger) 진입
+            _stateMachine.ChangeState((int)UnitState.ParryStagger, true);
+        }
+    }
 
     protected virtual void OnDestroy()
     {

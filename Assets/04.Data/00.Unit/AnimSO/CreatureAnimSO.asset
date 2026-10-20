@@ -44,3 +44,5 @@ MonoBehaviour:
     CrossFadeDuration: 0.1
   - StateType: 201
     CrossFadeDuration: 0.1
+  - StateType: 15
+    CrossFadeDuration: 0.1

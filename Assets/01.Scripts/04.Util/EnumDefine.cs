@@ -8,6 +8,7 @@ public enum UnitState
     Jump,
     Attack,
     Parry,
+    ParryStagger,
     Stun,
     Roll,
     Riposte,
@@ -19,7 +20,7 @@ public enum UnitState
     Return,     // 활동 반경 이탈 시 스폰 지점 복귀
 
     // 크리처 전용 특화 상태
-    Crawl,      // 포복 이동 순찰
+    Patrol,      // 포복 이동 순찰
     Alert,      // 발소리 감지 기상 및 수색
     Roar        // 발견 표효 및 동료 호출
 }
@@ -38,6 +39,14 @@ public enum UnitId
     // 201번부터 NPC의 고유 명사
     NPC = 201
 }
+
+public enum EnemyTier 
+{
+    Normal,
+    Elite,
+    Boss
+}
+
 #endregion
 
 #region Stat Enum
