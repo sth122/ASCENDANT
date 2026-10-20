@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
 /// <summary>
 /// Nightmare Creature 전용 파생 컨트롤러
@@ -71,5 +72,20 @@ public class CreatureEnemyController : EnemyController
         if (_currentTarget != null) return;
         SetTarget(sharedTarget);
         _stateMachine.ChangeState((int)UnitState.Chase);
+    }
+
+    protected override void OnDrawGizmosSelected()
+    {
+        // 1. 공통 에너미 기즈모(지면, 시야각, 청각, 리쉬, 타깃선) 렌더링
+        base.OnDrawGizmosSelected();
+
+        // 2. 크리처 전용 아군 무리 호출(Broadcast Roar) 영역 렌더링 (보라색 와이어 구체 및 디스크)
+        Gizmos.color = new Color(0.7f, 0.2f, 1.0f, 0.4f);
+        Gizmos.DrawWireSphere(transform.position, _callAlliesRadius);
+
+#if UNITY_EDITOR
+        Handles.color = new Color(0.7f, 0.2f, 1.0f, 0.25f);
+        Handles.DrawWireDisc(transform.position, Vector3.up, _callAlliesRadius);
+#endif
     }
 }

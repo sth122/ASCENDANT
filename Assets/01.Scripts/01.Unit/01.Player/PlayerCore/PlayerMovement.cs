@@ -94,9 +94,4 @@ public class PlayerMovement : UnitMovement
 
         _rb.linearVelocity = targetVel;
     }
-
-    /// <summary>
-    /// 캐릭터를 즉시 180도 뒤로 회전 (백스탭 대용 반전 구르기 시 사용)
-    /// </summary>
-    public void Flip180Degrees() => _transform.rotation = Quaternion.LookRotation(-_transform.forward);
 }

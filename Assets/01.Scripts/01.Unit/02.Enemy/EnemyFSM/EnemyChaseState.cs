@@ -3,9 +3,7 @@
     private const float PathUpdateInterval = 0.2f;
     private float _pathUpdateTimer = 0f;
 
-    public EnemyChaseState(EnemyController owner, EnemyStateMachine stateMachine) : base(owner, stateMachine)
-    {
-    }
+    public EnemyChaseState(EnemyController owner, EnemyStateMachine stateMachine) : base(owner, stateMachine) { }
 
     public override void Enter()
     {
@@ -20,13 +18,14 @@
         base.Update();
 
         UnityEngine.Transform target = owner.CurrentTarget;
-        // 1. 타겟이 없거나 사망했으면 대기 상태로 전이
-        if(target != null)
+        // 1. 타겟이 없으면 대기 상태로 전이
+        if(target == null)
         {
             _enemyStateMachine.ChangeState((int)UnitState.Idle);
             return;
         }
 
+        // 2. 타겟이 사망했으면 타겟을 해제하고 복귀
         UnitStatController targetStat = target.GetComponentInParent<UnitStatController>();
         if (targetStat != null && targetStat.IsDead)
         {
@@ -35,7 +34,7 @@
             return;
         }
         
-        // 최대 활동 반경 검사
+        // 3. 최대 활동 반경 초과 검사
         float maxLeash = _enemyStatController.EnemyStatSource != null
             ? _enemyStatController.EnemyStatSource.MaxLeashDistance : 25.0f;
 
@@ -45,7 +44,7 @@
             return;
         }
 
-        // 3. 공격 사거리 및 패턴 검사
+        // 4. 공격 사거리 및 패턴 검사
         EnemyAttackContext context = owner.CreateAttackContext();
         if (owner.Combat.TrySelectAttackPattern(in context, target, out EnemyAttackData selectedPattern))
         {

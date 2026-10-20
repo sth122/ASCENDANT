@@ -1,10 +1,14 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 using UnityEngine.AI;
 using Util = DebugLogger<EnemyController>;
 
 [RequireComponent(typeof(NavMeshAgent), typeof(EnemyAnimController), typeof(EnemyStatController))]
 public abstract class EnemyController : UnitController<EnemyController>, IDamageable
 {
+    [Header("Runtime PlayerStat")]
+    [SerializeField] private EnemyStat _runtimeEnemyStat;
+
     [SerializeField] protected LayerMask _obstacleLayer;
 
     [Header("타격 판정 컴포넌트")]
@@ -37,7 +41,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         _enemyAnimController = GetComponent<EnemyAnimController>();
         _enemyStatController = GetComponent<EnemyStatController>();
 
-        _enemyMovement = new EnemyMovement(_rigidbody, transform, agent, LayerMask.GetMask("Default", "Ground"));
+        _enemyMovement = new EnemyMovement(_rigidbody, transform, agent, _groundLayer);
 
         if (_mainHitbox == null)
         {
@@ -68,12 +72,12 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
             // 1. EnemyStatSO로부터 런타임 스탯 복제 주입
             if (DataManager.Instance._enemyStatSO != null && DataManager.Instance._enemyStatSO.TryGetData(_unitId, out EnemyStat stat))
             {
-                EnemyStat clonedStat = (EnemyStat)stat.Clone();
-                _enemyStatController.Init(clonedStat);
+                _runtimeEnemyStat = (EnemyStat)stat.Clone();
+                _enemyStatController.Init(_runtimeEnemyStat);
 
-                _perceptionModule.SightRadius = clonedStat.SightRadius;
-                _perceptionModule.SightAngle = clonedStat.SightAngle;
-                _perceptionModule.HearingRadius = clonedStat.HearingRadius;
+                _perceptionModule.SightRadius = _runtimeEnemyStat.SightRadius;
+                _perceptionModule.SightAngle = _runtimeEnemyStat.SightAngle;
+                _perceptionModule.HearingRadius = _runtimeEnemyStat.HearingRadius;
             }
             else
             {
@@ -101,15 +105,9 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         _combatModule.TickCooldown(Time.deltaTime);
     }
 
-    public virtual void SetTarget(Transform target)
-    {
-        _currentTarget = target;
-    }
+    public virtual void SetTarget(Transform target) => _currentTarget = target;
 
-    public virtual void ClearTarget()
-    {
-        _currentTarget = null;
-    }
+    public virtual void ClearTarget() => _currentTarget = null;
 
     #region Movement API
     public void StopMovementAPI() => Movement.StopMovement();
@@ -160,10 +158,12 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     #region IDamageable 피격 수신부
     public virtual void ApplyDamage(in DamageContext context)
     {
+        // 이미 사망한 개체
         if (_stateMachine.CurrentState is EnemyDieState) return;
 
         _enemyStatController.TakeDamage(context.Damage, context.PoiseDamage);
 
+        // Player 자동 타겟 지정
         if (_currentTarget == null && context.Attacker != null)
         {
             SetTarget(context.Attacker.transform);
@@ -172,11 +172,10 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         if (_enemyStatController.CurrentHp <= 0f)
         {
             _stateMachine.ChangeState((int)UnitState.Die);
+            return;
         }
-        else if (_enemyStatController.IsPoiseBroken)
-        {
-            _stateMachine.ChangeState((int)UnitState.GetHit, true);
-        }
+
+        _stateMachine.ChangeState((int)UnitState.GetHit, true);
     }
     #endregion
 
@@ -187,6 +186,44 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
             _perceptionModule.OnTargetSpotted -= HandleTargetSpotted;
             _perceptionModule.OnNoiseHeard -= HandleNoiseHeard;
             _perceptionModule.Dispose();
+        }
+    }
+
+    protected virtual void OnDrawGizmosSelected()
+    {
+        // 1. 물리 지면 접지 감지 기즈모
+        Movement?.DrawGizmos();
+
+        // 2. 시야 및 청각 센서 기즈모
+        _perceptionModule?.DrawGizmos(transform);
+
+        // 3. 스폰 위치 및 최대 추적 한계선(Leash Radius) 렌더링
+        Vector3 spawn = Application.isPlaying ? _spawnPoint : transform.position;
+        float maxLeash = (_enemyStatController != null && _enemyStatController.EnemyStatSource != null)
+            ? _enemyStatController.EnemyStatSource.MaxLeashDistance : 25.0f;
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(spawn, 0.6f); // 스폰 앵커 마커
+
+#if UNITY_EDITOR
+        Handles.color = new Color(0.1f, 1.0f, 0.3f, 0.3f);
+        Handles.DrawWireDisc(spawn, Vector3.up, maxLeash); // 리쉬 한계선 원형 디스크
+#endif
+
+        // 4. 현재 타깃 연결선 및 전투 사거리 렌더링
+        if (_currentTarget != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(transform.position + Vector3.up * 1.0f, _currentTarget.position + Vector3.up * 1.0f);
+
+            // 기본 근접 사거리 가이드 (적색 와이어 디스크)
+            float combatRange = (_enemyStatController != null && _enemyStatController.EnemyStatSource != null)
+                ? _enemyStatController.EnemyStatSource.AttackRange : 2.0f;
+
+#if UNITY_EDITOR
+            Handles.color = new Color(1.0f, 0.1f, 0.1f, 0.5f);
+            Handles.DrawWireDisc(transform.position, Vector3.up, combatRange);
+#endif
         }
     }
 }

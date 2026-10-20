@@ -23,6 +23,15 @@
             return;
         }
 
+        // 2. 타겟이 사망했으면 타겟을 해제하고 복귀
+        UnitStatController targetStat = target.GetComponentInParent<UnitStatController>();
+        if (targetStat != null && targetStat.IsDead)
+        {
+            owner.ClearTarget();
+            _enemyStateMachine.ChangeState((int)UnitState.Return);
+            return;
+        }
+
         EnemyAttackContext context = owner.CreateAttackContext();
         owner.Combat.StartAttack(in context, target, in _currentPattern);
     }
