@@ -99,7 +99,7 @@ public class PlayerMoveState : PlayerGroundState
             UnityEngine.Vector3 localMove = owner.transform.InverseTransformDirection(owner.CurrentMoveDirection);
             // Lock-On 시 입력 방향을 그대로 전달하여 8방향 Strafe 블렌딩
             _playerAnimController.SetFloat(AnimParamType.MoveX, localMove.x * 0.5f);
-            _playerAnimController.SetFloat(AnimParamType.MoveZ, localMove.y * 0.5f);
+            _playerAnimController.SetFloat(AnimParamType.MoveZ, localMove.z * 0.5f);
         }
         else
         {
