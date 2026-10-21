@@ -14,7 +14,7 @@
         _playerAnimController.PlayState(AnimStateType.Stun);
 
         // 스턴 상태 진입 시 Poise 자동 회복 일시 정지
-        _playerStatController?.SetPoiseRecoveryPause(true);
+        _playerStatusController?.SetPoiseRecoveryPause(true);
 
         ResetActionToken();
         System.Threading.CancellationToken token = CreateActionToken();
@@ -26,7 +26,7 @@
         base.Exit();
 
         // 스턴 종료 시 Poise 회복 루프 실행
-        _playerStatController?.RestorePoiseToMax();
+        _playerStatusController?.RestorePoiseToMax();
         ResetActionToken();
     }
 

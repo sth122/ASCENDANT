@@ -57,7 +57,7 @@ public class WeaponSweepHitbox : MonoBehaviour
         _attackerOwner = null;
     }
 
-    private void FixedUpdate()
+    private void LateUpdate()
     {
         if (!_isHitboxActive) return;
 
@@ -125,6 +125,11 @@ public class WeaponSweepHitbox : MonoBehaviour
                 damageable.ApplyDamage(in context);
             }
         }
+    }
+
+    private void OnDisable()
+    {
+        CloseHitBox();
     }
 
     private void OnDrawGizmos()

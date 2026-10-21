@@ -5,14 +5,14 @@
 /// 공통적인 스탯만 가지고 있고, 플레이어 및 특수 유닛에 종속적이 스탯은 하위 클래스에서 구현
 /// </summary>
 [System.Serializable]
-public abstract class UnitBaseStat
+public abstract class UnitBaseStatus
 {
-    [field: Header("Unit Base Common Stats")]
+    [field: Header("Unit Base Common Statsus")]
     [field: SerializeField] public float MaxHp { get; protected set; }
     [field: SerializeField] public float Poise { get; protected set; }
     [field: SerializeField] public float WalkSpeed { get; protected set; }
 
-    public abstract UnitBaseStat Clone();
+    public abstract UnitBaseStatus Clone();
 }
 
 #region PlayerStat
@@ -22,7 +22,7 @@ public abstract class UnitBaseStat
 /// 성장 스탯( 생명력, 지구력, 근력, 기량 )과 Soul 데이터를 관리
 /// </summary>
 [System.Serializable]
-public class PlayerStat : UnitBaseStat
+public class PlayerStatus : UnitBaseStatus
 {
     [field: Header("Player Movement Physics")]
     [field: SerializeField] public float SprintSpeed { get; private set; }
@@ -48,8 +48,8 @@ public class PlayerStat : UnitBaseStat
     [field: SerializeField] public int Dexterity { get; private set; }
 
     // 스탯 수치 기반 유도 계산식
-    public float CalculateMaxHp() => 400f + (Vigor * 25f);
-    public float CalculateMaxStamina() => 80f + (Endurance * 2f);
+    public float CalculateMaxHp() => MaxHp + (Vigor * 25f);
+    public float CalculateMaxStamina() => Poise + (Endurance * 2f);
     public float CalculateMaxEquipWeight() => 40f + (Endurance * 1.5f);
 
     /// <summary>
@@ -73,9 +73,9 @@ public class PlayerStat : UnitBaseStat
     /// <summary>
     /// 원본 SO 훼손을 막기 위한 복제 메서드
     /// </summary>
-    public override UnitBaseStat Clone()
+    public override UnitBaseStatus Clone()
     {
-        return new PlayerStat
+        return new PlayerStatus
         {
             // 부모 필드 복사
             MaxHp = this.MaxHp,
@@ -104,11 +104,11 @@ public class PlayerStat : UnitBaseStat
 /// UnitBaseStat을 상속받아 추후 구현하게 될 보스 전용 스탯 클래스
 /// </summary>
 [System.Serializable]
-public class BossGimmickStat : UnitBaseStat
+public class BossGimmickStatus : UnitBaseStatus
 {
-    public override UnitBaseStat Clone()
+    public override UnitBaseStatus Clone()
     {
-        return new BossGimmickStat { };
+        return new BossGimmickStatus { };
     }
 }
 #endregion
@@ -119,15 +119,15 @@ public class BossGimmickStat : UnitBaseStat
 /// 일반 Enemy 전용 확장 기본 스탯 데이터 클래스
 /// </summary>
 [System.Serializable]
-public class EnemyStat : UnitBaseStat
+public class EnemyStatus : UnitBaseStatus
 {
     #region 처치 보상
-    [field: Header("Enemy Reward Stats")]
+    [field: Header("Reward")]
     [field: SerializeField] public int DropSouls { get; protected set; }
     #endregion
 
     #region 전투 스탯 (Combat)
-    [field: Header("Enemy Combat Stats")]
+    [field: Header("Enemy Combat Status")]
     [field: SerializeField] public float AttackPower { get; protected set; }
     [field: SerializeField] public float BasePoiseDamage { get; protected set; }
     [field: SerializeField] public float AttackRange { get; protected set; }
@@ -135,7 +135,7 @@ public class EnemyStat : UnitBaseStat
     #endregion
 
     #region 기동 및 활동 영역 스탯 (Locomotion & Leash)
-    [field: Header("Enemy Locomotion & Leash Stats")]
+    [field: Header("Enemy Locomotion & Leash")]
     [field: SerializeField] public float ChaseSpeed { get; protected set; }
     [field: SerializeField] public float PatrolSpeed { get; protected set; }
     [field: Tooltip("최대 추적 범위")]
@@ -143,7 +143,7 @@ public class EnemyStat : UnitBaseStat
     #endregion
 
     #region 지각 센서 스탯 (Perception Sensors)
-    [field: Header("Enemy Perception Sensor Stats")]
+    [field: Header("Enemy Perception Sensor")]
     [field: SerializeField] public float SightRadius { get; protected set; }
     [field: Range(0f, 360f)]
     [field: SerializeField] public float SightAngle { get; protected set; }
@@ -154,9 +154,9 @@ public class EnemyStat : UnitBaseStat
     /// 원본 ScriptableObject 데이터 보호를 위한 깊은 복사(Deep Copy) 메서드
     /// 런타임 상태에서 버프/디버프 등에 의해 스탯이 변조되어도 원본 에셋이 유지되도록 처리
     /// </summary>
-    public override UnitBaseStat Clone()
+    public override UnitBaseStatus Clone()
     {
-        return new EnemyStat
+        return new EnemyStatus
         {
             // 1. UnitBaseStat 공통 수치 복제
             MaxHp = this.MaxHp,

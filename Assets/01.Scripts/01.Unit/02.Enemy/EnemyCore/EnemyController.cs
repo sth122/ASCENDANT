@@ -3,12 +3,9 @@ using UnityEngine;
 using UnityEngine.AI;
 using Util = DebugLogger<EnemyController>;
 
-[RequireComponent(typeof(NavMeshAgent), typeof(EnemyAnimController), typeof(EnemyStatController))]
+[RequireComponent(typeof(NavMeshAgent), typeof(EnemyAnimController), typeof(EnemyStatusController))]
 public abstract class EnemyController : UnitController<EnemyController>, IDamageable
 {
-    [Header("Runtime PlayerStat")]
-    [SerializeField] private EnemyStat _runtimeEnemyStat;
-
     [SerializeField] protected LayerMask _obstacleLayer;
 
     [Header("타격 판정 컴포넌트")]
@@ -20,12 +17,11 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     [SerializeField] private float chaseStopping;
     [SerializeField] private float patrolStopping;
 
-
     protected Vector3 _spawnPoint;
     protected Transform _currentTarget;
     protected EnemyMovement _enemyMovement;
     protected EnemyAnimController _enemyAnimController;
-    protected EnemyStatController _enemyStatController;
+    protected EnemyStatusController _enemyStatusController;
     protected EnemyPerceptionModule _perceptionModule;
     protected EnemyCombatModule _combatModule;
 
@@ -35,7 +31,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     #region Properties
     public EnemyMovement Movement => _enemyMovement;
     public EnemyAnimController EnemyAnimController => _enemyAnimController;
-    public EnemyStatController EnemyStatController => _enemyStatController;
+    public EnemyStatusController StatusController => _enemyStatusController;
     public EnemyPerceptionModule Perception => _perceptionModule;
     public EnemyCombatModule Combat => _combatModule;
     public Transform CurrentTarget => _currentTarget;
@@ -53,7 +49,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
 
         NavMeshAgent agent = GetComponent<NavMeshAgent>();
         _enemyAnimController = GetComponent<EnemyAnimController>();
-        _enemyStatController = GetComponent<EnemyStatController>();
+        _enemyStatusController = GetComponent<EnemyStatusController>();
 
         _enemyMovement = new EnemyMovement(_rigidbody, transform, agent, _groundLayer);
 
@@ -84,14 +80,14 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         if (DataManager.Instance != null)
         {
             // 1. EnemyStatSO로부터 런타임 스탯 복제 주입
-            if (DataManager.Instance._enemyStatSO != null && DataManager.Instance._enemyStatSO.TryGetData(_unitId, out EnemyStat stat))
+            if (DataManager.Instance._enemyStatusSO != null && DataManager.Instance._enemyStatusSO.TryGetData(_unitId, out EnemyStatus status))
             {
-                _runtimeEnemyStat = (EnemyStat)stat.Clone();
-                _enemyStatController.Init(_runtimeEnemyStat);
+                EnemyStatus runtimeStatus = (EnemyStatus)status.Clone();
+                _enemyStatusController.Init(runtimeStatus);
 
-                _perceptionModule.SightRadius = _runtimeEnemyStat.SightRadius;
-                _perceptionModule.SightAngle = _runtimeEnemyStat.SightAngle;
-                _perceptionModule.HearingRadius = _runtimeEnemyStat.HearingRadius;
+                _perceptionModule.SightRadius = runtimeStatus.SightRadius;
+                _perceptionModule.SightAngle = runtimeStatus.SightAngle;
+                _perceptionModule.HearingRadius = runtimeStatus.HearingRadius;
             }
             else
             {
@@ -111,12 +107,6 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
 
         Init();
         _perceptionModule.StartSensorLoop();
-    }
-
-    protected override void Update()
-    {
-        base.Update();
-        _combatModule.TickCooldown(Time.deltaTime);
     }
 
     public virtual void SetTarget(Transform target) => _currentTarget = target;
@@ -146,11 +136,11 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     /// </summary>
     public EnemyAttackContext CreateAttackContext()
     {
-        float baseAtk = _enemyStatController.EnemyStatSource != null
-            ? _enemyStatController.EnemyStatSource.AttackPower : 20.0f;
+        float baseAtk = _enemyStatusController.EnemyStatusSource != null
+            ? _enemyStatusController.EnemyStatusSource.AttackPower : 20.0f;
 
-        float basePoise = _enemyStatController.EnemyStatSource != null
-            ? _enemyStatController.EnemyStatSource.BasePoiseDamage : 15.0f;
+        float basePoise = _enemyStatusController.EnemyStatusSource != null
+            ? _enemyStatusController.EnemyStatusSource.BasePoiseDamage : 15.0f;
 
         return new EnemyAttackContext(gameObject, transform, _enemyMovement,
             _enemyAnimController, _mainHitbox, baseAtk, basePoise);
@@ -175,7 +165,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         // 이미 사망한 개체
         if (_stateMachine.CurrentState is EnemyDieState) return;
 
-        _enemyStatController.TakeDamage(context.Damage, context.PoiseDamage);
+        _enemyStatusController.TakeDamage(context.Damage, context.PoiseDamage);
 
         // Player 자동 타겟 지정
         if (_currentTarget == null && context.Attacker != null)
@@ -183,14 +173,14 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
             SetTarget(context.Attacker.transform);
         }
 
-        if (_enemyStatController.CurrentHp <= 0f)
+        if (_enemyStatusController.CurrentHp <= 0f)
         {
             _stateMachine.ChangeState((int)UnitState.Die);
             return;
         }
 
         // 2. 포이즈 0 도달 시 그로기/스턴 상태 전이
-        if (_enemyStatController.IsPoiseBroken)
+        if (_enemyStatusController.IsPoiseBroken)
         {
             _stateMachine.ChangeState((int)UnitState.Stun, true);
             return;
@@ -211,7 +201,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         // 보스는 패링당해도 행동을 취소하지 않고 패턴을 그대로 진행
         if (_tier == EnemyTier.Boss)
         {
-            _enemyStatController.TakeDamage(0f, 10.0f); // 보스는 미세 포이즈만 차감
+            _enemyStatusController.TakeDamage(0f, 10.0f); // 보스는 미세 포이즈만 차감
             return;
         }
 
@@ -220,10 +210,10 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         Combat.StopAttack(in context, 4f);
 
         // 2. 패링 포이즈 대미지 차감
-        _enemyStatController.TakeDamage(0f, parryPoiseDamage);
+        _enemyStatusController.TakeDamage(0f, parryPoiseDamage);
 
         // 3. 포이즈가 0이 되었다면 그로기 스턴 (앞잡 허용)
-        if (_enemyStatController.IsPoiseBroken)
+        if (_enemyStatusController.IsPoiseBroken)
         {
             _stateMachine.ChangeState((int)UnitState.Stun, true);
         }
@@ -242,6 +232,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
             _perceptionModule.OnNoiseHeard -= HandleNoiseHeard;
             _perceptionModule.Dispose();
         }
+        _combatModule?.Dispose();
     }
 
     protected virtual void OnDrawGizmosSelected()
@@ -254,8 +245,8 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
 
         // 3. 스폰 위치 및 최대 추적 한계선(Leash Radius) 렌더링
         Vector3 spawn = Application.isPlaying ? _spawnPoint : transform.position;
-        float maxLeash = (_enemyStatController != null && _enemyStatController.EnemyStatSource != null)
-            ? _enemyStatController.EnemyStatSource.MaxLeashDistance : 25.0f;
+        float maxLeash = (_enemyStatusController != null && _enemyStatusController.EnemyStatusSource != null)
+            ? _enemyStatusController.EnemyStatusSource.MaxLeashDistance : 25.0f;
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(spawn, 0.6f); // 스폰 앵커 마커
@@ -272,8 +263,8 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
             Gizmos.DrawLine(transform.position + Vector3.up * 1.0f, _currentTarget.position + Vector3.up * 1.0f);
 
             // 기본 근접 사거리 가이드 (적색 와이어 디스크)
-            float combatRange = (_enemyStatController != null && _enemyStatController.EnemyStatSource != null)
-                ? _enemyStatController.EnemyStatSource.AttackRange : 2.0f;
+            float combatRange = (_enemyStatusController != null && _enemyStatusController.EnemyStatusSource != null)
+                ? _enemyStatusController.EnemyStatusSource.AttackRange : 2.0f;
 
 #if UNITY_EDITOR
             Handles.color = new Color(1.0f, 0.1f, 0.1f, 0.5f);

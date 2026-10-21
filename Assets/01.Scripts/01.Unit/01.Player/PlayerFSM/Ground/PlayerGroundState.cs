@@ -47,7 +47,7 @@ public class PlayerGroundState : PlayerBaseState
                 }
 
                 // 2. 스태미나가 부족하면 공격 상태로 전이하지 않고 입력을 폐기
-                if (_playerStatController != null && !_playerStatController.HasEnoughStamina(RequiredAttackStamina))
+                if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(RequiredAttackStamina))
                 {
                     owner.InputReader.ClearCommand(InputCommandType.Attack);
                     return;
@@ -63,8 +63,21 @@ public class PlayerGroundState : PlayerBaseState
         }
     }
 
-    protected virtual void HandleMoveInputChanged(UnityEngine.Vector2 moveInput) { }
-    protected virtual void HandleSprintChanged(bool isSprinting) { }
+    protected virtual void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)
+    {
+        if (moveInput.sqrMagnitude <= 0.01f)
+        {
+            _playerStateMachine.ChangeState(UnitState.Idle);
+        }
+    }
+    protected virtual void HandleSprintChanged(bool isSprinting)
+    {
+        // Shift 입력 감지 시 스태미나 여유가 있으면 Sprint 상태로 전이
+        if (isSprinting && _playerStatusController != null && _playerStatusController.HasEnoughStamina(5.0f))
+        {
+            _playerStateMachine.ChangeState(UnitState.Sprint);
+        }
+    }
 
     private void SubscribeEvent()
     {

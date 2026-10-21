@@ -7,7 +7,7 @@ using Util = DebugLogger<UnitStatController>;
 /// </summary>
 public class UnitStatController : MonoBehaviour
 {
-    public UnitMotionStatModule MotionStats { get; protected set; }
+    public UnitMotionStatusModule MotionStatus { get; protected set; }
     #region 런타임 가변 수치 ( 공통 Stat )
     [Header("Unit Shared Stats")]
     [SerializeField] protected float _currentHp;
@@ -15,7 +15,7 @@ public class UnitStatController : MonoBehaviour
     [SerializeField] protected float _currentPoise;
     [SerializeField] protected float _maxPoise;
 
-    protected System.Threading.CancellationTokenSource _cts;
+    protected System.Threading.CancellationTokenSource _poiseCts;
 
     protected float _poiseRecoveryTimer;
     protected const float PoiseRecoveryDelay = 5.0f;  // 마지막 피격 후 5초 뒤 회복
@@ -35,13 +35,14 @@ public class UnitStatController : MonoBehaviour
     #endregion
     #endregion
 
+    public event System.Action<float, float> OnHpChangedEvent;
+    public event System.Action<float, float> OnPoiseChangedEvent;
     public event System.Action OnDieEvent;
     public event System.Action OnPoiseBreakEvent;
-    public event System.Action<float> OnHpChanged;
 
     protected virtual void Awake()
     {
-        _cts = new System.Threading.CancellationTokenSource();
+        _poiseCts = new System.Threading.CancellationTokenSource();
     }
 
     /// <summary>
@@ -49,7 +50,7 @@ public class UnitStatController : MonoBehaviour
     /// 공통 스탯 세팅 -> 자식 전용 스탯 및 모듈 확장 -> 루프 가동 순서
     /// </summary>
     /// <param name="baseStat">주입할 기본 스탯 데이터</param>
-    public void Init(UnitBaseStat baseStat)
+    public void Init(UnitBaseStatus baseStat)
     {
         if (baseStat == null)
         {
@@ -58,8 +59,8 @@ public class UnitStatController : MonoBehaviour
         }
 
         // 1. 기존 동작 중인 비동기 루프 안전 정리 (오브젝트 풀링/재초기화 대응)
-        AsyncUtil.CancelAndDispose(ref _cts);
-        _cts = new System.Threading.CancellationTokenSource();
+        AsyncUtil.CancelAndDispose(ref _poiseCts);
+        _poiseCts = new System.Threading.CancellationTokenSource();
 
         // 2. 공통 기초 스탯 값 주입
         _maxHp = baseStat.MaxHp;
@@ -76,22 +77,28 @@ public class UnitStatController : MonoBehaviour
 
         // 4. 모든 스탯과 모듈이 완전히 구성된 루프 가동
         StartPoiseRecoveryLoop();
+
+        OnHpChangedEvent?.Invoke(_currentHp, _maxHp);
+        OnPoiseChangedEvent?.Invoke(_currentPoise, _maxPoise);
+
+        EventBusSystem.Publish(new UnitHpChangedEvent(gameObject, _currentHp, _maxHp));
+        EventBusSystem.Publish(new UnitPoiseChangedEvent(gameObject, _currentPoise, _maxPoise));
     }
 
     /// <summary>
     /// 자식 클래스에서 오버라이드하여 전용 모션 모듈과 추가 스탯을 세팅하는 가상 메서드
     /// </summary>
     /// <param name="baseStat">자식 타입으로 캐스팅하여 사용할 원본 스탯</param>
-    protected virtual void SetupDerivedStats(UnitBaseStat baseStat) { }
+    protected virtual void SetupDerivedStats(UnitBaseStatus baseStat) { }
 
     /// <summary>
     /// 강인도 회복 비동기 루프 기동
     /// </summary>
     protected void StartPoiseRecoveryLoop()
     {
-        if (_cts != null && _maxPoise > 0f)
+        if (_poiseCts != null && _maxPoise > 0f)
         {
-            PoiseRecoveryLoopAsync(_cts.Token).Forget();
+            PoiseRecoveryLoopAsync(_poiseCts.Token).Forget();
         }
     }
 
@@ -100,24 +107,65 @@ public class UnitStatController : MonoBehaviour
         if (_isDead) return;
 
         _currentHp = Mathf.Max(0f, _currentHp - damage);
-        OnHpChanged?.Invoke(_currentHp);
+        OnHpChangedEvent?.Invoke(_currentHp, _maxHp);
+        EventBusSystem.Publish(new UnitHpChangedEvent(gameObject, _currentHp, _maxHp));
 
         _poiseRecoveryTimer = PoiseRecoveryDelay;
         _currentPoise = Mathf.Max(0f, _currentPoise - poiseDamage);
+        OnPoiseChangedEvent?.Invoke(_currentPoise, _maxPoise);
+        EventBusSystem.Publish(new UnitPoiseChangedEvent(gameObject, _currentPoise, _maxPoise));
 
 
         if (_currentHp <= 0f)
         {
-            _isDead = true;
-            OnDieEvent?.Invoke();
+            Dead();
             return;
         }
 
         if (_currentPoise <= 0f)
         {
-            _isPoiseDepleted = true;
-            OnPoiseBreakEvent?.Invoke();
+            PoiseBreak();
         }
+    }
+
+    /// <summary>
+    /// 체력 회복 메서드
+    /// </summary>
+    public virtual void HealHp(float healAmount)
+    {
+        if (_isDead || healAmount <= 0f) return;
+
+        _currentHp = Mathf.Min(_maxHp, _currentHp + healAmount);
+        OnHpChangedEvent?.Invoke(_currentHp, _maxHp);
+        EventBusSystem.Publish(new UnitHpChangedEvent(gameObject, _currentHp, _maxHp));
+    }
+
+    /// <summary>
+    /// 사망 처리 메서드
+    /// </summary>
+    protected virtual void Dead()
+    {
+        if (_isDead) return;
+        _isDead = true;
+
+        AsyncUtil.CancelAndDispose(ref _poiseCts);
+
+        OnDieEvent?.Invoke();
+
+        UnitId identifier = GetComponent<PlayerController>() != null ? UnitId.Player : UnitId.NightmareCreature;
+        EventBusSystem.Publish(new UnitDiedEvent(gameObject, identifier));
+
+        Util.Log($"{gameObject.name} 사망");
+    }
+
+    /// <summary>
+    /// 그로기 발생 메서드
+    /// </summary>
+    protected virtual void PoiseBreak()
+    {
+        _isPoiseDepleted = true;
+        OnPoiseBreakEvent?.Invoke();
+        Util.Log($"{gameObject.name} 그로기 발생");
     }
 
     public void SetPoiseRecoveryPause(bool isPause) => _isPoiseRecoveryPaused = isPause;
@@ -130,6 +178,10 @@ public class UnitStatController : MonoBehaviour
         _currentPoise = _maxPoise;
         _poiseRecoveryTimer = 0f;
         _isPoiseRecoveryPaused = false;
+        _isPoiseDepleted = false;
+
+        OnPoiseChangedEvent?.Invoke(_currentPoise, _maxPoise);
+        EventBusSystem.Publish(new UnitPoiseChangedEvent(gameObject, _currentPoise, _maxPoise));
     }
 
     /// <summary>
@@ -153,8 +205,9 @@ public class UnitStatController : MonoBehaviour
             else
             {
                 _currentPoise = Mathf.Min(_maxPoise, _currentPoise + PoiseRecoveryRate * Time.deltaTime);
-
-                if(_currentPoise >= _maxPoise)
+                OnPoiseChangedEvent?.Invoke(_currentPoise, _maxPoise);
+                EventBusSystem.Publish(new UnitPoiseChangedEvent(gameObject, _currentPoise, _maxPoise));
+                if (_currentPoise >= _maxPoise)
                 {
                     _isPoiseDepleted = false;
                 }
@@ -162,5 +215,10 @@ public class UnitStatController : MonoBehaviour
         }
     }
 
-    protected virtual void OnDestroy() => AsyncUtil.CancelAndDispose(ref _cts);
+    protected virtual void OnDestroy() => AsyncUtil.CancelAndDispose(ref _poiseCts);
+
+    protected void InvokeChangeHPEvent(float currentHp, float maxHp)
+    {
+        OnHpChangedEvent?.Invoke(currentHp, maxHp);
+    }
 }

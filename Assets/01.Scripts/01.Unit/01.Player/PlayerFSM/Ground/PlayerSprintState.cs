@@ -12,7 +12,7 @@
         base.Enter();
 
         // 1. 최소 스태미나 미달 시 즉시 일반 걷기 상태로 강등
-        if (_playerStatController != null && !_playerStatController.HasEnoughStamina(MinimumSprintStamina))
+        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(MinimumSprintStamina))
         {
             _playerStateMachine.ChangeState(UnitState.Move);
             return;
@@ -41,43 +41,26 @@
 
         // 2. 실시간 스태미나 지속 차감
         float staminaCost = SprintStaminaCostPerSec * UnityEngine.Time.fixedDeltaTime;
-        if (_playerStatController != null)
+        if (_playerStatusController != null)
         {
-            if (!_playerStatController.HasEnoughStamina(staminaCost))
+            if (!_playerStatusController.HasEnoughStamina(staminaCost))
             {
                 // 스태미나가 완전히 고갈되면 일반 걷기로 강제 전환
                 _playerStateMachine.ChangeState(UnitState.Move);
                 return;
             }
 
-            _playerStatController.ConsumeStamina(staminaCost);
+            _playerStatusController.ConsumeStamina(staminaCost);
         }
 
         // 3. 스프린트 물리 이동 실행 - 움직이지 않으면 해당 부분 문제인거 체크
-        float sprintSpeed = _playerStatController != null && _playerStatController.PlayerMotionStats != null
-            ? _playerStatController.PlayerMotionStats.SprintSpeed.Value            : 0f;
+        float sprintSpeed = _playerStatusController != null && _playerStatusController.PlayerMotionStats != null
+            ? _playerStatusController.PlayerMotionStats.SprintSpeed.Value            : 0f;
 
         owner.MoveAPI(moveDir, sprintSpeed);
 
         // 4. 회전 제어 (락온 중이라도 전력 질주 시에는 이동 진행 방향을 바라보며 뜀)
-        owner.RotateTowardsAPI(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
-    }
-
-    protected override void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)
-    {
-        if (moveInput.sqrMagnitude <= 0.01f)
-        {
-            _playerStateMachine.ChangeState(UnitState.Idle);
-        }
-    }
-
-    protected override void HandleSprintChanged(bool isSprinting)
-    {
-        // 달리기 키(Shift)를 떼면 일반 걷기 상태로 복귀
-        if (!isSprinting)
-        {
-            _playerStateMachine.ChangeState(UnitState.Move);
-        }
+        owner.RotateTowardsAPI(moveDir, _playerStatusController.PlayerStatusSource.RotationSpeed, UnityEngine.Time.fixedDeltaTime);
     }
 
     private void UpdateSprintLocomotionAnimation()

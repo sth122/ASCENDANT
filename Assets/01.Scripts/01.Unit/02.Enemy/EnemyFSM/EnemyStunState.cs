@@ -25,7 +25,7 @@
         owner.CanBeRiposted = false; // 앞잡 허용 플래그 회수
 
         // 스턴 종료 시 강인도를 100% 완전 복구하여 다음 전투 준비
-        owner.EnemyStatController?.RestorePoiseToMax();
+        owner.StatusController?.RestorePoiseToMax();
     }
 
     private async Cysharp.Threading.Tasks.UniTaskVoid WaitForStunRecoveryAsync(System.Threading.CancellationToken token)

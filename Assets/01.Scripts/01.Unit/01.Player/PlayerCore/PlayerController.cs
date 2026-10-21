@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using Util = DebugLogger<PlayerController>;
 
 /// <summary>
@@ -8,14 +9,9 @@ using Util = DebugLogger<PlayerController>;
 /// </summary>
 public class PlayerController : UnitController<PlayerController>, IDamageable
 {
-    [Header("Runtime PlayerStat")]
-    [SerializeField] private PlayerStat _runtimePlayerStat;
-
     [Header("Lock-On Setting")]
     [SerializeField] private float _lockOnRadius = 15f;
     [SerializeField] private float _riposteRange = 2.2f; // 앞잡 유효 사거리
-
-    [Header("Lock-On Setting")]
     [SerializeField] private LayerMask _lockOnObstacleLayer;
 
     private readonly Collider[] _lockOnHitBuffer = new Collider[8];
@@ -23,7 +19,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     #region Properties
     public PlayerMovement Movement { get; private set; }
     public PlayerInputReader InputReader { get; private set; }
-    public PlayerStatController PlayerStatController => _statController as PlayerStatController;
+    public PlayerStatusController StatusController => _unitStatusController as PlayerStatusController;
     public PlayerAnimController AnimationController { get; private set; }
     public PlayerCombatModule CombatModule { get; private set; }
 
@@ -31,8 +27,6 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     public Transform CurrentLockOnTarget { get; private set; }
     public Vector3 CurrentMoveDirection { get; private set; }
     #endregion
-
-    public PlayerStat GetPlayerStat() => _runtimePlayerStat;
 
     protected override void Awake()
     {
@@ -46,6 +40,8 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
         // 메인 카메라는 CinemachineBrain에 의해 항상 활성화된 가상 카메라의 위치/각도를 반영함
         Transform mainCameraTransform = Camera.main != null ? Camera.main.transform : null;
         Movement = new PlayerMovement(_rigidbody, transform, mainCameraTransform, _groundLayer);
+
+        CombatModule = new PlayerCombatModule(this, AnimationController.WeaponHitbox);
     }
 
     /// <summary>
@@ -63,12 +59,12 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     /// </summary>
     private void InitializeStatData()
     {
-        if (DataManager.Instance != null && DataManager.Instance._playerStatSO != null)
+        if (DataManager.Instance != null && DataManager.Instance._playerStatusSO != null)
         {
-            if (DataManager.Instance._playerStatSO.TryGetData(_unitId, out PlayerStat stat))
+            if (DataManager.Instance._playerStatusSO.TryGetData(_unitId, out PlayerStatus status))
             {
-                _runtimePlayerStat = (PlayerStat)stat.Clone();
-                PlayerStatController?.Init(_runtimePlayerStat);
+                PlayerStatus runtimeStatus = (PlayerStatus)status.Clone();
+                StatusController.Init(runtimeStatus);
             }
             else
             {
@@ -76,28 +72,29 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
             }
         }
     }
+
+    public override void Init()
+    {
+        base.Init();
+        if (StatusController != null)
+        {
+            StatusController.OnDieEvent -= HandleUnitDie;
+            StatusController.OnPoiseBreakEvent -= HandlePoiseBreak;
+            StatusController.OnDieEvent += HandleUnitDie;
+            StatusController.OnPoiseBreakEvent += HandlePoiseBreak;
+        }
+    }
+
     private void OnDestroy()
     {
         UnsubscribeInputEvents();
         InputReader?.Dispose();
 
-        if (StatController != null)
+        if (StatusController != null)
         {
 
-            StatController.OnDieEvent -= HandleUnitDie;
-            StatController.OnPoiseBreakEvent -= HandlePoiseBreak;
-        }
-    }
-
-    public override void Init()
-    {
-        base.Init();
-        if (StatController != null)
-        {
-            StatController.OnDieEvent -= HandleUnitDie;
-            StatController.OnPoiseBreakEvent -= HandlePoiseBreak;
-            StatController.OnDieEvent += HandleUnitDie;
-            StatController.OnPoiseBreakEvent += HandlePoiseBreak;
+            StatusController.OnDieEvent -= HandleUnitDie;
+            StatusController.OnPoiseBreakEvent -= HandlePoiseBreak;
         }
     }
 
@@ -146,7 +143,8 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
                 lookDirection.y = 0f;
                 if (lookDirection.sqrMagnitude > 0.001f)
                 {
-                    Movement.RotateTowards(lookDirection.normalized, _runtimePlayerStat.RotationSpeed, Time.deltaTime);
+                    float rotSpeed = StatusController.PlayerStatusSource != null ? StatusController.PlayerStatusSource.RotationSpeed : 10.0f;
+                    Movement.RotateTowards(lookDirection.normalized, rotSpeed, Time.deltaTime);
                 }
             }
         }
@@ -183,8 +181,8 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
         }
 
         // 5. 일반 피격 처리
-        StatController.TakeDamage(context.Damage, context.PoiseDamage);
-        if(StatController.CurrentHp <= 0f) return;
+        StatusController.TakeDamage(context.Damage, context.PoiseDamage);
+        if(StatusController.CurrentHp <= 0f) return;
 
         // 6. 패링 불가 공격 적중 시 GetHit
         if(!context.IsParryable)
@@ -197,7 +195,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
         if (_stateMachine.CurrentState is PlayerAttackState)
         {
             // 포이즈가 아직 남아있고 고갈되지 않았다면 모션 유지 (슈퍼아머 버팀)
-            if (!StatController.IsPoiseBroken && !StatController.IsPoiseDepleted) return;
+            if (!StatusController.IsPoiseBroken && !StatusController.IsPoiseDepleted) return;
 
             // 포이즈가 0으로 깨지면 공격 캔슬 후 피격 경직 발생
             _stateMachine.ChangeState((int)UnitState.GetHit, true);
@@ -206,7 +204,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
 
         // 8. 비공격(대기/이동/달리기) 상태에서의 피격 판정
         // 포이즈가 한 번 깨진 후 100% 완전 회복되기 전까지는 피격 시 무조건 GetHit
-        if (StatController.IsPoiseDepleted || StatController.IsPoiseBroken)
+        if (StatusController.IsPoiseDepleted || StatusController.IsPoiseBroken)
         {
             _stateMachine.ChangeState((int)UnitState.GetHit, true);
         }
@@ -309,7 +307,6 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
             if (targetStat != null && targetStat.IsDead) continue;
 
             Vector3 toTarget = target.position - transform.position;
-            //toTarget.y = 0f;
             float distance = toTarget.magnitude;
 
             // 시야 차폐 검사
@@ -319,7 +316,6 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
             // 카메라 정면 각도 가중치 부여
             Vector3 camToTargetDir = (target.position - camTransform.position).normalized;
             float dot = Vector3.Dot(camTransform.forward, camToTargetDir);
-
             float score = (dot * 2.0f) - (distance / _lockOnRadius);
 
             if (score > maxSrcore)
@@ -360,6 +356,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     public void ToggleLockOn(Transform target)
     {
         CurrentLockOnTarget = target;
+        EventBusSystem.Publish(new LockOnTargetChangedEvent(CurrentLockOnTarget, CurrentLockOnTarget != null));
 
         if (CameraManager.Instance != null)
         {
@@ -383,9 +380,9 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     /// </summary>
     private void OnValidate()
     {
-        if (Application.isPlaying && PlayerStatController != null && _runtimePlayerStat != null)
+        if (Application.isPlaying && StatusController != null && StatusController.PlayerStatusSource != null)
         {
-            PlayerStatController.SyncRuntimeStats(_runtimePlayerStat);
+            StatusController.SyncRuntimeStats(StatusController.PlayerStatusSource);
             Util.Log("인스펙터 스탯이 런타임 모듈에 실시간 동기화");
         }
     }

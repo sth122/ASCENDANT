@@ -1,15 +1,15 @@
-﻿using Util = DebugLogger<PlayerMotionStatModule>;
+﻿using Util = DebugLogger<PlayerMotionStatusModule>;
 
 /// <summary>
 /// Player 전용 기동력 및 장비 중량(Equip Load) 페널티를 전담 관리하는 순수 C# 모듈
 /// </summary>
 [System.Serializable]
-public class PlayerMotionStatModule : UnitMotionStatModule
+public class PlayerMotionStatusModule : UnitMotionStatusModule
 {
     #region Player 전용 기동 스탯
-    public ModifiableStat SprintSpeed { get; }
-    public ModifiableStat JumpForce { get; }
-    public ModifiableStat RollForce { get; }
+    public ModifiableStatus SprintSpeed { get; }
+    public ModifiableStatus JumpForce { get; }
+    public ModifiableStatus RollForce { get; }
     #endregion
 
     #region 장비 중량 시스템
@@ -18,7 +18,7 @@ public class PlayerMotionStatModule : UnitMotionStatModule
     public float WeightRatio => MaxEquipWeight > 0f ? CurrentEquipWeight / MaxEquipWeight : 0f;
     #endregion
 
-    public PlayerMotionStatModule(PlayerStat playerStat) : base(playerStat)
+    public PlayerMotionStatusModule(PlayerStatus playerStat) : base(playerStat)
     {
         if (playerStat == null)
         {
@@ -26,9 +26,9 @@ public class PlayerMotionStatModule : UnitMotionStatModule
             return;
         }
 
-        SprintSpeed = new ModifiableStat(playerStat.SprintSpeed);
-        JumpForce = new ModifiableStat(playerStat.JumpForce);
-        RollForce = new ModifiableStat(playerStat.RollForce);
+        SprintSpeed = new ModifiableStatus(playerStat.SprintSpeed);
+        JumpForce = new ModifiableStatus(playerStat.JumpForce);
+        RollForce = new ModifiableStatus(playerStat.RollForce);
         MaxEquipWeight = playerStat.CalculateMaxEquipWeight();
     }
 
@@ -45,12 +45,11 @@ public class PlayerMotionStatModule : UnitMotionStatModule
         WalkSpeed.ClearModifiers();
         SprintSpeed.ClearModifiers();
 
-        RollForce.ClearModifiers();
         if (WeightRatio >= 0.7f)
         {
-            RollForce.AddModifier(new StatModifier(-0.3f, StatModType.PercentMult));     // 구르기 거리 30% 감소
-            WalkSpeed.AddModifier(new StatModifier(-0.2f, StatModType.PercentMult));     // 걷기 속도 20% 감소
-            SprintSpeed.AddModifier(new StatModifier(-0.25f, StatModType.PercentMult));  // 달리기 속도 25% 감소
+            RollForce.AddModifier(new StatusModifier(-0.3f, StatModType.PercentMult));     // 구르기 거리 30% 감소
+            WalkSpeed.AddModifier(new StatusModifier(-0.2f, StatModType.PercentMult));     // 걷기 속도 20% 감소
+            SprintSpeed.AddModifier(new StatusModifier(-0.25f, StatModType.PercentMult));  // 달리기 속도 25% 감소
         }
 
         InvokeMotionStatChanged();
@@ -59,7 +58,7 @@ public class PlayerMotionStatModule : UnitMotionStatModule
     /// <summary>
     /// 인스펙터 튜닝 시 ModifiableStat의 기본값을 실시간 동기화
     /// </summary>
-    public void SyncBaseValues(PlayerStat playerStat)
+    public void SyncBaseValues(PlayerStatus playerStat)
     {
         if (playerStat == null) return;
 

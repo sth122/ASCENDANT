@@ -7,8 +7,8 @@
 public class PlayerRollState : PlayerActionState
 {
     private const float RollStaminaCost = 18.0f;
-    private const float InvincibleDuration = 0.35f;    // 무적 시간 (초 단위)
-    private const float RollTotalDuration = 0.8f;     // 구르기 전체 동작 시간 (초 단위)
+    private const float InvincibleDuration = 0.35f;
+    private const float RollTotalDuration = 0.85f;
 
     public bool IsInvincible { get; private set; }
 
@@ -21,15 +21,13 @@ public class PlayerRollState : PlayerActionState
 
         // 1. 구르기 방향 결정 (입력 방향 우선, 무입력 시 백스탭 대용 180도 반전 - 현재 잠시 해제)
         UnityEngine.Vector3 moveInputDirection = owner.CurrentMoveDirection;
-        bool isBackstep = moveInputDirection.sqrMagnitude <= 0.001f;
-
-        if (!isBackstep)
+        if (moveInputDirection.sqrMagnitude > 0.001f)
         {
             owner.transform.rotation = UnityEngine.Quaternion.LookRotation(moveInputDirection.normalized);
         }
 
         // 2. 스태미나 차감
-        _playerStatController?.ConsumeStamina(RollStaminaCost);
+        _playerStatusController?.ConsumeStamina(RollStaminaCost);
 
         // 3. 기존 잔여 관성 속도 초기화 (이전 이동 속도가 구르기에 간섭하는 것 방지)
         owner.StopMovementAPI();
@@ -40,9 +38,8 @@ public class PlayerRollState : PlayerActionState
         // 5. 애니메이터 Roll 트리거 실행
         _playerAnimController.SetTrigger(AnimParamType.Roll);
 
-        // 6. 무적 시간 및 상태 복귀 비동기 타이머 가동
         System.Threading.CancellationToken token = CreateActionToken();
-        ExecuteRollAsync(isBackstep, token).Forget();
+        ExecuteRollAsync(token).Forget();
     }
 
     public override void Exit()
@@ -54,10 +51,8 @@ public class PlayerRollState : PlayerActionState
         IsInvincible = false;
     }
 
-    private async Cysharp.Threading.Tasks.UniTaskVoid ExecuteRollAsync(bool isBackstep, System.Threading.CancellationToken token)
+    private async Cysharp.Threading.Tasks.UniTaskVoid ExecuteRollAsync(System.Threading.CancellationToken token)
     {
-        // 백스탭은 무적 시간이 짧음 (0.15초), 일반 구르기는 0.35초
-        float actualInvincible = isBackstep ? 0.15f : InvincibleDuration;
         IsInvincible = true;
 
         // 1. 무적 시간 대기

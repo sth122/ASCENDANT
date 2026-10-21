@@ -34,16 +34,16 @@ public class EnemyDieState : EnemyBaseState
 
     private void DistributeRewardSouls()
     {
-        if (owner.EnemyStatController == null) return;
+        if (owner.StatusController == null) return;
 
-        int rewardSouls = owner.EnemyStatController.DropSouls;
+        int rewardSouls = owner.StatusController.DropSouls;
         if (rewardSouls <= 0) return;
 
         // 플레이어 탐색 후 소울 지급
         PlayerController player = Object.FindAnyObjectByType<PlayerController>();
-        if (player != null && player.PlayerStatController != null && player.PlayerStatController.PlayerStatSource != null)
+        if (player != null && player.StatusController != null && player.StatusController.PlayerStatusSource != null)
         {
-            player.PlayerStatController.PlayerStatSource.AddSouls(rewardSouls);
+            player.StatusController.PlayerStatusSource.AddSouls(rewardSouls);
             DebugLogger.LogWithTag("EnemyDieState", $"처치 보상 소울 지급 완료: +{rewardSouls} Souls");
         }
     }

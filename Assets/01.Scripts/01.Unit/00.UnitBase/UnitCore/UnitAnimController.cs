@@ -37,10 +37,8 @@ public class UnitAnimController : MonoBehaviour
             _animator.applyRootMotion = isEnabled;
         }
     }
-
     /// <summary>
-    /// 특정 레이어의 현재 애니메이션 재생 진행도(0.0 ~ 1.0)를 반환
-    /// 트랜지션 중일 때는 다음 상태의 진행도를 함께 고려
+    /// 현재 재생 중인 애니메이션의 normalizedTime 반환
     /// </summary>
     public float GetCurrentNormalizedTime(int layerIndex = 0)
     {
@@ -48,6 +46,36 @@ public class UnitAnimController : MonoBehaviour
 
         AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(layerIndex);
         return stateInfo.normalizedTime;
+    }
+
+    /// <summary>
+    /// 목표 상태(targetStateHash)의 진행도를 안전하게 추출하는 메서드
+    /// 트랜지션 중에는 다음 상태(NextState)의 진행도를 읽고, 
+    /// 목표 상태가 아니면 0f를 반환하여 이전 루프 모션 시간(예: BattleIdle 3.5) 오독을 원천 방지
+    /// </summary>
+    public float GetCurrentNormalizedTimeOfState(int targetStateHash, int layerIndex = 0)
+    {
+        if (_animator == null) return 0f;
+
+        // 1. 현재 트랜지션 중인 경우
+        if (_animator.IsInTransition(layerIndex))
+        {
+            AnimatorStateInfo nextInfo = _animator.GetNextAnimatorStateInfo(layerIndex);
+            if (nextInfo.shortNameHash == targetStateHash)
+            {
+                return nextInfo.normalizedTime;
+            }
+            return 0f; // 아직 전환 대상이 아니면 0 반환
+        }
+
+        // 2. 트랜지션이 완료된 현재 상태인 경우
+        AnimatorStateInfo currentInfo = _animator.GetCurrentAnimatorStateInfo(layerIndex);
+        if (currentInfo.shortNameHash == targetStateHash)
+        {
+            return currentInfo.normalizedTime;
+        }
+
+        return 0f;
     }
 
     /// <summary>
@@ -65,7 +93,7 @@ public class UnitAnimController : MonoBehaviour
 
     public void SetTrigger(AnimParamType paramType)
     {
-        if (_animData != null)
+        if (_animData != null && _animator != null)
         {
             _animator.SetTrigger(_animData.GetParamHash(paramType));
         }
@@ -73,7 +101,7 @@ public class UnitAnimController : MonoBehaviour
 
     public void ResetTrigger(AnimParamType paramType)
     {
-        if (_animData != null)
+        if (_animData != null && _animator != null)
         {
             _animator.ResetTrigger(_animData.GetParamHash(paramType));
         }
@@ -81,7 +109,7 @@ public class UnitAnimController : MonoBehaviour
 
     public void SetInteger(AnimParamType paramType, int value)
     {
-        if (_animData != null)
+        if (_animData != null && _animator != null)
         {
             _animator.SetInteger(_animData.GetParamHash(paramType), value);
         }
@@ -89,7 +117,7 @@ public class UnitAnimController : MonoBehaviour
 
     public void SetFloat(AnimParamType paramType, float value)
     {
-        if (_animData != null)
+        if (_animData != null && _animator != null)
         {
             _animator.SetFloat(_animData.GetParamHash(paramType), value);
         }
@@ -97,10 +125,19 @@ public class UnitAnimController : MonoBehaviour
 
     public void SetBool(AnimParamType paramType, bool value)
     {
-        if (_animData != null)
+        if (_animData != null && _animator != null)
         {
             _animator.SetBool(_animData.GetParamHash(paramType), value);
         }
+    }
+
+    public int GetStateHash(AnimStateType stateType)
+    {
+        if (_animData != null && _animData.TryGetState(stateType, out int hash, out _))
+        {
+            return hash;
+        }
+        return 0;
     }
 
     public void PlayState(AnimStateType stateType)

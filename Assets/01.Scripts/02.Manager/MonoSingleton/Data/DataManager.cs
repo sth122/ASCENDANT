@@ -2,21 +2,25 @@
 
 public class DataManager : MonoSingleton<DataManager>
 {
-    [SerializeField] public PlayerStatSO _playerStatSO;
+    [SerializeField] public PlayerStatusSO _playerStatusSO;
 
-    public EnemyStatSO _enemyStatSO; 
+    public EnemyStatusSO _enemyStatusSO; 
     public EnemyAttackDatabaseSO _enemyAttackDatabaseSO;
-
-    protected override void Awake()
-    {
-        base.Awake();
-    }
 
     public override void Init()
     {
-        if (_playerStatSO != null)
+        if (_playerStatusSO != null)
         {
-            _playerStatSO.InitializeDictionary();
+            _playerStatusSO.InitializeDictionary();
+        }
+        if (_enemyStatusSO != null)
+        {
+            _enemyStatusSO.InitializeDictionary();
+        }
+
+        if (_enemyAttackDatabaseSO != null)
+        {
+            _enemyAttackDatabaseSO.InitDatabase();
         }
     }
 }

@@ -21,12 +21,12 @@ public class PlayerJumpState : PlayerBaseState
         owner.InputReader.ClearCommand(InputCommandType.Jump);
 
         // 1. 스태미나 차감
-        _playerStatController?.ConsumeStamina(JumpStaminaCost);
+        _playerStatusController?.ConsumeStamina(JumpStaminaCost);
         _playerAnimController.SetTrigger(AnimParamType.Jump);
 
         // 2. JumpForce 반영  - 점프하지 않으면 해당 부분 문제인거 체크
-        float jumpForce = _playerStatController != null && _playerStatController.PlayerMotionStats != null ?
-            _playerStatController.PlayerMotionStats.JumpForce.Value : 0.0f;
+        float jumpForce = _playerStatusController != null && _playerStatusController.PlayerMotionStats != null ?
+            _playerStatusController.PlayerMotionStats.JumpForce.Value : 0.0f;
 
         owner.ApplyJumpAPI(jumpForce);
     }
@@ -58,7 +58,7 @@ public class PlayerJumpState : PlayerBaseState
 
         if(owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
         {
-            float airSpeed = _playerStatController.MotionStats.WalkSpeed.Value * AirControlFactor;
+            float airSpeed = _playerStatusController.MotionStatus.WalkSpeed.Value * AirControlFactor;
             UnityEngine.Vector3 airVelocity = owner.CurrentMoveDirection * airSpeed;
 
             owner.Rigidbody.linearVelocity = new UnityEngine.Vector3(airVelocity.x, owner.Rigidbody.linearVelocity.y, airVelocity.z);

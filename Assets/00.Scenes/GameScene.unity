@@ -245,11 +245,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6405264929382701879, guid: 28229c1b215e3884893425e89eb65072, type: 3}
       propertyPath: chaseStopping
-      value: 2
+      value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: 6405264929382701879, guid: 28229c1b215e3884893425e89eb65072, type: 3}
       propertyPath: patrolStopping
-      value: 1
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6405264929382701879, guid: 28229c1b215e3884893425e89eb65072, type: 3}
+      propertyPath: _allLayer.m_Bits
+      value: 128
       objectReference: {fileID: 0}
     - target: {fileID: 6786336889762450844, guid: 28229c1b215e3884893425e89eb65072, type: 3}
       propertyPath: m_Constraints
@@ -303,8 +307,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DataManager
   isDDOL: 0
-  _playerStatSO: {fileID: 11400000, guid: 8faec110d4afb5e47b67c75a78c48947, type: 2}
-  _enemyStatSO: {fileID: 11400000, guid: 2723aa284ae59f440b9a68b0a41df536, type: 2}
+  _playerStatusSO: {fileID: 11400000, guid: 8faec110d4afb5e47b67c75a78c48947, type: 2}
+  _enemyStatusSO: {fileID: 11400000, guid: 2723aa284ae59f440b9a68b0a41df536, type: 2}
   _enemyAttackDatabaseSO: {fileID: 11400000, guid: 4461b0ffc5a1ae345aee10215f188c06, type: 2}
 --- !u!4 &875489837
 Transform:
@@ -526,8 +530,6 @@ MonoBehaviour:
       Input:
         InputAction: {fileID: -5630151704836100654, guid: 1d6e640e716dc4ff6989b73d02023f2b, type: 3}
         Gain: 1
-        LegacyInput: 
-        LegacyGain: 1
         CancelDeltaTime: 0
       InputValue: 0
       Driver:
@@ -539,8 +541,6 @@ MonoBehaviour:
       Input:
         InputAction: {fileID: -5630151704836100654, guid: 1d6e640e716dc4ff6989b73d02023f2b, type: 3}
         Gain: -1
-        LegacyInput: 
-        LegacyGain: 1
         CancelDeltaTime: 0
       InputValue: 0
       Driver:
@@ -552,8 +552,6 @@ MonoBehaviour:
       Input:
         InputAction: {fileID: 5082991133974614888, guid: 1d6e640e716dc4ff6989b73d02023f2b, type: 3}
         Gain: -1
-        LegacyInput: 
-        LegacyGain: 1
         CancelDeltaTime: 0
       InputValue: 0
       Driver:

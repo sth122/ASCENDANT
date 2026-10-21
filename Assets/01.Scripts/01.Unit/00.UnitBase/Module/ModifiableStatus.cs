@@ -1,12 +1,12 @@
 ﻿/// <summary>
 /// 스탯에 주는 영향을 표현하는 기본 데이터 구조
 /// </summary>
-public readonly struct StatModifier
+public readonly struct StatusModifier
 {
     public readonly float Value;
     public readonly StatModType Type;
 
-    public StatModifier(float value, StatModType type)
+    public StatusModifier(float value, StatModType type)
     {
         this.Value = value;
         this.Type = type;
@@ -18,11 +18,11 @@ public readonly struct StatModifier
 /// 값이 변경될 때만 재계산하는 더티 플래그(Dirty Flag) 패턴 사용
 /// </summary>
 [System.Serializable]
-public class ModifiableStat
+public class ModifiableStatus
 {
     public float BaseValue { get; set; }
 
-    private readonly System.Collections.Generic.List<StatModifier> _modifiers = new System.Collections.Generic.List<StatModifier>();
+    private readonly System.Collections.Generic.List<StatusModifier> _modifiers = new System.Collections.Generic.List<StatusModifier>();
     private float _cachedValue;
     private bool _isDirty = true;
 
@@ -39,18 +39,18 @@ public class ModifiableStat
         }
     }
 
-    public ModifiableStat(float baseValue)
+    public ModifiableStatus(float baseValue)
     {
         this.BaseValue = baseValue;
     }
 
-    public void AddModifier(StatModifier modifier)
+    public void AddModifier(StatusModifier modifier)
     {
         _modifiers.Add(modifier);
         _isDirty = true;
     }
 
-    public void RemoveModifier(StatModifier modifier)
+    public void RemoveModifier(StatusModifier modifier)
     {
         if (_modifiers.Remove(modifier))
             _isDirty = true;

@@ -11,6 +11,7 @@ public class CreatureEnemyController : EnemyController
 {
     [Header("Creature Specific Settings")]
     [SerializeField] private float _callAlliesRadius = 15.0f;
+    [SerializeField] private LayerMask _allLayer;
 
     private readonly Collider[] _allyBuffer = new Collider[16];
     public float CallAlliesRadius => _callAlliesRadius;
@@ -30,7 +31,7 @@ public class CreatureEnemyController : EnemyController
     #region MyRegion
     protected override void HandleTargetSpotted(Transform target)
     {
-        if(_currentTarget == null)
+        if (_currentTarget == null)
         {
             SetTarget(target);
             _stateMachine.ChangeState((int)UnitState.Roar);
@@ -59,7 +60,7 @@ public class CreatureEnemyController : EnemyController
     {
         if (_currentTarget == null) return;
 
-        int count = Physics.OverlapSphereNonAlloc(transform.position, _callAlliesRadius, _allyBuffer, _targetLayer);
+        int count = Physics.OverlapSphereNonAlloc(transform.position, _callAlliesRadius, _allyBuffer, _allLayer);
         for (int i = 0; i < count; i++)
         {
             Collider col = _allyBuffer[i];

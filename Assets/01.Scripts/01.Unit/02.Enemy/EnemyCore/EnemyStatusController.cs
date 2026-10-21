@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
-using Util = DebugLogger<EnemyStatController>;
+using Util = DebugLogger<EnemyStatusController>;
 
 /// <summary>
 /// Enemy 전용 확장 런타임 스탯 컨트롤러
 /// </summary>
-public class EnemyStatController : UnitStatController
+public class EnemyStatusController : UnitStatController
 {
-    public EnemyMotionStatModule EnemyMotionStats => MotionStats as EnemyMotionStatModule;
-    public EnemyStat EnemyStatSource { get; private set; }
+    public EnemyMotionStatusModule EnemyMotionStatus => MotionStatus as EnemyMotionStatusModule;
+    public EnemyStatus EnemyStatusSource { get; private set; }
 
     [Header("Enemy ExclusiveL Souls")]
     [SerializeField] private int _dropSouls;
@@ -17,11 +17,11 @@ public class EnemyStatController : UnitStatController
     /// Enemy 전용 스탯 및 모듈 확장부
     /// </summary>
     /// <param name="baseStat"></param>
-    protected override void SetupDerivedStats(UnitBaseStat baseStat)
+    protected override void SetupDerivedStats(UnitBaseStatus baseStat)
     {
-        if (baseStat is EnemyStat enemyStat)
+        if (baseStat is EnemyStatus enemyStat)
         {
-            EnemyStatSource = enemyStat;
+            EnemyStatusSource = enemyStat;
 
             _maxHp = enemyStat.MaxHp;
             _currentHp = _maxHp;
@@ -29,7 +29,7 @@ public class EnemyStatController : UnitStatController
             _maxPoise = enemyStat.Poise;
             _dropSouls = enemyStat.DropSouls;
 
-            MotionStats = new EnemyMotionStatModule(enemyStat);
+            MotionStatus = new EnemyMotionStatusModule(enemyStat);
         }
         else
         {

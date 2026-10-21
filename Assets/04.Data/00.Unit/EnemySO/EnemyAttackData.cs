@@ -14,7 +14,6 @@ public struct EnemyAttackData
     [SerializeField] private float _damageMultiplier;
     [Tooltip("강인도 피해 배율")]
     [SerializeField] private float _poiseMultiplier;
-
     [Header("사거리 및 쿨타임")]
     [SerializeField] private float _attackRange;
     [SerializeField] private float _attackCooldown;
@@ -39,7 +38,7 @@ public struct EnemyAttackData
     public float AttackCooldown => _attackCooldown;
     public bool IsParryable => _isParryable;
 
-    public float HitboxStartNormalized => _hitboxStartNormalized > 0f ? _hitboxStartNormalized : 0.25f;
+    public float HitboxStartNormalized => _hitboxStartNormalized >= 0f ? _hitboxStartNormalized : 0.25f;
     public float HitboxEndNormalized => _hitboxEndNormalized > 0f ? _hitboxEndNormalized : 0.60f;
     public float ActionEndNormalized => _actionEndNormalized > 0f ? _actionEndNormalized : 0.90f;
     #endregion

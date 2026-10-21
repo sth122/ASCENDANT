@@ -11,7 +11,7 @@ public class PlayerMoveState : PlayerGroundState
         base.Enter();
 
         // 달리기 키가 이미 눌려져 있고 스태미나가 충분하다면 즉시 Sprint 상태로 승급
-        if (owner.InputReader.IsSprinting && _playerStatController != null && _playerStatController.HasEnoughStamina(5.0f))
+        if (owner.InputReader.IsSprinting && _playerStatusController != null && _playerStatusController.HasEnoughStamina(5.0f))
         {
             _playerStateMachine.ChangeState(UnitState.Sprint);
             return;
@@ -38,8 +38,8 @@ public class PlayerMoveState : PlayerGroundState
         }
 
         // 일반 걷기 물리 이동 - 움직이지 않으면 해당 부분 문제인거 체크
-        float walkSpeed = _playerStatController != null && _playerStatController.PlayerMotionStats != null
-            ? _playerStatController.MotionStats.WalkSpeed.Value : 0f;
+        float walkSpeed = _playerStatusController != null && _playerStatusController.PlayerMotionStats != null
+            ? _playerStatusController.MotionStatus.WalkSpeed.Value : 0f;
 
         owner.MoveAPI(moveDir, walkSpeed);
 
@@ -52,13 +52,13 @@ public class PlayerMoveState : PlayerGroundState
             targetDir.y = 0f;
             if (targetDir.sqrMagnitude > 0.001f)
             {
-                owner.RotateTowardsAPI(targetDir.normalized, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+                owner.RotateTowardsAPI(targetDir.normalized, _playerStatusController.PlayerStatusSource.RotationSpeed, UnityEngine.Time.fixedDeltaTime);
             }
         }
         else
         {
             // 비 락온 시 진행 방향으로 회전
-            owner.RotateTowardsAPI(moveDir, owner.GetPlayerStat().RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+            owner.RotateTowardsAPI(moveDir, _playerStatusController.PlayerStatusSource.RotationSpeed, UnityEngine.Time.fixedDeltaTime);
         }
     }
 
@@ -67,23 +67,6 @@ public class PlayerMoveState : PlayerGroundState
         base.Exit();
         _playerAnimController.SetFloat(AnimParamType.MoveX, 0f);
         _playerAnimController.SetFloat(AnimParamType.MoveZ, 0f);
-    }
-
-    protected override void HandleMoveInputChanged(UnityEngine.Vector2 moveInput)
-    {
-        if(moveInput.sqrMagnitude <= 0.01f)
-        {
-            _playerStateMachine.ChangeState(UnitState.Idle);
-        }
-    }
-
-    protected override void HandleSprintChanged(bool isSprinting)
-    {
-        // Shift 입력 감지 시 스태미나 여유가 있으면 Sprint 상태로 전이
-        if (isSprinting && _playerStatController != null && _playerStatController.HasEnoughStamina(5.0f))
-        {
-            _playerStateMachine.ChangeState(UnitState.Sprint);
-        }
     }
 
     private void UpdateLocomotionAnimation()

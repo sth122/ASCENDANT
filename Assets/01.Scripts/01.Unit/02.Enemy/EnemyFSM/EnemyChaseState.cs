@@ -4,6 +4,10 @@
     private float _pathUpdateTimer = 0f;
     private bool _isInCombatRange = false;
 
+    // 대치 진입 및 이탈 사거리
+    private const float EngageDistance = 1.8f;      // 대치 진입 거리 (공격 사거리 2.0m보다 앞쪽)
+    private const float DisengageDistance = 2.8f;   // 대치 이탈 거리
+
     public EnemyChaseState(EnemyController owner, EnemyStateMachine stateMachine) : base(owner, stateMachine) { }
 
     public override void Enter()
@@ -13,15 +17,13 @@
 
         owner.SetStoppingDistanceAPI(UnitState.Chase);
 
-        float engageRange = GetEngageDistance();
-
         // 진입 시점에 이미 공격 사거리 이내라면 Run을 켜지 않고 BattleIdle로 시작
         if (owner.CurrentTarget != null)
         {
             UnityEngine.Vector3 toTarget = owner.CurrentTarget.position - owner.transform.position;
             toTarget.y = 0f;
 
-            if (toTarget.magnitude <= engageRange)
+            if (toTarget.magnitude <= EngageDistance)
             {
                 _isInCombatRange = true;
                 owner.StopMovementAPI();
@@ -58,8 +60,8 @@
         }
         
         // 3. 최대 활동 반경 초과 검사
-        float maxLeash = _enemyStatController.EnemyStatSource != null
-            ? _enemyStatController.EnemyStatSource.MaxLeashDistance : 25.0f;
+        float maxLeash = _enemyStatusController.EnemyStatusSource != null
+            ? _enemyStatusController.EnemyStatusSource.MaxLeashDistance : 25.0f;
 
         if (owner.IsExceedingLeashDistance(maxLeash))
         {
@@ -73,45 +75,40 @@
         float distance = toTarget.magnitude;
 
         // 기본 공격 사거리 (기준: 2.0m)
-        float engageRange = GetEngageDistance();
 
-        // 5. 사거리 내 진입 시: 정지 후 BattleIdle 모션으로 대치
-        if (distance <= engageRange)
+        // 5. 대치 영역 상태 분기
+        if (!_isInCombatRange && distance <= EngageDistance)
         {
-            if (!_isInCombatRange)
-            {
-                _isInCombatRange = true;
-                owner.StopMovementAPI();
-                _enemyAnimController.PlayState(AnimStateType.BattleIdle);
-            }
+            _isInCombatRange = true;
+            owner.StopMovementAPI();
+            _enemyAnimController.PlayState(AnimStateType.BattleIdle);
+        }
+        else if (_isInCombatRange && distance > DisengageDistance)
+        {
+            _isInCombatRange = false;
+            _enemyAnimController.PlayState(AnimStateType.Run);
+        }
 
-            // 대치 중에는 제자리에서 플레이어를 지속 주시
+        // 6. 대치 분기
+        if (_isInCombatRange)
+        {
             owner.FaceTargetAPI(target.position, 5.0f, UnityEngine.Time.deltaTime);
 
-            // 쿨타임이 완료되어 공격 패턴 실행이 가능한 경우 BattleIdle에서 Attack으로 자연스럽게 진입
             EnemyAttackContext context = owner.CreateAttackContext();
-            if (owner.Combat.TrySelectAttackPattern(in context, target, out EnemyAttackData selectedPattern))
+            if (owner.Combat.TrySelectAttackPattern(in context, target, out _))
             {
                 _enemyStateMachine.ChangeState((int)UnitState.Attack);
                 return;
             }
         }
-        else
+        else // 추격 로직
         {
-            // 6. 플레이어가 사거리 밖으로 벗어난 경우: Run 모션으로 재추격
-            if (_isInCombatRange)
-            {
-                _isInCombatRange = false;
-                _enemyAnimController.PlayState(AnimStateType.Run);
-            }
-
-            // 0.2초 스로틀링 경로 갱신
             _pathUpdateTimer += UnityEngine.Time.deltaTime;
             if (_pathUpdateTimer >= PathUpdateInterval)
             {
                 _pathUpdateTimer = 0f;
-                float speed = _enemyStatController.EnemyMotionStats != null
-                    ? _enemyStatController.EnemyMotionStats.ChaseSpeed.Value : 4.5f;
+                float speed = _enemyStatusController.EnemyMotionStatus != null
+                    ? _enemyStatusController.EnemyMotionStatus.ChaseSpeed.Value : 4.5f;
 
                 owner.SetDestinationAPI(target.position, speed);
             }
@@ -120,15 +117,6 @@
         }
     }
 
-    /// <summary>
-    /// 공격 데이터베이스 상의 최대 공격 사거리에 마진을 더한 실제 대치 진입 사거리 산출
-    /// </summary>
-    private float GetEngageDistance()
-    {
-        float maxPatternRange = owner.Combat != null ? owner.Combat.GetMaxAttackRange() : 2.0f;
-        // 최대 공격 사거리(2.0m)보다 살짝 넓은 2.3m를 대치 기준점으로 설정
-        return UnityEngine.Mathf.Max(2.3f, maxPatternRange + 0.3f);
-    }
     public override void Exit()
     {
         base.Exit();

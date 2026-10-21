@@ -20,7 +20,7 @@ MonoBehaviour:
         _attackAnimStateType: 6
         _damageMultiplier: 1
         _poiseMultiplier: 1
-        _attackRange: 2
+        _attackRange: 2.5
         _attackCooldown: 2.5
         _hitboxStartNormalized: 0.25
         _hitboxEndNormalized: 0.6
@@ -31,7 +31,7 @@ MonoBehaviour:
         _attackAnimStateType: 7
         _damageMultiplier: 1.2
         _poiseMultiplier: 1
-        _attackRange: 2
+        _attackRange: 2.5
         _attackCooldown: 2.5
         _hitboxStartNormalized: 0.25
         _hitboxEndNormalized: 0.6
@@ -42,7 +42,7 @@ MonoBehaviour:
         _attackAnimStateType: 8
         _damageMultiplier: 1.5
         _poiseMultiplier: 2
-        _attackRange: 2
+        _attackRange: 2.5
         _attackCooldown: 4
         _hitboxStartNormalized: 0.25
         _hitboxEndNormalized: 0.6
@@ -53,7 +53,7 @@ MonoBehaviour:
         _attackAnimStateType: 9
         _damageMultiplier: 1.5
         _poiseMultiplier: 2
-        _attackRange: 2
+        _attackRange: 2.5
         _attackCooldown: 4
         _hitboxStartNormalized: 0.25
         _hitboxEndNormalized: 0.6

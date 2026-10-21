@@ -28,7 +28,10 @@ public class MeleeAttackStrategy : IEnemyAttackStrategy
         _isHitboxOpen = false;
 
         // 1. 타겟 정면 응시 회전
-        context.Movement.FaceTarget(target.position, TrackingRotationSpeed, UnityEngine.Time.deltaTime);
+        if(target != null)
+        {
+            context.Movement.FaceTarget(target.position, TrackingRotationSpeed, UnityEngine.Time.deltaTime);
+        }
 
         // 2. 애니메이션 상태 재생
         context.AnimController.PlayState(data.AttackAnimStateType);

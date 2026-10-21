@@ -1,11 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
-using Util = DebugLogger<PlayerStatController>;
+using Util = DebugLogger<PlayerStatusController>;
 
 /// <summary>
 /// Player 전용 확장 스탯 컴포넌트
 /// Player 전용 스태미나 소모 및 회복 루프, 가드 상태에 따른 스태미나 감쇄 및 가드 브레이크 판정을 전담하는 컴포넌트
 /// </summary>
-public class PlayerStatController : UnitStatController
+public class PlayerStatusController : UnitStatController
 {
     #region Player 전용 스태미나 수치
     [UnityEngine.Header("Player Exclusive: Stamina")]
@@ -21,17 +21,18 @@ public class PlayerStatController : UnitStatController
     public float MaxStamina => _maxStamina;
     #endregion
 
-    public PlayerMotionStatModule PlayerMotionStats => MotionStats as PlayerMotionStatModule;
-    public PlayerStat PlayerStatSource { get; private set; }
+    public PlayerMotionStatusModule PlayerMotionStats => MotionStatus as PlayerMotionStatusModule;
+    public PlayerStatus PlayerStatusSource { get; private set; }
+    public event System.Action<float, float> OnStaminaChangedEvent;
 
     /// <summary>
     /// Player 전용 스탯 및 모듈 확장부
     /// </summary>
-    protected override void SetupDerivedStats(UnitBaseStat baseStat)
+    protected override void SetupDerivedStats(UnitBaseStatus baseStat)
     {
-        if (baseStat is PlayerStat playerStat)
+        if (baseStat is PlayerStatus playerStat)
         {
-            PlayerStatSource = playerStat;
+            PlayerStatusSource = playerStat;
 
             // Player 전용 공식에 의한 Max 수치 계산
             _maxHp = playerStat.CalculateMaxHp();
@@ -40,10 +41,13 @@ public class PlayerStatController : UnitStatController
             _currentStamina = _maxStamina;
 
             // Player 전용 모션 모듈 생성 (장비 무게 로직 탑재)
-            MotionStats = new PlayerMotionStatModule(playerStat);
+            MotionStatus = new PlayerMotionStatusModule(playerStat);
 
             // 스태미나 회복 비동기 루프 가동
             StartStaminaRegenLoop();
+
+            OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
+            EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
         }
         else
         {
@@ -52,24 +56,30 @@ public class PlayerStatController : UnitStatController
     }
     private void StartStaminaRegenLoop()
     {
-        if (_cts != null)
+        if (_poiseCts != null)
         {
-            StaminaRegenLoopAsync(_cts.Token).Forget();
+            StaminaRegenLoopAsync(_poiseCts.Token).Forget();
         }
     }
 
     /// <summary>
     /// 인스펙터에서 수정된 PlayerStat 수치를 런타임 모듈에 실시간 주입
     /// </summary>
-    public void SyncRuntimeStats(PlayerStat updatedStat)
+    public void SyncRuntimeStats(PlayerStatus updatedStat)
     {
         if (updatedStat == null || PlayerMotionStats == null) return;
 
-        PlayerStatSource = updatedStat;
+        PlayerStatusSource = updatedStat;
         _maxHp = updatedStat.CalculateMaxHp();
         _maxStamina = updatedStat.CalculateMaxStamina();
 
         PlayerMotionStats.SyncBaseValues(updatedStat);
+
+        InvokeChangeHPEvent(_currentHp, _maxHp);
+        OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
+
+        EventBusSystem.Publish(new UnitHpChangedEvent(gameObject, _currentHp, _maxHp));
+        EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
     }
 
     public bool HasEnoughStamina(float cost) => _currentStamina >= cost;
@@ -78,6 +88,18 @@ public class PlayerStatController : UnitStatController
     {
         _currentStamina = UnityEngine.Mathf.Max(0f, _currentStamina - cost);
         _staminaRecoveryTimer = StaminaRegenDelay;
+
+        OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
+        EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+    }
+
+    public void RestoreStamina(float amount)
+    {
+        if (_isDead || amount <= 0f) return;
+
+        _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + amount);
+        OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
+        EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
     }
 
     /// <summary>
@@ -89,10 +111,9 @@ public class PlayerStatController : UnitStatController
     public bool BlockAttackWithStamina(float incomingDamage, float shieldStability)
     {
         float staminaCost = incomingDamage * (1.0f - UnityEngine.Mathf.Clamp01(shieldStability));
-        _currentStamina -= staminaCost;
+        ConsumeStamina(staminaCost);
 
         // 가드 피격 시에도 스태미나 회복 지연 타이머 갱신 ( 무한 가드 방어 )
-        _staminaRecoveryTimer = StaminaRegenDelay;
 
         if (_currentStamina <= 0f)
         {
@@ -123,6 +144,9 @@ public class PlayerStatController : UnitStatController
             {
                 float finalRate = _staminaRegenRate * StaminaRegenMultiplier;
                 _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + finalRate * UnityEngine.Time.deltaTime);
+
+                OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
+                EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
             }
         }
     }

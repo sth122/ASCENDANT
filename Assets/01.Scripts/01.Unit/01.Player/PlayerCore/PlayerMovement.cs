@@ -57,7 +57,8 @@ public class PlayerMovement : UnitMovement
             }
             else
             {
-                targetVelocity.y = -0.5f;
+                float downSnap = Mathf.Clamp(-0.5f - (CurrentSlopeAngle * 0.05f), -2.5f, -0.5f);
+                targetVelocity.y = downSnap;
                 _rb.linearVelocity = targetVelocity;
             }
         }
@@ -86,12 +87,17 @@ public class PlayerMovement : UnitMovement
         float currentSpeed = maxSpeed * speedMultiplier;
 
         Vector3 slopeRollDir = AdjustDirectionToSlope(rollDirection);
-        slopeRollDir.y = Mathf.Clamp(slopeRollDir.y, -0.2f, 0.1f);
-        slopeRollDir.Normalize();
-
-        Vector3 targetVel = slopeRollDir * currentSpeed;
-        targetVel.y = _rb.linearVelocity.y; // 중력 보존
-
-        _rb.linearVelocity = targetVel;
+        if (IsGrounded && CurrentSlopeAngle <= MaxSlopeAngle)
+        {
+            // 지면 위에서 구를 때는 경사면을 따라 흐르도록 완전한 투영 속도 반영
+            _rb.linearVelocity = slopeRollDir * currentSpeed;
+        }
+        else
+        {
+            // 공중에 떴을 때만 기존 중력 보존
+            Vector3 targetVel = slopeRollDir * currentSpeed;
+            targetVel.y = _rb.linearVelocity.y;
+            _rb.linearVelocity = targetVel;
+        }
     }
 }
