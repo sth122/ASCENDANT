@@ -1,10 +1,18 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// 풀링 객체 인터페이스
+/// </summary>
+public interface IPoolable
+{
+    void OnSpawn();
+    void OnDespawn();
+}
+
 public interface IInitable
 {
     public void Init();
 }
-
 
 /// <summary>
 /// FSM  상태 인터페이스

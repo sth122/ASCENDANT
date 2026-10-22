@@ -124,3 +124,48 @@ public enum AnimStateType
     Death2 = 201
 }
 #endregion
+
+#region UI Indentifier Enum
+/// <summary>
+/// 프로젝트 전역에서 사용되는 UI 식별자
+/// </summary>
+public enum UIId
+{
+    None = 0,
+
+    PlayerHUD = 10,
+    LoadingScreen = 11,
+    SystemPopup = 12,
+
+    BossHUD = 100,
+    Inventory = 101,
+    Equipment,
+    PauseMenu,
+    DeathScreen,
+    InteractionPrompt,
+}
+
+/// <summary>
+/// Canvas 렌더링 우선 순위 레이어
+/// </summary>
+public enum UILayer 
+{
+    Background = 0,
+    HUD = 100,
+    Window = 200,
+    Popup = 300,
+    System = 400,
+}
+#endregion
+
+#region Pool Enum
+/// <summary>
+/// ObjectPool에서 관리하는 풀링 객체 식별자
+/// </summary>
+public enum PoolType
+{
+    None = 0,
+
+
+}
+#endregion
