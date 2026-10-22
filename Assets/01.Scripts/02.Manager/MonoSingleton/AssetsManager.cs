@@ -6,8 +6,13 @@ using Util = DebugLogger<AssetsManager>;
 
 public class AssetsManager : MonoSingleton<AssetsManager>
 {
+    // 전역 유지 에셋 핸들
     private readonly Dictionary<string, AsyncOperationHandle> _globalAssetHandles = new Dictionary<string, AsyncOperationHandle>();
+
+    // 씬 전환 시 언로드되는 씬 종속 에셋 핸들
     private readonly Dictionary<string, AsyncOperationHandle> _sceneAssetHandles = new Dictionary<string, AsyncOperationHandle>();
+
+    // 1회성 인스턴스화 오브젝트 캐시
     private readonly Dictionary<UnityEngine.GameObject, AsyncOperationHandle> _instanceHandles = new Dictionary<UnityEngine.GameObject, AsyncOperationHandle>();
 
     protected override void Awake()
@@ -94,7 +99,7 @@ public class AssetsManager : MonoSingleton<AssetsManager>
     /// <summary>
     /// 단일 에셋 동기 로드
     /// </summary>
-    public T LoadAssetAsync<T>(string addressableKey, bool isGlobal = false) where T : UnityEngine.Object
+    public T LoadAssetSync<T>(string addressableKey, bool isGlobal = false) where T : UnityEngine.Object
     {
         Dictionary<string, AsyncOperationHandle> targetDict = isGlobal ? _globalAssetHandles : _sceneAssetHandles;
 

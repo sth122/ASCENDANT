@@ -7,10 +7,6 @@ using System.Collections.Generic;
 using System;
 using Util = DebugLogger;
 
-public enum SceneId
-{
-   
-}
 public enum ServiceLifetime
 {
     Global, // 싱글톤

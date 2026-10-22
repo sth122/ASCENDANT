@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-/// <summary>
+﻿/// <summary>
 /// 풀링 객체 인터페이스
 /// </summary>
 public interface IPoolable
@@ -30,14 +28,14 @@ public interface IState
 /// </summary>
 public readonly struct DamageContext
 {
-    public readonly GameObject Attacker;
+    public readonly UnityEngine.GameObject Attacker;
     public readonly float Damage;
     public readonly float PoiseDamage;
-    public readonly Vector3 HitPoint;
-    public readonly Vector3 HitNormal;
+    public readonly UnityEngine.Vector3 HitPoint;
+    public readonly UnityEngine.Vector3 HitNormal;
     public readonly bool IsParryable;
 
-    public DamageContext(GameObject attacker, float damage, float poiseDamage, Vector3 hitPoint, Vector3 hitNormal, bool isParryable = true)
+    public DamageContext(UnityEngine.GameObject attacker, float damage, float poiseDamage, UnityEngine.Vector3 hitPoint, UnityEngine.Vector3 hitNormal, bool isParryable = true)
     {
         Attacker = attacker;
         Damage = damage;
@@ -61,8 +59,51 @@ public interface IDamageable
 /// </summary>
 public interface IEnemyAttackStrategy
 {
-    bool CanExecute(in EnemyAttackContext context, Transform target, in EnemyAttackData data);
-    void Execute(in EnemyAttackContext context, Transform target, in EnemyAttackData data);
-    void Update(in EnemyAttackContext context, Transform target, in EnemyAttackData data, float normalizedTime);
+    bool CanExecute(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data);
+    void Execute(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data);
+    void Update(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data, float normalizedTime);
     void Stop(in EnemyAttackContext context);
 }
+
+#region UI 인터페이스
+public interface IUIModel
+{
+    void Reset();
+}
+public interface IUIPresenter
+{
+    void Bind(UIBase view, IUIModel model);
+    void Unbind();
+}
+#endregion
+
+#region BootStrap
+/// <summary>
+/// 씬 전환 시 로딩 파이프라인에서 순차적으로 초기화 및 파괴를 제어하는 규약
+/// </summary>
+public interface ILoadable
+{
+    int LoadOrder { get; }
+    Cysharp.Threading.Tasks.UniTask OnSceneLoadCreate(SceneId scene);
+    void Init(SceneId scene);
+    void OnSceneDestroy(SceneId scene);
+}
+
+/// <summary>
+/// 각 씬의 하이어라키 루트에서 인게임 액터 및 로컬 서비스를 셋업하는 규약
+/// </summary>
+public interface ISceneBootstrap
+{
+    Cysharp.Threading.Tasks.UniTask OnSceneReadyAsync();
+}
+
+/// <summary>
+/// 씬에 스폰된 플레이어 컨트롤러를 몬스터 AI나 카메라가 안전하게 획득하도록 중계하는 로컬 서비스 인터페이스
+/// </summary>
+public interface IPlayerProvider
+{
+    PlayerController Player { get; }
+    UnityEngine.Transform PlayerTransform { get; }
+    bool IsPlayerSpawned { get; }
+}
+#endregion

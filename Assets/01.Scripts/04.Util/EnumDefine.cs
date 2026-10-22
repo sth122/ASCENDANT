@@ -133,16 +133,23 @@ public enum UIId
 {
     None = 0,
 
+    // HUD 계열 (Layer: HUD)
     PlayerHUD = 10,
-    LoadingScreen = 11,
-    SystemPopup = 12,
+    BossHUD = 11,
+    FloatingHpBar = 12,
 
-    BossHUD = 100,
-    Inventory = 101,
-    Equipment,
-    PauseMenu,
-    DeathScreen,
-    InteractionPrompt,
+    // 윈도우/패널 계열 (Layer: Window, ESC 스택 제어)
+    InventoryWindow = 100,
+    EquipmentWindow = 101,
+    PauseWindow = 102,
+
+    // 팝업 계열 (Layer: Popup, 모달 대화상자)
+    ConfirmationPopup = 200,
+    RewardPopup = 201,
+
+    // 시스템 계열 (Layer: System)
+    LoadingScreen = 300,
+    FadeScreen = 301
 }
 
 /// <summary>
@@ -166,6 +173,30 @@ public enum PoolType
 {
     None = 0,
 
+    // 타격 및 환경 VFX (1000 ~)
+    HitVFX_Slash = 1000,
+    HitVFX_Blunt = 1001,
+    HitVFX_Parry = 1002,
+    BloodSplatter = 1003,
 
+    // 투사체 및 인게임 드랍 (2000 ~)
+    SoulOrb = 2000,
+
+    // 풀링 UI (3000 ~)
+    DamageText = 3000,
+    EnemyFloatingHpBar = 3010,
+
+    // 소환 몬스터 (4000 ~)
+    NightmareCreature = 4000
+}
+#endregion
+
+#region Scene Indetifier
+public enum SceneId
+{
+    None = 0,
+    TitleScene = 1,
+    GameScene = 2,
+    BossScnen = 3,
 }
 #endregion

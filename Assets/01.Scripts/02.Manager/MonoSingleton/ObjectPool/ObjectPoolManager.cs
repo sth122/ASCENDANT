@@ -6,8 +6,10 @@ using Util = DebugLogger<ObjectPoolManager>;
 // <summary>
 /// PoolType Enum 기반으로 인게임 객체를 동기 및 비동기로 풀링하는 싱글톤 매니저
 /// </summary>
-public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>
+public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
 {
+    public int LoadOrder => 5;
+
     private readonly Dictionary<PoolType, GameObjectPool> _pools = new Dictionary<PoolType, GameObjectPool>();
     private Transform _poolRoot;
 
@@ -26,6 +28,12 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>
             _poolRoot.SetParent(transform);
         }
     }
+
+    #region ILoadable 구현부 - 추후 각 Scene 별로 Pooling 할 객체 분리 후 구현 완료
+    public UniTask OnSceneLoadCreate(SceneId scene) => UniTask.CompletedTask;
+    public void Init(SceneId scene) => Util.Log($"[{scene}] 풀 매니저 준비 완료");
+    public void OnSceneDestroy(SceneId scene) { }
+    #endregion
 
     #region 동기 등록 및 풀 생성
     public void RegisterPool(PoolType poolType, GameObject prefab, int initialCount = 1)
