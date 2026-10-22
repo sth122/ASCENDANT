@@ -6,10 +6,10 @@ public class PlayerAttackState : PlayerActionState
     private const float AttackStaminaCost = 14.0f;
 
     // 모션 진행도(normalizedTime) 기준 타임라인 설정
-    private const float HitboxOpenNormalized = 0.22f;       // 타격 판정 시작
+    private const float HitboxOpenNormalized = 0.4f;       // 타격 판정 시작
     private const float HitboxCloseNormalized = 0.60f;      // 타격 판정 종료
     private const float EmergencyCancelNormalized = 0.35f;  // 긴급 회피/패링 허용 시작
-    private const float ComboAdvanceStartNormalized = 0.45f;// 후속 공격 입력 수집 및 승급 시작
+    private const float ComboAdvanceStartNormalized = 0.65f;// 후속 공격 입력 수집 및 승급 시작
     private const float MovementCancelNormalized = 0.75f;   // 캔슬 걷기 윈도우
     private const float ActionRecoveryNormalized = 0.88f;
 

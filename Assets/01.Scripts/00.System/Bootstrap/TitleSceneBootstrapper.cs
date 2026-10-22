@@ -1,12 +1,13 @@
-﻿using Cysharp.Threading.Tasks;
-
+﻿/// <summary>
+/// Title Scene 전용 Bootstrapper
+/// </summary>
 public class TitleSceneBootstrapper : SceneBootstrapper
 {
     protected override void RegisterSceneServices() { }
-    protected override UniTask PreloadSceneAssetsAsync() => UniTask.CompletedTask;
-    protected override UniTask SetupSceneActorsAsync() => UniTask.CompletedTask;
+    protected override Cysharp.Threading.Tasks.UniTask PreloadSceneAssetsAsync() => Cysharp.Threading.Tasks.UniTask.CompletedTask;
+    protected override Cysharp.Threading.Tasks.UniTask SetupSceneActorsAsync() => Cysharp.Threading.Tasks.UniTask.CompletedTask;
 
-    protected override async UniTask SetupSceneUIAsync()
+    protected override async Cysharp.Threading.Tasks.UniTask SetupSceneUIAsync()
     {
         TitleMenuModel model = new TitleMenuModel
         {

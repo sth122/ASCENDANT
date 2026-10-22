@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Util = DebugLogger<SceneLoadManager>;
 
@@ -59,11 +58,14 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
             // 2. 로컬 서비스 및 이전 씬 에셋 정리
             ServiceLocator.ClearSceneLocalServices();
             AssetsManager.Instance.ReleaseSceneAssets();
-            await Resources.UnloadUnusedAssets().ToUniTask(cancellationToken: this.destroyCancellationToken);
+            await UnityEngine.Resources.UnloadUnusedAssets().ToUniTask(cancellationToken: this.destroyCancellationToken);
             System.GC.Collect();
 
             // 3. Addressables 씬 비동기 로드
             await Addressables.LoadSceneAsync(nextScene.ToString()).ToUniTask(cancellationToken: this.destroyCancellationToken);
+
+            // 현재 씬 ID 갱신 - Bootstrapper 실행 전 선행 갱신으로 인한 Start 실행 차단
+            _currentScene = nextScene;
 
             // 4. 새 씬 내부의 ISceneBootstrap 감지 및 실행
             await ExecuteSceneBootstrapAsync(nextScene);
@@ -71,7 +73,6 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
             // 5. ILoadable 시스템 순차 초기화 (LoadOrder 오름차순)
             await InitializeLoadablesAsync(nextScene);
 
-            _currentScene = nextScene;
             Util.Log($"[{nextScene}] 씬 전환 완료");
         }
         finally
@@ -105,7 +106,7 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
     private async UniTask ExecuteSceneBootstrapAsync(SceneId scene)
     {
         ISceneBootstrap bootstrap = null;
-        var monos = Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+        var monos = UnityEngine.Object.FindObjectsByType<UnityEngine.MonoBehaviour>(UnityEngine.FindObjectsSortMode.None);
         foreach (var mono in monos)
         {
             if (mono is ISceneBootstrap target)

@@ -2,7 +2,7 @@
 /// <summary>
 /// Unit에 해당하는 모든 객체의 Controller 최상위 제네릭 추상 클래스
 /// </summary>
-[RequireComponent(typeof(Rigidbody), typeof(Animator), typeof(UnitStatController))]
+[RequireComponent(typeof(Rigidbody), typeof(Animator), typeof(UnitStatusController))]
 public abstract class UnitController<T> : MonoBehaviour, IInitable where T : UnitController<T>
 {
     #region SerializeField Variable
@@ -18,13 +18,13 @@ public abstract class UnitController<T> : MonoBehaviour, IInitable where T : Uni
     protected UnitStateMachine<T> _stateMachine;
     protected Collider _collider;
     protected Rigidbody _rigidbody;
-    protected UnitStatController _unitStatusController;
+    protected UnitStatusController _unitStatusController;
     #endregion
 
     #region Property
     public Collider Collider => _collider;
     public Rigidbody Rigidbody => _rigidbody;
-    public UnitStatController UnitStatusController => _unitStatusController;
+    public UnitStatusController UnitStatusController => _unitStatusController;
     public UnitId UnitIdentifier => _unitId;
     public UnitStateMachine<T> StateMachineInstance => _stateMachine;
     #endregion
@@ -33,7 +33,7 @@ public abstract class UnitController<T> : MonoBehaviour, IInitable where T : Uni
     {
         _collider = GetComponent<Collider>();
         _rigidbody = GetComponent<Rigidbody>();
-        _unitStatusController = GetComponent<UnitStatController>();
+        _unitStatusController = GetComponent<UnitStatusController>();
     }
 
     protected virtual void Update() => _stateMachine?.Update();

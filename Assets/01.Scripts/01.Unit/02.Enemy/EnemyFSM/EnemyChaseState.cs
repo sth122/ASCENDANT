@@ -51,7 +51,7 @@
         }
 
         // 2. 타겟이 사망했으면 타겟을 해제하고 복귀
-        UnitStatController targetStat = target.GetComponentInParent<UnitStatController>();
+        UnitStatusController targetStat = target.GetComponentInParent<UnitStatusController>();
         if (targetStat != null && targetStat.IsDead)
         {
             owner.ClearTarget();

@@ -132,6 +132,8 @@ public enum AnimStateType
 public enum UIId
 {
     None = 0,
+    TitleMenuView = 1,
+
 
     // HUD 계열 (Layer: HUD)
     PlayerHUD = 10,

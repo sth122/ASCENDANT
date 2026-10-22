@@ -24,8 +24,11 @@
         // 플레이어 본체 체력 변동일 때만 반영
         if (eventData.TargetUnit != null && eventData.TargetUnit.CompareTag("Player"))
         {
-            Model.CurrentHp = eventData.CurrentHp;
-            Model.MaxHp = eventData.MaxHp;
+            if (Model != null)
+            {
+                Model.CurrentHp = eventData.CurrentHp;
+                Model.MaxHp = eventData.MaxHp;
+            }
             View.UpdateHpBar(eventData.CurrentHp, eventData.MaxHp);
         }
     }
@@ -34,8 +37,12 @@
     {
         if (View == null) return;
 
-        Model.CurrentStamina = eventData.CurrentStamina;
-        Model.MaxStamina = eventData.MaxStamina;
+        if (Model != null)
+        {
+            Model.CurrentStamina = eventData.CurrentStamina;
+            Model.MaxStamina = eventData.MaxStamina;
+        }
+
         View.UpdateStaminaBar(eventData.CurrentStamina, eventData.MaxStamina);
     }
 }

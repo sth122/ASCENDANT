@@ -4,7 +4,7 @@ using Util = DebugLogger<EnemyStatusController>;
 /// <summary>
 /// Enemy 전용 확장 런타임 스탯 컨트롤러
 /// </summary>
-public class EnemyStatusController : UnitStatController
+public class EnemyStatusController : UnitStatusController
 {
     public EnemyMotionStatusModule EnemyMotionStatus => MotionStatus as EnemyMotionStatusModule;
     public EnemyStatus EnemyStatusSource { get; private set; }

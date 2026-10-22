@@ -7,12 +7,12 @@ public class PlayerRiposteState : PlayerActionState
 {
     private const float RiposteDuration = 1.8f;
     private UnityEngine.Transform _targetEnemy;
-    private UnitStatController _targetEnemyStat;
+    private UnitStatusController _targetEnemyStat;
 
     public PlayerRiposteState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
 
-    public void SetRiposteTarget(UnityEngine.Transform targetEnemy, UnitStatController enemyStat)
+    public void SetRiposteTarget(UnityEngine.Transform targetEnemy, UnitStatusController enemyStat)
     {
         _targetEnemy = targetEnemy;
         _targetEnemyStat = enemyStat;

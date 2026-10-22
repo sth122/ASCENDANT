@@ -1243,7 +1243,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b719dfd29f1a9448a0fa71b6731bc23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreatureEnemyController
-  _unitId: 0
+  _unitId: 11
   _groundLayer:
     serializedVersion: 2
     m_Bits: 256
@@ -1254,7 +1254,13 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   _mainHitbox: {fileID: 3505293341940719824}
+  _tier: 0
+  chaseStopping: 1.2
+  patrolStopping: 0.5
   _callAlliesRadius: 15
+  _allLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!136 &6247525529700649862
 CapsuleCollider:
   m_ObjectHideFlags: 0

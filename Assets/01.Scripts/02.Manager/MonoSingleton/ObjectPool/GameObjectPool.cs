@@ -64,9 +64,9 @@ public class GameObjectPool
         if (obj == null) return;
 
         // 중복 반환 차단
-        if (_pooledSet.Contains(obj) || !obj.activeSelf)
+        if (_pooledSet.Contains(obj))
         {
-            DebugLogger.LogWarningWithTag("ObjectPoolManager", $"[중복 반환 방어] 이미 비활성화된 오브젝트: {obj.name}");
+            DebugLogger.LogWarningWithTag("ObjectPoolManager", $"[중복 반환 방어] 이미 풀에 반환된 오브젝트: {obj.name}");
             return;
         }
 

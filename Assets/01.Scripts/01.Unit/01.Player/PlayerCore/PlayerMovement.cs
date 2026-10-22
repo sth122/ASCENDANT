@@ -5,12 +5,23 @@
 /// </summary>
 public class PlayerMovement : UnitMovement
 {
-    private readonly Transform _cameraTransform;
+    private Transform _cameraTransform;
 
-    public PlayerMovement(Rigidbody rb, Transform transform, Transform cameraTransform, LayerMask groundLayer) 
+    public PlayerMovement(Rigidbody rb, Transform transform, Transform cameraTransform, LayerMask groundLayer)
         : base(rb, transform, groundLayer)
     {
-        this._cameraTransform = cameraTransform;
+        CacheMainCamera();
+    }
+
+    /// <summary>
+    /// 메인 카메라 캐싱
+    /// </summary>
+    public void CacheMainCamera()
+    {
+        if (Camera.main != null)
+        {
+            _cameraTransform = Camera.main.transform;
+        }
     }
 
     /// <summary>
@@ -20,6 +31,13 @@ public class PlayerMovement : UnitMovement
     {
         if (input.sqrMagnitude < 0.001f || _cameraTransform == null)
             return Vector3.zero;
+
+        // 카메라 참조가 소실된 경우 재탐색
+        if (_cameraTransform == null)
+        {
+            CacheMainCamera();
+            if (_cameraTransform == null) return Vector3.zero;
+        }
 
         Vector3 forward = _cameraTransform.forward;
         Vector3 right = _cameraTransform.right;
@@ -82,7 +100,6 @@ public class PlayerMovement : UnitMovement
     /// </summary>
     public void ApplyRoll(Vector3 rollDirection, float maxSpeed, float normalizedTime)
     {
-        // 0.0(시작)에서 최고 속도, 1.0(종료)에 도달할수록 0으로 감속하는 쿼드라틱 감속 곡선
         float speedMultiplier = Mathf.Clamp01(1.0f - normalizedTime);
         float currentSpeed = maxSpeed * speedMultiplier;
 

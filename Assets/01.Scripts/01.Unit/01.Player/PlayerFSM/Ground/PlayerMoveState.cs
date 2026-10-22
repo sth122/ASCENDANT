@@ -43,6 +43,12 @@ public class PlayerMoveState : PlayerGroundState
 
         owner.MoveAPI(moveDir, walkSpeed);
 
+        // 2. 회전 속도 안전 참조 (NullReferenceException 원천 차단)
+        float rotSpeed = (_playerStatusController != null && _playerStatusController.PlayerStatusSource != null)
+            ? _playerStatusController.PlayerStatusSource.RotationSpeed
+            : 16f;
+
+
         bool isLockOn = owner.CurrentLockOnTarget != null;
 
         if (isLockOn)
@@ -52,13 +58,13 @@ public class PlayerMoveState : PlayerGroundState
             targetDir.y = 0f;
             if (targetDir.sqrMagnitude > 0.001f)
             {
-                owner.RotateTowardsAPI(targetDir.normalized, _playerStatusController.PlayerStatusSource.RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+                owner.RotateTowardsAPI(targetDir.normalized, rotSpeed, UnityEngine.Time.fixedDeltaTime);
             }
         }
         else
         {
             // 비 락온 시 진행 방향으로 회전
-            owner.RotateTowardsAPI(moveDir, _playerStatusController.PlayerStatusSource.RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+            owner.RotateTowardsAPI(moveDir, rotSpeed, UnityEngine.Time.fixedDeltaTime);
         }
     }
 

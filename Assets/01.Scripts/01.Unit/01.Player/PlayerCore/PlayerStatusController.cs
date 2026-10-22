@@ -5,7 +5,7 @@ using Util = DebugLogger<PlayerStatusController>;
 /// Player 전용 확장 스탯 컴포넌트
 /// Player 전용 스태미나 소모 및 회복 루프, 가드 상태에 따른 스태미나 감쇄 및 가드 브레이크 판정을 전담하는 컴포넌트
 /// </summary>
-public class PlayerStatusController : UnitStatController
+public class PlayerStatusController : UnitStatusController
 {
     #region Player 전용 스태미나 수치
     [UnityEngine.Header("Player Exclusive: Stamina")]

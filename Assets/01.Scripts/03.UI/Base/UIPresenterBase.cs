@@ -1,7 +1,7 @@
 ﻿/// <summary>
 /// MVP 패턴의 Presenter 추상 베이스 클래스
 /// </summary>
-public abstract class UIPresenterBase<TView, TModel> : IUIPresenter where TView : UIBase where TModel : IUIModel
+public abstract class UIPresenterBase<TView, TModel> : IUIPresenter where TView : UIBase where TModel : IUIModel, new()
 {
     protected TView View { get; private set; }
     protected TModel Model { get; private set; }
@@ -9,7 +9,7 @@ public abstract class UIPresenterBase<TView, TModel> : IUIPresenter where TView 
     public void Bind(UIBase view, IUIModel model)
     {
         View = view as TView;
-        Model = (TModel)model;
+        Model = model != null ? (TModel)model : new TModel();
         OnBind();
     }
 
@@ -22,4 +22,7 @@ public abstract class UIPresenterBase<TView, TModel> : IUIPresenter where TView 
 
     protected abstract void OnBind();
     protected abstract void OnUnbind();
+
+    protected virtual void OnBindHandler() { }
+    protected virtual void OnUnbindHandler() { }
 }

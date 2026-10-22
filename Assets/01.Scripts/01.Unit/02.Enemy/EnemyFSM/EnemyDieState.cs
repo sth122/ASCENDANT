@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Enemy 사망 상태를 담당하는 FSM 상태 클래스
+/// </summary>
 public class EnemyDieState : EnemyBaseState
 {
     public EnemyDieState(EnemyController owner, EnemyStateMachine stateMachine)
@@ -26,7 +29,7 @@ public class EnemyDieState : EnemyBaseState
             owner.SetAgentableAPI(false);
         }
 
-        // 임시 FindAny 소울 드랍
+        // 전역 탐색(FindAnyObjectByType) 제거: IPlayerProvider 서비스를 통해 안전하게 소울 지급
         DistributeRewardSouls();
 
         owner.enabled = false;
@@ -39,12 +42,14 @@ public class EnemyDieState : EnemyBaseState
         int rewardSouls = owner.StatusController.DropSouls;
         if (rewardSouls <= 0) return;
 
-        // 플레이어 탐색 후 소울 지급
-        PlayerController player = Object.FindAnyObjectByType<PlayerController>();
-        if (player != null && player.StatusController != null && player.StatusController.PlayerStatusSource != null)
+        if (ServiceLocator.TryGet<IPlayerProvider>(out IPlayerProvider playerProvider) && playerProvider.IsPlayerSpawned)
         {
-            player.StatusController.PlayerStatusSource.AddSouls(rewardSouls);
-            DebugLogger.LogWithTag("EnemyDieState", $"처치 보상 소울 지급 완료: +{rewardSouls} Souls");
+            PlayerController player = playerProvider.Player;
+            if (player != null && player.StatusController != null && player.StatusController.PlayerStatusSource != null)
+            {
+                player.StatusController.PlayerStatusSource.AddSouls(rewardSouls);
+                DebugLogger.LogWithTag("EnemyDieState", $"[처치 보상 지급 완료] +{rewardSouls} Souls");
+            }
         }
     }
 }

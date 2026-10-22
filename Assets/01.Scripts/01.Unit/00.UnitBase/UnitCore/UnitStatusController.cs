@@ -1,11 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
 using UnityEngine;
-using Util = DebugLogger<UnitStatController>;
+using Util = DebugLogger<UnitStatusController>;
 
 /// <summary>
 /// 모든 Unit(Player, Enemy, NPC)이 공유하는 런타임 가변 수치를 전담 관리하는 추상 컴포넌트
 /// </summary>
-public class UnitStatController : MonoBehaviour
+public class UnitStatusController : MonoBehaviour
 {
     public UnitMotionStatusModule MotionStatus { get; protected set; }
     #region 런타임 가변 수치 ( 공통 Stat )
@@ -86,6 +86,21 @@ public class UnitStatController : MonoBehaviour
     }
 
     /// <summary>
+    /// 세이브 파일 로드 시 피격 경직이나 대미지 연산 없이 현재 체력을 세팅
+    /// </summary>
+    public void SetHpDirectly(float hp)
+    {
+        _currentHp = Mathf.Clamp(hp, 0, _maxHp);
+        OnHpChangedEvent?.Invoke(_currentHp, _maxHp);
+        EventBusSystem.Publish(new UnitHpChangedEvent(gameObject, _currentHp, _maxHp));
+
+        if (_currentHp <= 0f)
+        {
+            Dead();
+        }
+    }
+
+    /// <summary>
     /// 자식 클래스에서 오버라이드하여 전용 모션 모듈과 추가 스탯을 세팅하는 가상 메서드
     /// </summary>
     /// <param name="baseStat">자식 타입으로 캐스팅하여 사용할 원본 스탯</param>
@@ -152,9 +167,10 @@ public class UnitStatController : MonoBehaviour
 
         OnDieEvent?.Invoke();
 
-        UnitId identifier = GetComponent<PlayerController>() != null ? UnitId.Player : UnitId.NightmareCreature;
-        EventBusSystem.Publish(new UnitDiedEvent(gameObject, identifier));
+        UnitId id = UnitId.NightmareCreature;
+        if (TryGetComponent<PlayerController>(out _)) id = UnitId.Player;
 
+        EventBusSystem.Publish(new UnitDiedEvent(gameObject, id));
         Util.Log($"{gameObject.name} 사망");
     }
 
@@ -217,8 +233,5 @@ public class UnitStatController : MonoBehaviour
 
     protected virtual void OnDestroy() => AsyncUtil.CancelAndDispose(ref _poiseCts);
 
-    protected void InvokeChangeHPEvent(float currentHp, float maxHp)
-    {
-        OnHpChangedEvent?.Invoke(currentHp, maxHp);
-    }
+    protected void InvokeChangeHPEvent(float currentHp, float maxHp) => OnHpChangedEvent?.Invoke(currentHp, maxHp);
 }

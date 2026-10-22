@@ -142,9 +142,15 @@ public class UnitAnimController : MonoBehaviour
 
     public void PlayState(AnimStateType stateType)
     {
-        if (_animData != null && _animData.TryGetState(stateType, out int hash, out float duration))
+        if (_animData == null || _animator == null) return;
+
+        if (_animData.TryGetState(stateType, out int hash, out float duration))
         {
-            _animator.CrossFadeInFixedTime(hash, duration);
+            // 베이스 레이어(0)에 해당 상태 해시가 실제로 존재하는지 검증 후 재생
+            if (_animator.HasState(0, hash))
+            {
+                _animator.CrossFadeInFixedTime(hash, duration, 0);
+            }
         }
     }
     #endregion
