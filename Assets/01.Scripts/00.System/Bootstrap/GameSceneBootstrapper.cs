@@ -19,6 +19,11 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
     protected override void RegisterSceneServices()
     {
         ServiceLocator.Register<IPlayerProvider>(this, ServiceLifetime.Local);
+        EnemyManager enemyManager = GetComponent<EnemyManager>();
+        if (enemyManager == null)
+        {
+            enemyManager = gameObject.AddComponent<EnemyManager>();
+        }
     }
 
     protected override async Cysharp.Threading.Tasks.UniTask PreloadSceneAssetsAsync()
@@ -68,9 +73,9 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
 
         // 4. DataManager에서 베이스 스탯 조회 후 Player 초기화 파이프라인 실행
         PlayerStatus runtimeStat = null;
-        if (DataManager.Instance != null && DataManager.Instance._playerStatusSO != null)
+        if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<PlayerStatusSO>(out PlayerStatusSO _playerStatusSO))
         {
-            if (DataManager.Instance._playerStatusSO.TryGetData(UnitId.Player, out PlayerStatus statusSO))
+            if (_playerStatusSO.TryGetData(UnitId.Player, out PlayerStatus statusSO))
             {
                 runtimeStat = (PlayerStatus)statusSO.Clone();
             }

@@ -28,10 +28,23 @@ public class PlayerGroundState : PlayerBaseState
         switch (command)
         {
             case InputCommandType.Roll:
+                // 스태미나가 부족하면 구르기 상태로 전이하지 않고 입력을 폐기
+                if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(PlayerRollState.RollStaminaCost))
+                {
+                    owner.InputReader.ClearCommand(InputCommandType.Roll);
+                    return;
+                }
                 _playerStateMachine.ChangeState(UnitState.Roll); 
                 break;
 
             case InputCommandType.Jump:
+                // 스태미나가 부족하면 점프 상태로 전이하지 않고 입력을 폐기
+                if (!owner.Movement.IsGrounded)
+                {
+                    owner.InputReader.ClearCommand(InputCommandType.Jump);
+                    return;
+                }
+
                 if (owner.Movement.IsGrounded)
                 {
                     _playerStateMachine.ChangeState(UnitState.Jump);
@@ -76,6 +89,10 @@ public class PlayerGroundState : PlayerBaseState
         if (isSprinting && _playerStatusController != null && _playerStatusController.HasEnoughStamina(5.0f))
         {
             _playerStateMachine.ChangeState(UnitState.Sprint);
+        }
+        else if (!isSprinting && _playerStateMachine.CurrentState is PlayerSprintState)
+        {
+            _playerStateMachine.ChangeState(UnitState.Move);
         }
     }
 

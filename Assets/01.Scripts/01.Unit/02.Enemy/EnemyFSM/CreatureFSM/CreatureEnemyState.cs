@@ -6,5 +6,6 @@
         AddState((int)UnitState.Patrol, new CreatureCrawlState(creature, this));
         AddState((int)UnitState.Alert, new CreatureAlertState(creature, this));
         AddState((int)UnitState.Roar, new CreatureRoarState(creature, this));
+        AddState((int)UnitState.RoarResponse, new CreatureRoarResponseState(creature, this));
     }
 }

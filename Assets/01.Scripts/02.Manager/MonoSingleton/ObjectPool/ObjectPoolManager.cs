@@ -11,6 +11,7 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
     public int LoadOrder => 5;
 
     private readonly Dictionary<PoolType, GameObjectPool> _pools = new Dictionary<PoolType, GameObjectPool>();
+    private readonly HashSet<PoolType> _sceneDependentPoolTypes = new HashSet<PoolType>();
     private Transform _poolRoot;
 
     protected override void Awake()
@@ -30,13 +31,38 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
     }
 
     #region ILoadable 구현부 - 추후 각 Scene 별로 Pooling 할 객체 분리 후 구현 완료
-    public UniTask OnSceneLoadCreate(SceneId scene) => UniTask.CompletedTask;
+    public async UniTask OnSceneLoadCreate(SceneId scene)
+    {
+        EnsureRoot();
+        _sceneDependentPoolTypes.Clear();
+
+        // 1. DataManager로부터 ScenePoolConfigSO 획득 (인스펙터 바인딩 완전 배제)
+        if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<ScenePoolConfigSO>(out var configSO))
+        {
+            if (configSO.TryGetPoolItemsForScene(scene, out List<ScenePoolConfigSO.PoolItem> items))
+            {
+                System.Threading.CancellationToken ct = this.destroyCancellationToken;
+
+                for (int i = 0; i < items.Count; i++)
+                {
+                    ScenePoolConfigSO.PoolItem item = items[i];;
+                    await PreloadPoolAsync(item.Type, item.Type.ToString(), item.PreloadCount, ct, isSceneDependent: true);
+                }
+
+                Util.Log($"[{scene}] ScenePoolConfigSO 기반 오브젝트 풀 {items.Count}종 자동 적재 완료");
+            }
+        }
+        else
+        {
+            Util.LogWarning($"[{scene}] ScenePoolConfigSO를 찾을 수 없습니다. (라벨 Static_Data 등록 여부 확인 필요)");
+        }
+    }
     public void Init(SceneId scene) => Util.Log($"[{scene}] 풀 매니저 준비 완료");
-    public void OnSceneDestroy(SceneId scene) { }
+    public void OnSceneDestroy(SceneId scene) => ClearSceneDependentPools();
     #endregion
 
     #region 동기 등록 및 풀 생성
-    public void RegisterPool(PoolType poolType, GameObject prefab, int initialCount = 1)
+    public void RegisterPool(PoolType poolType, GameObject prefab, int initialCount = 1, bool isSceneDependent = false)
     {
         if (_pools.ContainsKey(poolType))
         {
@@ -50,12 +76,18 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
         folder.SetParent(_poolRoot);
 
         _pools[poolType] = new GameObjectPool(poolType, prefab, folder, initialCount);
+       
+        if (isSceneDependent)
+        {
+            _sceneDependentPoolTypes.Add(poolType);
+        }
+
         Util.Log($"[풀 등록 완료] {poolType} (초기 수량: {initialCount})");
     }
     #endregion
 
     #region 비동기 프리로드 
-    public async UniTask PreloadPoolAsync(PoolType poolType, string addressableKey, int initialCount = 1, System.Threading.CancellationToken ct = default)
+    public async UniTask PreloadPoolAsync(PoolType poolType, string addressableKey, int initialCount = 1, System.Threading.CancellationToken ct = default, bool isSceneDependent = false)
     {
         if (_pools.ContainsKey(poolType)) return;
 
@@ -63,7 +95,7 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
 
         if (prefab != null)
         {
-            RegisterPool(poolType, prefab, initialCount);
+            RegisterPool(poolType, prefab, initialCount, isSceneDependent);
         }
         else
         {
@@ -105,11 +137,11 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
     /// <summary>
     /// 비동기 Spawn (해당 풀이 아직 없을 경우 비동기 로드 후 즉시 인스턴스 반환)
     /// </summary>
-    public async UniTask<T> SpawnAsync<T>(PoolType poolType, string fallbackAddressableKey, Vector3 position = default, Quaternion rotation = default, Transform parent = null, System.Threading.CancellationToken ct = default) where T : Component
+    public async UniTask<T> SpawnAsync<T>(PoolType poolType, string fallbackAddressableKey, Vector3 position = default, Quaternion rotation = default, Transform parent = null, System.Threading.CancellationToken ct = default, bool isSceneDependent = false) where T : Component
     {
         if (!_pools.ContainsKey(poolType))
         {
-            await PreloadPoolAsync(poolType, fallbackAddressableKey, 5, ct);
+            await PreloadPoolAsync(poolType, fallbackAddressableKey, 5, ct, isSceneDependent);
         }
 
         return Spawn<T>(poolType, position, rotation, parent);
@@ -152,8 +184,20 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
         {
             pool.Clear();
             _pools.Remove(poolType);
+            _sceneDependentPoolTypes.Remove(poolType);
             Util.Log($"[단일 풀 메모리 정리] {poolType}");
         }
+    }
+
+    public void ClearSceneDependentPools()
+    {
+        List<PoolType> toClear = new List<PoolType>(_sceneDependentPoolTypes);
+        for(int i = 0; i < toClear.Count; i++)
+        {
+            ClearPool(toClear[i]);
+        }
+        _sceneDependentPoolTypes.Clear();
+        Util.Log("[씬 종속 오브젝트 풀 메모리 일괄 반환 완료]");
     }
 
     protected override void OnDestroy()
@@ -163,6 +207,7 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
             pool.Clear();
         }
         _pools.Clear();
+        _sceneDependentPoolTypes.Clear();
         base.OnDestroy();
     }
 }

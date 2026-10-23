@@ -77,9 +77,9 @@ public class CreatureEnemyController : EnemyController
 
     public void ReceiveAlertSignal(Transform sharedTarget)
     {
-        if (_currentTarget != null) return;
+        if (_currentTarget != null || StatusController.IsDead) return;
         SetTarget(sharedTarget);
-        _stateMachine.ChangeState((int)UnitState.Chase);
+        _stateMachine.ChangeState((int)UnitState.RoarResponse);
     }
 
     protected override void OnDrawGizmosSelected()

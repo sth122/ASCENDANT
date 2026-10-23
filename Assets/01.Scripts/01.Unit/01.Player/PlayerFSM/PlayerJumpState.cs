@@ -5,7 +5,7 @@
 /// </summary>
 public class PlayerJumpState : PlayerBaseState
 {  
-    private const float JumpStaminaCost = 12.0f;
+    public const float JumpStaminaCost = 12.0f;     // 임시 외부 참조 허용. 소모값 SO나 Module을 따로 만들 예정
     private const float AirControlFactor = 0.4f;    // 공중 이동 제어 감쇠율
     private const float JumpCooldown = 0.15f;       // 도약 직후 즉시 착지 판정되는 것 방지
     private float _tiemInAir = 0f;
@@ -19,6 +19,21 @@ public class PlayerJumpState : PlayerBaseState
 
         _tiemInAir = 0f;
         owner.InputReader.ClearCommand(InputCommandType.Jump);
+
+        // 방어선
+        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(JumpStaminaCost))
+        {
+            if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
+            {
+                _playerStateMachine.ChangeState(owner.InputReader.IsSprinting ? UnitState.Sprint : UnitState.Move);
+            }
+            else
+            {
+                _playerStateMachine.ChangeState(UnitState.Idle);
+            }
+            return;
+        }
+
 
         // 1. 스태미나 차감
         _playerStatusController?.ConsumeStamina(JumpStaminaCost);

@@ -6,7 +6,7 @@
 /// </summary>
 public class PlayerRollState : PlayerActionState
 {
-    private const float RollStaminaCost = 18.0f;
+    public const float RollStaminaCost = 18.0f;        // 임시 외부 참조 허용. 소모값 SO나 Module을 따로 만들 예정
     private const float InvincibleDuration = 0.35f;
     private const float RollTotalDuration = 0.85f;
 
@@ -18,6 +18,13 @@ public class PlayerRollState : PlayerActionState
     public override void Enter()
     {
         base.Enter();
+
+        // 방어선
+        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(RollStaminaCost))
+        {
+            CompleteActionAndEvaluateTransition();
+            return;
+        }
 
         // 1. 구르기 방향 결정 (입력 방향 우선, 무입력 시 백스탭 대용 180도 반전 - 현재 잠시 해제)
         UnityEngine.Vector3 moveInputDirection = owner.CurrentMoveDirection;

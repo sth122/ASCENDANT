@@ -78,3 +78,16 @@ public readonly struct LockOnTargetChangedEvent : IEventType
         IsLockedOn = isLockedOn;
     }
 }
+
+/// <summary>
+/// 플레이어가 화톳불(세이브 터미널)에서 휴식을 취했을 때 발생하는 월드 리셋 이벤트
+/// </summary>
+public readonly struct BonfireRestedEvent : IEventType
+{
+    public readonly UnityEngine.Vector3 BonfirePosition;
+
+    public BonfireRestedEvent(UnityEngine.Vector3 bonfirePosition)
+    {
+        BonfirePosition = bonfirePosition;
+    }
+}

@@ -172,6 +172,12 @@ public class PlayerParryState : PlayerActionState
         // 가드 중 위급 상황 시 즉시 가드를 풀고 회피 전이
         if (command == InputCommandType.Roll)
         {
+            // 스태미나 사전 검증
+            if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(PlayerRollState.RollStaminaCost))
+            {
+                owner.InputReader.ClearCommand(InputCommandType.Roll);
+                return;
+            }
             _playerStateMachine.ChangeState(UnitState.Roll);
         }
     }

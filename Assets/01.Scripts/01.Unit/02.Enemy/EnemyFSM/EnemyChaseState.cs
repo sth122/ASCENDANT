@@ -13,7 +13,7 @@
     public override void Enter()
     {
         base.Enter();
-        _pathUpdateTimer = 0f; 
+        _pathUpdateTimer = 0f;
 
         owner.SetStoppingDistanceAPI(UnitState.Chase);
 
@@ -44,7 +44,7 @@
 
         UnityEngine.Transform target = owner.CurrentTarget;
         // 1. 타겟이 없으면 대기 상태로 전이
-        if(target == null)
+        if (target == null)
         {
             _enemyStateMachine.ChangeState((int)UnitState.Idle);
             return;
@@ -58,7 +58,7 @@
             _enemyStateMachine.ChangeState((int)UnitState.Return);
             return;
         }
-        
+
         // 3. 최대 활동 반경 초과 검사
         float maxLeash = _enemyStatusController.EnemyStatusSource != null
             ? _enemyStatusController.EnemyStatusSource.MaxLeashDistance : 25.0f;
@@ -79,9 +79,7 @@
         // 5. 대치 영역 상태 분기
         if (!_isInCombatRange && distance <= EngageDistance)
         {
-            _isInCombatRange = true;
-            owner.StopMovementAPI();
-            _enemyAnimController.PlayState(AnimStateType.BattleIdle);
+            EnterCombatStance();
         }
         else if (_isInCombatRange && distance > DisengageDistance)
         {
@@ -117,6 +115,14 @@
         }
     }
 
+    public void EnterCombatStance()
+    {
+        _isInCombatRange = true;
+        owner.StopMovementAPI();
+
+
+        _enemyAnimController.PlayState(AnimStateType.BattleIdle);
+    }
     public override void Exit()
     {
         base.Exit();

@@ -14,6 +14,7 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
     private bool _isLoading = false;
 
     public SceneId CurrentScene => _currentScene;
+    public bool IsLoading => _isLoading;
 
     protected override void Awake()
     {
@@ -67,11 +68,12 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
             // 현재 씬 ID 갱신 - Bootstrapper 실행 전 선행 갱신으로 인한 Start 실행 차단
             _currentScene = nextScene;
 
-            // 4. 새 씬 내부의 ISceneBootstrap 감지 및 실행
+            // 4. ILoadable 시스템 순차 초기화 (LoadOrder 오름차순)
+            await InitializeLoadablesAsync(nextScene);
+
+            // 5. 새 씬 내부의 ISceneBootstrap 감지 및 실행
             await ExecuteSceneBootstrapAsync(nextScene);
 
-            // 5. ILoadable 시스템 순차 초기화 (LoadOrder 오름차순)
-            await InitializeLoadablesAsync(nextScene);
 
             Util.Log($"[{nextScene}] 씬 전환 완료");
         }

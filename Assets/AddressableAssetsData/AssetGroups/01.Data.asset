@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: 01.Data
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: 01.Data
+  m_GUID: f82b32457735cbb48bfacff5bef57855
+  m_SerializeEntries:
+  - m_GUID: 2723aa284ae59f440b9a68b0a41df536
+    m_Address: EnemyStatusSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Static_Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4461b0ffc5a1ae345aee10215f188c06
+    m_Address: EnemyAttackDatabaseSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Static_Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87a065d055e748541a2d29b73e5228a3
+    m_Address: ScenePoolConfigSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Static_Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8faec110d4afb5e47b67c75a78c48947
+    m_Address: PlayerStatusSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Static_Data
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 7026aa4d763780a49862f1c5ad971903, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 035f85d8feb73ef4597736aa5f2ef6ae, type: 2}
+    - {fileID: 11400000, guid: 55d3d533dc5fd27409e6f6e76bd0054b, type: 2}

@@ -121,8 +121,9 @@ public class BossGimmickStatus : UnitBaseStatus
 [System.Serializable]
 public class EnemyStatus : UnitBaseStatus
 {
-    #region 처치 보상
-    [field: Header("Reward")]
+    #region 등급 및 처치 보상
+    [field: Header("Classification & Reward")]
+    [field: SerializeField] public EnemyTier Tier { get; protected set; } = EnemyTier.Normal;
     [field: SerializeField] public int DropSouls { get; protected set; }
     #endregion
 
@@ -163,7 +164,8 @@ public class EnemyStatus : UnitBaseStatus
             Poise = this.Poise,
             WalkSpeed = this.WalkSpeed,
 
-            // 2. Enemy 처치 보상 수치 복제
+            // 2. Enemy 등급 및 처치 보상 수치 복제
+            Tier = this.Tier,
             DropSouls = this.DropSouls,
 
             // 3. Enemy 전투 수치 복제

@@ -3,7 +3,7 @@
 /// </summary>
 public class PlayerAttackState : PlayerActionState
 {
-    private const float AttackStaminaCost = 14.0f;
+    public const float AttackStaminaCost = 14.0f;           // 임시 외부 참조 허용. 소모값 SO나 Module을 따로 만들 예정
 
     // 모션 진행도(normalizedTime) 기준 타임라인 설정
     private const float HitboxOpenNormalized = 0.4f;       // 타격 판정 시작
@@ -101,9 +101,13 @@ public class PlayerAttackState : PlayerActionState
         {
             if (owner.InputReader.TryConsumeCommand(InputCommandType.Roll))
             {
-                CloseHitboxInternal();
-                _playerStateMachine.ChangeState(UnitState.Roll);
-                return;
+                // 스태미나 검증
+                if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(PlayerRollState.RollStaminaCost))
+                {
+                    CloseHitboxInternal();
+                    _playerStateMachine.ChangeState(UnitState.Roll);
+                    return;
+                }
             }
 
             if (owner.InputReader.TryConsumeCommand(InputCommandType.Parry))

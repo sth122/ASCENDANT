@@ -1,4 +1,7 @@
-﻿public class PlayerSprintState : PlayerGroundState
+﻿/// <summary>
+/// Player 달리기 FSM 상태 클래스
+/// </summary>
+public class PlayerSprintState : PlayerGroundState
 {
     // 기획 밸런스 수치
     private const float SprintStaminaCostPerSec = 16.0f; // 초당 스태미나 소모량
@@ -57,10 +60,13 @@
         float sprintSpeed = _playerStatusController != null && _playerStatusController.PlayerMotionStats != null
             ? _playerStatusController.PlayerMotionStats.SprintSpeed.Value            : 0f;
 
+        float rotSpeed = _playerStatusController != null && _playerStatusController.PlayerStatusSource != null
+            ? _playerStatusController.PlayerStatusSource.RotationSpeed : 16.0f;
+
         owner.MoveAPI(moveDir, sprintSpeed);
 
         // 4. 회전 제어 (락온 중이라도 전력 질주 시에는 이동 진행 방향을 바라보며 뜀)
-        owner.RotateTowardsAPI(moveDir, _playerStatusController.PlayerStatusSource.RotationSpeed, UnityEngine.Time.fixedDeltaTime);
+        owner.RotateTowardsAPI(moveDir, rotSpeed, UnityEngine.Time.fixedDeltaTime);
     }
 
     private void UpdateSprintLocomotionAnimation()

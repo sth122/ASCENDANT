@@ -60,17 +60,22 @@ public class EnemyAttackState : EnemyBaseState
         // 3. 실제 공격 클립의 normalizedTime 추출
         float normalizedTime = _enemyAnimController.GetCurrentNormalizedTimeOfState(_targetAnimHash, 0);
 
+        bool isClipFinished = _enemyAnimController.IsAnimationFinished(0);
+        bool isActionEnded = normalizedTime >= _currentPattern.ActionEndNormalized && normalizedTime > 0f;
+
+        if (isActionEnded || isClipFinished)
+        {
+            // 공격 종료 시점에 즉시 대치/추격 상태로 전이하여 후딜레이 굳음 원천 차단
+            _enemyStateMachine.ChangeState((int)UnitState.Chase);
+            return;
+        }
+
         // 4. 공격 클립을 재생하지 않았으면 판정 유예
         if (normalizedTime <= 0f) return;
 
         // 정규화 시간 전달
         EnemyAttackContext context = owner.CreateAttackContext();
         owner.Combat.UpdateAttack(in context, owner.CurrentTarget, in _currentPattern, normalizedTime);
-
-        if(normalizedTime >= _currentPattern.ActionEndNormalized && !_enemyAnimController.IsInTransition(0))
-        {
-            _enemyStateMachine.ChangeState((int)UnitState.Chase);
-        }
     }
 
     public override void Exit()

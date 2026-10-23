@@ -22,7 +22,8 @@ public enum UnitState
     // 크리처 전용 특화 상태
     Patrol,      // 포복 이동 순찰
     Alert,      // 발소리 감지 기상 및 수색
-    Roar        // 발견 표효 및 동료 호출
+    Roar,        // 발견 표효 및 동료 호출
+    RoarResponse // 발견 표호 답변
 }
 
 public enum UnitId
@@ -186,7 +187,8 @@ public enum PoolType
 
     // 풀링 UI (3000 ~)
     DamageText = 3000,
-    EnemyFloatingHpBar = 3010,
+    FloatingHpBar = 3010,
+
 
     // 소환 몬스터 (4000 ~)
     NightmareCreature = 4000

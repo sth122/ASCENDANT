@@ -176,7 +176,7 @@ GameObject:
   - component: {fileID: 1029992816194024196}
   m_Layer: 6
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -298,7 +298,7 @@ MonoBehaviour:
   _riposteRange: 2.2
   _lockOnObstacleLayer:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 257
   _cameraTarget: {fileID: 2071464979527174977}
 --- !u!114 &1367710400141555128
 MonoBehaviour:

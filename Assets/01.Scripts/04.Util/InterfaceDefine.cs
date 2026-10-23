@@ -65,6 +65,18 @@ public interface IEnemyAttackStrategy
     void Stop(in EnemyAttackContext context);
 }
 
+/// <summary>
+/// 씬 내 모든 에너미의 수명 주기 및 화톳불 리셋을 전담 제어하는 매니저 인터페이스
+/// </summary>
+public interface IEnemyManager
+{
+    void RegisterEnemy(EnemyController enemy);
+    void UnregisterEnemy(EnemyController enemy);
+    void RegisterDefeatedPermanentEnemy(string permanentId);
+    bool IsPermanentEnemyDefeated(string permanentId);
+    void ResetAllEnemies();
+}
+
 #region UI 인터페이스
 public interface IUIModel
 {
