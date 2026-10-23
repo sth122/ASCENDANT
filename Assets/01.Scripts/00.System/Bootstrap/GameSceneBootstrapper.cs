@@ -101,13 +101,19 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
 
     protected override void OnSceneReadyCompleted()
     {
-        // 1. UIManager의 잔여 UI 입력 맵 해제
+
+        // 1. 거시적 게임 상태를 Playing으로 전환
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetState(GameState.Playing);
+        }
+
+        // 2. 조작권 활성화 및 커서 잠금
         if (UIManager.Instance != null && UIManager.Instance.InputReader != null)
         {
             UIManager.Instance.InputReader.EnablePlayerInput();
         }
 
-        // 2. 플레이어 조작 맵 활성화
         if (_spawnedPlayer != null && _spawnedPlayer.InputReader != null)
         {
             _spawnedPlayer.InputReader.EnablePlayerInput();

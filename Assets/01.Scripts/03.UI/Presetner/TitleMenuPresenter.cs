@@ -109,7 +109,7 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
-        Application.Quit();
+        UnityEngine.Application.Quit();
 #endif
     }
 }

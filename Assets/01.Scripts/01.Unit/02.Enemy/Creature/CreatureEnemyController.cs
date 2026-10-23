@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using Unity.VisualScripting;
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -21,7 +22,10 @@ public class CreatureEnemyController : EnemyController
         _unitId = UnitId.NightmareCreature;
         base.Awake();
     }
-
+    protected override void Start()
+    {
+        base.Start();
+    }
     protected override void InitializeStateMachine()
     {
         _stateMachine = new CreatureEnemyStateMachine(this);

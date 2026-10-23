@@ -1,5 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Util = DebugLogger<ObjectPoolManager>;
 
@@ -13,6 +12,9 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
     private readonly Dictionary<PoolType, GameObjectPool> _pools = new Dictionary<PoolType, GameObjectPool>();
     private readonly HashSet<PoolType> _sceneDependentPoolTypes = new HashSet<PoolType>();
     private Transform _poolRoot;
+
+    private bool _isPoolReady = false;
+    public bool IsPoolReady => _isPoolReady;
 
     protected override void Awake()
     {
@@ -30,35 +32,51 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
         }
     }
 
-    #region ILoadable 구현부 - 추후 각 Scene 별로 Pooling 할 객체 분리 후 구현 완료
-    public async UniTask OnSceneLoadCreate(SceneId scene)
+    public async Cysharp.Threading.Tasks.UniTask EnsurePoolReadyAsync(System.Threading.CancellationToken ct = default)
     {
-        EnsureRoot();
+        if (_isPoolReady) return;
+
+        // 아직 OnSceneLoadCreate가 호출되지 않은 경우 대기
+        await Cysharp.Threading.Tasks.UniTask.WaitUntil(() => _isPoolReady, cancellationToken: ct);
+    }
+
+    #region ILoadable 구현부 - 추후 각 Scene 별로 Pooling 할 객체 분리 후 구현 완료
+    public async Cysharp.Threading.Tasks.UniTask OnSceneLoadCreate(SceneId scene)
+    {
+        _isPoolReady = false;
         _sceneDependentPoolTypes.Clear();
 
-        // 1. DataManager로부터 ScenePoolConfigSO 획득 (인스펙터 바인딩 완전 배제)
-        if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<ScenePoolConfigSO>(out var configSO))
+        try
         {
-            if (configSO.TryGetPoolItemsForScene(scene, out List<ScenePoolConfigSO.PoolItem> items))
+            // 1. DataManager로부터 ScenePoolConfigSO 획득 (인스펙터 바인딩 완전 배제)
+            if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<ScenePoolConfigSO>(out var configSO))
             {
-                System.Threading.CancellationToken ct = this.destroyCancellationToken;
-
-                for (int i = 0; i < items.Count; i++)
+                if (configSO.TryGetPoolItemsForScene(scene, out List<ScenePoolConfigSO.PoolItem> items))
                 {
-                    ScenePoolConfigSO.PoolItem item = items[i];;
-                    await PreloadPoolAsync(item.Type, item.Type.ToString(), item.PreloadCount, ct, isSceneDependent: true);
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        ScenePoolConfigSO.PoolItem item = items[i]; ;
+                        await PreloadPoolAsync(item.Type, item.Type.ToString(), item.PreloadCount, this.destroyCancellationToken, isSceneDependent: true);
+                    }
+                    Util.Log($"[{scene}] ScenePoolConfigSO 기반 오브젝트 풀 {items.Count}종 자동 적재 완료");
                 }
-
-                Util.Log($"[{scene}] ScenePoolConfigSO 기반 오브젝트 풀 {items.Count}종 자동 적재 완료");
             }
         }
-        else
+        catch (System.Exception ex)
         {
-            Util.LogWarning($"[{scene}] ScenePoolConfigSO를 찾을 수 없습니다. (라벨 Static_Data 등록 여부 확인 필요)");
+            Util.LogError($"풀 초기화 실패: {ex.Message}");
+        }
+        finally
+        {
+            _isPoolReady = true;
         }
     }
     public void Init(SceneId scene) => Util.Log($"[{scene}] 풀 매니저 준비 완료");
-    public void OnSceneDestroy(SceneId scene) => ClearSceneDependentPools();
+    public void OnSceneDestroy(SceneId scene)
+    {
+        _isPoolReady = false;
+        ClearSceneDependentPools();
+    }
     #endregion
 
     #region 동기 등록 및 풀 생성
@@ -87,7 +105,7 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
     #endregion
 
     #region 비동기 프리로드 
-    public async UniTask PreloadPoolAsync(PoolType poolType, string addressableKey, int initialCount = 1, System.Threading.CancellationToken ct = default, bool isSceneDependent = false)
+    public async Cysharp.Threading.Tasks.UniTask PreloadPoolAsync(PoolType poolType, string addressableKey, int initialCount = 1, System.Threading.CancellationToken ct = default, bool isSceneDependent = false)
     {
         if (_pools.ContainsKey(poolType)) return;
 
@@ -137,7 +155,7 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
     /// <summary>
     /// 비동기 Spawn (해당 풀이 아직 없을 경우 비동기 로드 후 즉시 인스턴스 반환)
     /// </summary>
-    public async UniTask<T> SpawnAsync<T>(PoolType poolType, string fallbackAddressableKey, Vector3 position = default, Quaternion rotation = default, Transform parent = null, System.Threading.CancellationToken ct = default, bool isSceneDependent = false) where T : Component
+    public async Cysharp.Threading.Tasks.UniTask<T> SpawnAsync<T>(PoolType poolType, string fallbackAddressableKey, Vector3 position = default, Quaternion rotation = default, Transform parent = null, System.Threading.CancellationToken ct = default, bool isSceneDependent = false) where T : Component
     {
         if (!_pools.ContainsKey(poolType))
         {

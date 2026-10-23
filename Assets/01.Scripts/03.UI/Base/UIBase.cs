@@ -22,6 +22,15 @@ public class UIBase : MonoBehaviour, IPoolable
         _rectTransform = GetComponent<RectTransform>();
     }
 
+    /// <summary>
+    /// UIManager에 의해 생성될 때 UIId 번호 대역에 맞춰 식별자와 레이어를 강제 동기화
+    /// </summary>
+    public void SetIdentity(UIId identifier, UILayer layer)
+    {
+        Identifier = identifier;
+        Layer = layer;
+    }
+
     public virtual void InitializeView() { }
     /// <summary>
     /// UniTask 기반의 부드러운 화면 출력
@@ -92,10 +101,7 @@ public class UIBase : MonoBehaviour, IPoolable
 
         _canvasGroup.alpha = targetAlpha;
     }
-    protected void CancelFadeToken()
-    {
-        AsyncUtil.CancelAndDispose(ref _fadeCts);
-    }
+    protected void CancelFadeToken() => AsyncUtil.CancelAndDispose(ref _fadeCts);
 
     protected System.Threading.CancellationToken CreateActionToken(System.Threading.CancellationToken ct = default)
     {
@@ -110,8 +116,5 @@ public class UIBase : MonoBehaviour, IPoolable
     public virtual void OnDespawn() => HideAsync(0f).Forget();
     #endregion
 
-    protected virtual void OnDestroy()
-    {
-        CancelFadeToken();
-    }
+    protected virtual void OnDestroy() => CancelFadeToken();
 }

@@ -46,6 +46,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
         Movement = new PlayerMovement(_rigidbody, transform, CameraTarget, _groundLayer);
 
         CombatModule = new PlayerCombatModule(this, AnimationController.WeaponHitbox);
+        EventBusSystem.Subscribe<GameStateChangedEvent>(HandleGameStateChanged);
     }
 
     /// <summary>
@@ -93,6 +94,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
             StatusController.OnDieEvent -= HandleUnitDie;
             StatusController.OnPoiseBreakEvent -= HandlePoiseBreak;
         }
+        EventBusSystem.Unsubscribe<GameStateChangedEvent>(HandleGameStateChanged);
     }
 
     private void SubscribeInputEvents()
@@ -123,6 +125,12 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
 
     protected override void Update()
     {
+        // 방어 코드. 일시정지 중에는 물리 이동/카메라/회전 연산을 일절 수행하지 않음
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+        {
+            return;
+        }
+
         Movement.CheckGrounded();
 
         // 1. 일반 이동 벡터 연산 ( 카메라 각도 기준 )
@@ -376,6 +384,22 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     private void HandleUnitDie() => _stateMachine.ChangeState((int)UnitState.Die);
     private void HandlePoiseBreak() { }
 
+    /// <summary>
+    /// GameManager 상태에 따라 플레이어 액션 맵을 물리적으로 온/오프
+    /// </summary>
+    private void HandleGameStateChanged(GameStateChangedEvent evt)
+    {
+        if (evt.NewState == GameState.Paused)
+        {
+            // 메뉴가 열렸을 때 플레이어 입력 맵을 즉각 비활성화 (마우스 클릭 공격 방지)
+            InputReader?.DisablePlayerInput();
+        }
+        else if (evt.NewState == GameState.Playing)
+        {
+            // 게임 재개 시 플레이어 입력 맵 복원
+            InputReader?.EnablePlayerInput();
+        }
+    }
     private void OnDrawGizmosSelected()
     {
         Movement?.DrawGizmos();

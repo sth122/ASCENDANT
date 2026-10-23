@@ -91,3 +91,18 @@ public readonly struct BonfireRestedEvent : IEventType
         BonfirePosition = bonfirePosition;
     }
 }
+
+/// <summary>
+/// GameManager 상태 변동 알림 이벤트
+/// </summary>
+public readonly struct GameStateChangedEvent : IEventType
+{
+    public readonly GameState PreviousState;
+    public readonly GameState NewState;
+
+    public GameStateChangedEvent(GameState previousState, GameState newState)
+    {
+        PreviousState = previousState;
+        NewState = newState;
+    }
+}

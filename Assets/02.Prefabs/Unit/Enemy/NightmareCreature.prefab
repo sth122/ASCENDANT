@@ -2338,6 +2338,7 @@ GameObject:
   - component: {fileID: 6686441447312148313}
   - component: {fileID: 5290241090621123541}
   - component: {fileID: 3635237896219343619}
+  - component: {fileID: 8489781988145303963}
   m_Layer: 7
   m_Name: NightmareCreature
   m_TagString: Enemy
@@ -2491,7 +2492,7 @@ MonoBehaviour:
   _patrolStoppingDistance: 0.5
   _isRespawnable: 1
   _permanentSpawnId: 
-  _callAlliesRadius: 15
+  _callAlliesRadius: 8
   _allLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -2518,6 +2519,19 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &8489781988145303963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6667185703038264674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bd330f196d34d848b5145214b7e3ce5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyFloatingHUDPresenter
+  _worldOffset: {x: 0, y: 2.3, z: 0}
 --- !u!1 &6767995465480487142
 GameObject:
   m_ObjectHideFlags: 0

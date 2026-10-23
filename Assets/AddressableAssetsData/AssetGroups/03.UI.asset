@@ -15,18 +15,23 @@ MonoBehaviour:
   m_GroupName: 03.UI
   m_GUID: 34322189bbc1b104dbcb524459a6b6b4
   m_SerializeEntries:
-  - m_GUID: 1fa5d5b6dcae9294c88bb4f384b2d4d5
-    m_Address: FloatingHpBar
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 208dd0bf6c76f8b48b504976b899387a
     m_Address: TitleMenuUI
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8d22b041f103e2543b29a1ca928ebf6d
+  - m_GUID: 7608bfc1babf9084a890a724e1161244
     m_Address: PlayerHUD
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 852ce88b8d84ac940a1a61da8c3ce551
+    m_Address: EnemyFloatingHpBar
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 93a4762f249d986409321f63f0186a1d
+    m_Address: SystemMenuUI
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -34,5 +39,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 7026aa4d763780a49862f1c5ad971903, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: bafcb25b74961c64e81266d73fd2f0cd, type: 2}
     - {fileID: 11400000, guid: eaebe31eaeb84254dadc71c7b2972ded, type: 2}
+    - {fileID: 11400000, guid: bafcb25b74961c64e81266d73fd2f0cd, type: 2}

@@ -59,6 +59,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     public string PermanentSpawnId => _permanentSpawnId;
     #endregion
 
+    private EnemyFloatingHUDPresenter _hudPresenter;
     protected override void Awake()
     {
         base.Awake();
@@ -78,6 +79,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
 
         NavMeshAgent agent = GetComponent<NavMeshAgent>();
         _enemyAnimController = GetComponent<EnemyAnimController>();
+        _hudPresenter = GetComponent<EnemyFloatingHUDPresenter>();
 
         _enemyMovement = new EnemyMovement(_rigidbody, transform, agent, _groundLayer);
 
@@ -172,6 +174,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     public virtual void OnSpawn() { }
     public virtual void OnDespawn()
     {
+        _hudPresenter?.ReleaseView();
         _perceptionModule?.StopSensorLoop();
         StopMovementAPI();
         _currentTarget = null;
@@ -190,6 +193,11 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         if (DataManager.Instance != null && !DataManager.Instance.IsDataLoaded)
         {
             await UniTask.WaitUntil(CheckDataLoaded, cancellationToken: this.destroyCancellationToken);
+        }
+
+        if (ObjectPoolManager.Instance != null)
+        {
+            await ObjectPoolManager.Instance.EnsurePoolReadyAsync(this.destroyCancellationToken);
         }
 
         // EnemyManager 서비스에 자기 자신 자동 등록
@@ -245,6 +253,13 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         _perceptionModule?.StartSensorLoop();
 
         this.enabled = true;
+
+        // Presenter에게 스폰 및 뷰 배정 요청
+        if (_hudPresenter != null)
+        {
+            _hudPresenter.AllocateAndBindView();
+        }
+
         Util.Log($"{gameObject.name} (ID: {_unitId}) 스폰 및 기동 완료");
     }
 
@@ -287,6 +302,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
             {
                 if (enemyManager.IsPermanentEnemyDefeated(_permanentSpawnId) || StatusController.IsDead)
                 {
+                    _hudPresenter?.ReleaseView();
                     // 처치 목록에 등록되어 있거나 이미 죽어있다면 리셋을 무시하고 비활성화 유지
                     gameObject.SetActive(false);
                     return;
@@ -355,6 +371,12 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
 
         // 6. 감각 센서 루프 재개
         _perceptionModule?.StartSensorLoop();
+
+        // 화톳불 복귀 시 뷰 재배정
+        if (_hudPresenter != null)
+        {
+            _hudPresenter.AllocateAndBindView();
+        }
 
         Util.Log($"[{gameObject.name}] 화톳불 리셋 완료 -> Origin 위치로 복귀 및 HP 회복 완료");
     }

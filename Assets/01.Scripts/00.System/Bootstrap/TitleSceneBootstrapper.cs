@@ -21,6 +21,10 @@ public class TitleSceneBootstrapper : SceneBootstrapper
 
     protected override void OnSceneReadyCompleted()
     {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetState(GameState.Title);
+        }
         UIManager.Instance.InputReader.EnableUIInput();
     }
 }

@@ -7,34 +7,31 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 유니티 기본 UGUI 및 파티클을 활용해 부트스트랩 필수 프리팹을 1초 만에 자동 생성하고
-/// Addressables 그룹에 해당 키로 즉시 등록해 주는 에디터 자동화 툴
+/// 잔상 슬라이더(Ghost Bar)가 포함된 PlayerHUD, FloatingHpBar와
+/// ESC 시스템 메뉴(SystemMenuUI)를 1초 만에 자동 생성하고 Addressables에 등록하는 에디터 툴
 /// </summary>
 public static class MockAssetGenerator
 {
-    private const string PrefabSaveDirectory = "Assets/03.Prefabs/Mock";
+    private const string PrefabSaveDirectory = "Assets/02.Prefabs/UI";
 
     [MenuItem("Tools/어센던트/Generate Mock Prefabs & Setup Addressables")]
     public static void GenerateAllMockAssets()
     {
         EnsureDirectory();
 
-        // 1. TitleMenuUI 프리팹 생성 및 등록
-        CreateTitleMenuUIPrefab();
-
-        // 2. PlayerHUD 프리팹 생성 및 등록
+        // 1. 소울라이크 잔상 & Poise가 포함된 PlayerHUD 생성
         CreatePlayerHUDPrefab();
 
-        // 3. HitVFX_Slash 파티클 프리팹 생성 및 등록
-        CreateHitVFXPrefab();
+        // 2. 적 머리 위 플로팅 HUD (HP 잔상 + Poise 그로기) 생성
+        CreateEnemyFloatingHpBarPrefab();
 
-        // 4. FloatingHpBar 프리팹 생성 및 등록
-        CreateFloatingHpBarPrefab();
+        // 3. ESC 시스템 메뉴 창 (SystemMenuUI) 생성
+        CreateSystemMenuUIPrefab();
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        DebugLogger.LogWithTag("MockAssetGenerator", "모든 Mock 프리팹 생성 및 Addressables 등록이 완료되었습니다.");
+        DebugLogger.LogWithTag("MockAssetGenerator", "모든 신규 UI 프리팹 생성 및 Addressables 등록이 완료되었습니다.");
     }
 
     private static void EnsureDirectory()
@@ -46,50 +43,7 @@ public static class MockAssetGenerator
         }
     }
 
-    #region 1. TitleMenuUI 제작
-    private static void CreateTitleMenuUIPrefab()
-    {
-        string assetPath = $"{PrefabSaveDirectory}/TitleMenuUI.prefab";
-
-        GameObject root = new GameObject("TitleMenuUI", typeof(RectTransform), typeof(CanvasGroup), typeof(TitleMenuView));
-        RectTransform rootRect = root.GetComponent<RectTransform>();
-        rootRect.sizeDelta = new Vector2(1920, 1080);
-
-        // 배경 패널
-        GameObject panelGo = CreateUIObject("BackgroundPanel", root.transform);
-        Image panelImg = panelGo.AddComponent<Image>();
-        panelImg.color = new Color(0.05f, 0.05f, 0.05f, 0.85f);
-        SetFullStretch(panelGo.GetComponent<RectTransform>());
-
-        // 버튼 세로 정렬 컨테이너
-        GameObject btnContainer = CreateUIObject("ButtonContainer", root.transform);
-        VerticalLayoutGroup layout = btnContainer.AddComponent<VerticalLayoutGroup>();
-        layout.spacing = 20;
-        layout.childAlignment = TextAnchor.MiddleCenter;
-        layout.childControlHeight = false;
-        layout.childControlWidth = false;
-
-        RectTransform containerRect = btnContainer.GetComponent<RectTransform>();
-        containerRect.anchoredPosition = new Vector2(0, -100);
-        containerRect.sizeDelta = new Vector2(400, 400);
-
-        Button newGameBtn = CreateMockButton("Btn_NewGame", "새 게임", btnContainer.transform);
-        Button continueBtn = CreateMockButton("Btn_Continue", "이어하기", btnContainer.transform);
-        Button quitBtn = CreateMockButton("Btn_Quit", "게임 종료", btnContainer.transform);
-
-        // TitleMenuView 직렬화 바인딩
-        TitleMenuView view = root.GetComponent<TitleMenuView>();
-        SerializedObject so = new SerializedObject(view);
-        so.FindProperty("_newGameButton").objectReferenceValue = newGameBtn;
-        so.FindProperty("_continueButton").objectReferenceValue = continueBtn;
-        so.FindProperty("_quitButton").objectReferenceValue = quitBtn;
-        so.ApplyModifiedProperties();
-
-        SaveAndRegisterAddressable(root, assetPath, "TitleMenuUI");
-    }
-    #endregion
-
-    #region 2. PlayerHUD 제작
+    #region 1. PlayerHUD 프리팹 생성 (HP/Stamina 잔상 + Poise)
     private static void CreatePlayerHUDPrefab()
     {
         string assetPath = $"{PrefabSaveDirectory}/PlayerHUD.prefab";
@@ -99,79 +53,140 @@ public static class MockAssetGenerator
         rootRect.sizeDelta = new Vector2(1920, 1080);
         SetFullStretch(rootRect);
 
-        // 좌상단 HUD 컨테이너
-        GameObject hudContainer = CreateUIObject("TopLeft_Container", root.transform);
-        RectTransform hudRect = hudContainer.GetComponent<RectTransform>();
-        hudRect.anchorMin = new Vector2(0, 1);
-        hudRect.anchorMax = new Vector2(0, 1);
-        hudRect.pivot = new Vector2(0, 1);
-        hudRect.anchoredPosition = new Vector2(60, -50);
-        hudRect.sizeDelta = new Vector2(500, 100);
+        // 좌상단 게이지 컨테이너
+        GameObject containerGo = CreateUIObject("TopLeft_Gauges", root.transform);
+        RectTransform containerRect = containerGo.GetComponent<RectTransform>();
+        containerRect.anchorMin = new Vector2(0, 1);
+        containerRect.anchorMax = new Vector2(0, 1);
+        containerRect.pivot = new Vector2(0, 1);
+        containerRect.anchoredPosition = new Vector2(60, -50);
+        containerRect.sizeDelta = new Vector2(500, 120);
 
-        Slider hpSlider = CreateMockSlider("HP_Bar", new Color(0.85f, 0.15f, 0.15f), hudContainer.transform, new Vector2(0, 0));
-        Slider staminaSlider = CreateMockSlider("Stamina_Bar", new Color(0.15f, 0.75f, 0.2f), hudContainer.transform, new Vector2(0, -35));
+        // 1) HP 게이지 (후면: 주황 잔상 / 전면: 선홍색)
+        CreateDoubleSlider("HP_Bar_Group", containerGo.transform, new Vector2(0, 0), new Vector2(400, 20),
+            new Color(0.9f, 0.55f, 0.1f), new Color(0.85f, 0.15f, 0.15f),
+            out Slider hpGhostSlider, out Slider hpFrontSlider);
 
-        // PlayerHUDView 직렬화 바인딩
+        // 2) Stamina 게이지 (후면: 밝은 연두 잔상 / 전면: 진녹색)
+        CreateDoubleSlider("Stamina_Bar_Group", containerGo.transform, new Vector2(0, -32), new Vector2(340, 15),
+            new Color(0.7f, 0.9f, 0.3f), new Color(0.15f, 0.75f, 0.2f),
+            out Slider stamGhostSlider, out Slider stamFrontSlider);
+
+        // 3) Poise 게이지 (단일: 청록색)
+        Slider poiseSlider = CreateSimpleSlider("Poise_Bar", new Color(0.18f, 0.8f, 0.85f), containerGo.transform,
+            new Vector2(0, -55), new Vector2(280, 10));
+
+        // PlayerHUDView 직렬화 필드 연결
         PlayerHUDView view = root.GetComponent<PlayerHUDView>();
         SerializedObject so = new SerializedObject(view);
-        so.FindProperty("_hpSlider").objectReferenceValue = hpSlider;
-        so.FindProperty("_staminaSlider").objectReferenceValue = staminaSlider;
+        so.FindProperty("_hpSlider").objectReferenceValue = hpFrontSlider;
+        so.FindProperty("_hpGhostSlider").objectReferenceValue = hpGhostSlider;
+        so.FindProperty("_staminaSlider").objectReferenceValue = stamFrontSlider;
+        so.FindProperty("_staminaGhostSlider").objectReferenceValue = stamGhostSlider;
+        so.FindProperty("_poiseSlider").objectReferenceValue = poiseSlider;
+        so.FindProperty("_ghostDelayDuration").floatValue = 0.45f;
+        so.FindProperty("_ghostDrainSpeed").floatValue = 0.6f;
         so.ApplyModifiedProperties();
 
-        SaveAndRegisterAddressable(root, assetPath, "PlayerHUD");
+        SaveAndRegisterAddressable(root, assetPath, "PlayerHUD", "03.UI");
     }
     #endregion
 
-    #region 3. HitVFX_Slash 제작 (기본 파티클)
-    private static void CreateHitVFXPrefab()
-    {
-        string assetPath = $"{PrefabSaveDirectory}/HitVFX_Slash.prefab";
-
-        GameObject root = new GameObject("HitVFX_Slash", typeof(ParticleSystem), typeof(VFXPoolable));
-        ParticleSystem ps = root.GetComponent<ParticleSystem>();
-
-        var main = ps.main;
-        main.duration = 0.4f;
-        main.loop = false;
-        main.startLifetime = 0.25f;
-        main.startSpeed = 8.0f;
-        main.startSize = 0.35f;
-        main.startColor = new Color(1f, 0.85f, 0.3f, 1f); // 황색 스파크
-        main.stopAction = ParticleSystemStopAction.None;
-
-        var emission = ps.emission;
-        emission.rateOverTime = 0;
-        emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, 15) });
-
-        var shape = ps.shape;
-        shape.shapeType = ParticleSystemShapeType.Sphere;
-        shape.radius = 0.1f;
-
-        VFXPoolable vfx = root.GetComponent<VFXPoolable>();
-        SerializedObject so = new SerializedObject(vfx);
-        so.FindProperty("_poolType").intValue = (int)PoolType.HitVFX_Slash;
-        so.FindProperty("_particleSystem").objectReferenceValue = ps;
-        so.FindProperty("_fallbackDuration").floatValue = 0.5f;
-        so.ApplyModifiedProperties();
-
-        SaveAndRegisterAddressable(root, assetPath, "HitVFX_Slash");
-    }
-    #endregion
-
-    #region 4. FloatingHpBar 제작
-    private static void CreateFloatingHpBarPrefab()
+    #region 2. EnemyFloatingHpBar 프리팹 생성 (HP 잔상 + Poise 그로기)
+    private static void CreateEnemyFloatingHpBarPrefab()
     {
         string assetPath = $"{PrefabSaveDirectory}/FloatingHpBar.prefab";
 
-        GameObject root = new GameObject("FloatingHpBar", typeof(RectTransform), typeof(CanvasGroup), typeof(UIBase));
+        GameObject root = new GameObject("FloatingHpBar", typeof(RectTransform), typeof(CanvasGroup), typeof(EnemyFloatingHUDView));
         RectTransform rootRect = root.GetComponent<RectTransform>();
-        rootRect.sizeDelta = new Vector2(120, 14);
+        rootRect.sizeDelta = new Vector2(140, 24);
 
-        Slider hpSlider = CreateMockSlider("Slider", new Color(0.9f, 0.2f, 0.2f), root.transform, Vector2.zero);
-        RectTransform sliderRect = hpSlider.GetComponent<RectTransform>();
-        SetFullStretch(sliderRect);
+        // 1) 적 HP 게이지 (후면 잔상 + 전면 빨강)
+        CreateDoubleSlider("Enemy_HP_Group", root.transform, new Vector2(0, 4), new Vector2(140, 12),
+            new Color(0.95f, 0.6f, 0.15f), new Color(0.85f, 0.1f, 0.1f),
+            out Slider hpGhostSlider, out Slider hpFrontSlider);
 
-        SaveAndRegisterAddressable(root, assetPath, "FloatingHpBar");
+        // 2) 적 Poise 게이지 (하단 얇은 슬라이더, 기본 골드색)
+        Slider poiseSlider = CreateSimpleSlider("Enemy_Poise_Bar", new Color(0.95f, 0.75f, 0.15f), root.transform,
+            new Vector2(0, -7), new Vector2(140, 6));
+
+        // EnemyFloatingHUDView 직렬화 필드 연결
+        EnemyFloatingHUDView view = root.GetComponent<EnemyFloatingHUDView>();
+        SerializedObject so = new SerializedObject(view);
+        so.FindProperty("_hpSlider").objectReferenceValue = hpFrontSlider;
+        so.FindProperty("_hpGhostSlider").objectReferenceValue = hpGhostSlider;
+        so.FindProperty("_poiseSlider").objectReferenceValue = poiseSlider;
+        so.FindProperty("_poiseFillImage").objectReferenceValue = poiseSlider.fillRect.GetComponent<Image>();
+        so.FindProperty("_worldOffset").vector3Value = new Vector3(0f, 2.2f, 0f);
+        so.FindProperty("_ghostDelayDuration").floatValue = 0.4f;
+        so.FindProperty("_ghostDrainSpeed").floatValue = 0.5f;
+        so.ApplyModifiedProperties();
+
+        SaveAndRegisterAddressable(root, assetPath, "FloatingHpBar", "03.UI");
+    }
+    #endregion
+
+    #region 3. SystemMenuUI 프리팹 생성 (ESC 일시정지 창)
+    private static void CreateSystemMenuUIPrefab()
+    {
+        string assetPath = $"{PrefabSaveDirectory}/SystemMenuUI.prefab";
+
+        GameObject root = new GameObject("SystemMenuUI", typeof(RectTransform), typeof(CanvasGroup), typeof(SystemMenuView));
+        RectTransform rootRect = root.GetComponent<RectTransform>();
+        rootRect.sizeDelta = new Vector2(1920, 1080);
+        SetFullStretch(rootRect);
+
+        // 반투명 배경 딤
+        GameObject dimmerGo = CreateUIObject("Dimmer", root.transform);
+        Image dimImg = dimmerGo.AddComponent<Image>();
+        dimImg.color = new Color(0f, 0f, 0f, 0.75f);
+        SetFullStretch(dimmerGo.GetComponent<RectTransform>());
+
+        // 중앙 메뉴 다이얼로그 패널
+        GameObject panelGo = CreateUIObject("MenuPanel", root.transform);
+        RectTransform panelRect = panelGo.GetComponent<RectTransform>();
+        panelRect.sizeDelta = new Vector2(420, 480);
+        Image panelImg = panelGo.AddComponent<Image>();
+        panelImg.color = new Color(0.12f, 0.12f, 0.12f, 0.95f);
+
+        // 타이틀 텍스트
+        GameObject titleTextGo = CreateUIObject("Txt_Title", panelGo.transform);
+        RectTransform titleRect = titleTextGo.GetComponent<RectTransform>();
+        titleRect.anchoredPosition = new Vector2(0, 170);
+        titleRect.sizeDelta = new Vector2(300, 50);
+        Text titleTxt = titleTextGo.AddComponent<Text>();
+        titleTxt.text = "시스템 메뉴";
+        titleTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        titleTxt.fontSize = 28;
+        titleTxt.alignment = TextAnchor.MiddleCenter;
+        titleTxt.color = new Color(0.9f, 0.85f, 0.7f);
+
+        // 버튼 수직 레이아웃 컨테이너
+        GameObject btnContainer = CreateUIObject("ButtonContainer", panelGo.transform);
+        VerticalLayoutGroup layout = btnContainer.AddComponent<VerticalLayoutGroup>();
+        layout.spacing = 18;
+        layout.childAlignment = TextAnchor.MiddleCenter;
+        layout.childControlHeight = false;
+        layout.childControlWidth = false;
+
+        RectTransform containerRect = btnContainer.GetComponent<RectTransform>();
+        containerRect.anchoredPosition = new Vector2(0, -30);
+        containerRect.sizeDelta = new Vector2(350, 300);
+
+        Button resumeBtn = CreateMockButton("Btn_Resume", "게임 재개", btnContainer.transform);
+        Button titleBtn = CreateMockButton("Btn_Title", "타이틀 화면으로", btnContainer.transform);
+        Button quitBtn = CreateMockButton("Btn_Quit", "게임 종료", btnContainer.transform);
+
+        // SystemMenuView 직렬화 바인딩
+        SystemMenuView view = root.GetComponent<SystemMenuView>();
+        SerializedObject so = new SerializedObject(view);
+        so.FindProperty("_resumeButton").objectReferenceValue = resumeBtn;
+        so.FindProperty("_titleButton").objectReferenceValue = titleBtn;
+        so.FindProperty("_quitButton").objectReferenceValue = quitBtn;
+        so.FindProperty("_pauseTimeWhenOpened").boolValue = true; // 열릴 때 자동 일시정지
+        so.ApplyModifiedProperties();
+
+        SaveAndRegisterAddressable(root, assetPath, "SystemMenuUI", "03.UI");
     }
     #endregion
 
@@ -191,20 +206,77 @@ public static class MockAssetGenerator
         rect.offsetMax = Vector2.zero;
     }
 
+    private static void CreateDoubleSlider(string groupName, Transform parent, Vector2 pos, Vector2 size,
+        Color ghostColor, Color frontColor, out Slider ghostSlider, out Slider frontSlider)
+    {
+        GameObject groupGo = CreateUIObject(groupName, parent);
+        RectTransform groupRect = groupGo.GetComponent<RectTransform>();
+        groupRect.anchoredPosition = pos;
+        groupRect.sizeDelta = size;
+
+        // 1. 후면 고스트 슬라이더 (배경 포함)
+        ghostSlider = CreateSliderInstance("GhostSlider", groupGo.transform, size, ghostColor, hasBackground: true);
+
+        // 2. 전면 슬라이더 (배경 투명, Fill만 출력)
+        frontSlider = CreateSliderInstance("FrontSlider", groupGo.transform, size, frontColor, hasBackground: false);
+    }
+
+    private static Slider CreateSimpleSlider(string name, Color fillColor, Transform parent, Vector2 pos, Vector2 size)
+    {
+        GameObject sliderGo = CreateUIObject(name, parent);
+        RectTransform rect = sliderGo.GetComponent<RectTransform>();
+        rect.anchoredPosition = pos;
+        rect.sizeDelta = size;
+
+        return CreateSliderInstance("Slider", sliderGo.transform, size, fillColor, hasBackground: true);
+    }
+
+    private static Slider CreateSliderInstance(string name, Transform parent, Vector2 size, Color fillColor, bool hasBackground)
+    {
+        GameObject go = CreateUIObject(name, parent);
+        RectTransform rect = go.GetComponent<RectTransform>();
+        SetFullStretch(rect);
+
+        Image bgImg = null;
+        if (hasBackground)
+        {
+            GameObject bgGo = CreateUIObject("Background", go.transform);
+            bgImg = bgGo.AddComponent<Image>();
+            bgImg.color = new Color(0.08f, 0.08f, 0.08f, 0.85f);
+            SetFullStretch(bgGo.GetComponent<RectTransform>());
+        }
+
+        GameObject fillArea = CreateUIObject("Fill Area", go.transform);
+        SetFullStretch(fillArea.GetComponent<RectTransform>());
+
+        GameObject fillGo = CreateUIObject("Fill", fillArea.transform);
+        Image fillImg = fillGo.AddComponent<Image>();
+        fillImg.color = fillColor;
+        SetFullStretch(fillGo.GetComponent<RectTransform>());
+
+        Slider slider = go.AddComponent<Slider>();
+        slider.fillRect = fillGo.GetComponent<RectTransform>();
+        slider.targetGraphic = bgImg != null ? bgImg : fillImg;
+        slider.value = 1.0f;
+        slider.transition = Selectable.Transition.None;
+
+        return slider;
+    }
+
     private static Button CreateMockButton(string name, string labelText, Transform parent)
     {
         GameObject btnGo = CreateUIObject(name, parent);
-        btnGo.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 50);
+        btnGo.GetComponent<RectTransform>().sizeDelta = new Vector2(280, 48);
 
         Image img = btnGo.AddComponent<Image>();
-        img.color = new Color(0.2f, 0.2f, 0.2f, 0.9f);
+        img.color = new Color(0.22f, 0.22f, 0.22f, 0.95f);
         Button btn = btnGo.AddComponent<Button>();
 
         GameObject textGo = CreateUIObject("Text", btnGo.transform);
         Text text = textGo.AddComponent<Text>();
         text.text = labelText;
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.fontSize = 22;
+        text.fontSize = 20;
         text.alignment = TextAnchor.MiddleCenter;
         text.color = Color.white;
         SetFullStretch(textGo.GetComponent<RectTransform>());
@@ -212,48 +284,21 @@ public static class MockAssetGenerator
         return btn;
     }
 
-    private static Slider CreateMockSlider(string name, Color fillColor, Transform parent, Vector2 pos)
-    {
-        GameObject sliderGo = CreateUIObject(name, parent);
-        RectTransform sliderRect = sliderGo.GetComponent<RectTransform>();
-        sliderRect.anchoredPosition = pos;
-        sliderRect.sizeDelta = new Vector2(350, 18);
-
-        // Background
-        GameObject bgGo = CreateUIObject("Background", sliderGo.transform);
-        Image bgImg = bgGo.AddComponent<Image>();
-        bgImg.color = new Color(0.1f, 0.1f, 0.1f, 0.8f);
-        SetFullStretch(bgGo.GetComponent<RectTransform>());
-
-        // Fill Area
-        GameObject fillArea = CreateUIObject("Fill Area", sliderGo.transform);
-        SetFullStretch(fillArea.GetComponent<RectTransform>());
-
-        // Fill
-        GameObject fillGo = CreateUIObject("Fill", fillArea.transform);
-        Image fillImg = fillGo.AddComponent<Image>();
-        fillImg.color = fillColor;
-        SetFullStretch(fillGo.GetComponent<RectTransform>());
-
-        Slider slider = sliderGo.AddComponent<Slider>();
-        slider.fillRect = fillGo.GetComponent<RectTransform>();
-        slider.targetGraphic = bgImg;
-        slider.value = 1.0f;
-
-        return slider;
-    }
-
-    private static void SaveAndRegisterAddressable(GameObject instance, string assetPath, string addressKey)
+    private static void SaveAndRegisterAddressable(GameObject instance, string assetPath, string addressKey, string targetGroupName)
     {
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(instance, assetPath);
         Object.DestroyImmediate(instance);
 
-        // Addressables Settings에 자동 등록
         AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
         if (settings != null)
         {
+            AddressableAssetGroup group = settings.FindGroup(targetGroupName);
+            if (group == null)
+            {
+                group = settings.CreateGroup(targetGroupName, false, false, false, null, typeof(UnityEditor.AddressableAssets.Settings.GroupSchemas.BundledAssetGroupSchema));
+            }
+
             string guid = AssetDatabase.AssetPathToGUID(assetPath);
-            AddressableAssetGroup group = settings.DefaultGroup;
             AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group);
             entry.address = addressKey;
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entry, true);

@@ -207,8 +207,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cefad036d23ca4b44aedf34038bb65cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TitleMenuView
-  <Identifier>k__BackingField: 1
-  <Layer>k__BackingField: 0
+  <Identifier>k__BackingField: 3001
+  <Layer>k__BackingField: 200
   <IsGlobalUI>k__BackingField: 0
   _pauseTimeWhenOpened: 0
   _newGameButton: {fileID: 8338447674049397735}

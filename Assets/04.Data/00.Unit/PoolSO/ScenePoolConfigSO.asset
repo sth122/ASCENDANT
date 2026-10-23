@@ -16,6 +16,6 @@ MonoBehaviour:
   - TargetScene: 2
     Items:
     - Type: 1000
-      PreloadCount: 1
+      PreloadCount: 5
     - Type: 3010
-      PreloadCount: 1
+      PreloadCount: 5
