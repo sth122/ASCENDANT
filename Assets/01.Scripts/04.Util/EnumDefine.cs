@@ -210,7 +210,7 @@ public enum UIId
     InventoryUI = 3003,     // 인벤토리 창 (Tab/I 토글)
     EquipmentUI = 3004,     // 장비 장착/변경 창
     StatusUI = 3005,     // 캐릭터 상세 스탯 정보 창
-
+    GameOverUI = 3006,
 
     // 4000 ~ 4999 : Popup (비동기 결과 대기 및 확인/경고 모달 다이얼로그)
     ConfirmPopup = 4001,     // 확인/취소 모달 팝업

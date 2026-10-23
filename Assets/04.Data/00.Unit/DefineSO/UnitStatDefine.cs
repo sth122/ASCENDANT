@@ -29,6 +29,8 @@ public class PlayerStatus : UnitBaseStatus
     [field: SerializeField] public float RotationSpeed { get; private set; }
     [field: SerializeField] public float JumpForce { get; private set; }
     [field: SerializeField] public float RollForce { get; private set; }
+    [field: SerializeField] public float MaxStamina { get; private set; }
+
 
     [field: Header("Level & Souls")]
     [field: SerializeField] public int SoulLevel { get; private set; }
@@ -49,7 +51,7 @@ public class PlayerStatus : UnitBaseStatus
 
     // 스탯 수치 기반 유도 계산식
     public float CalculateMaxHp() => MaxHp + (Vigor * 25f);
-    public float CalculateMaxStamina() => Poise + (Endurance * 2f);
+    public float CalculateMaxStamina() => MaxStamina + (Endurance * 2f);
     public float CalculateMaxEquipWeight() => 40f + (Endurance * 1.5f);
 
     /// <summary>
@@ -87,6 +89,7 @@ public class PlayerStatus : UnitBaseStatus
             RotationSpeed = this.RotationSpeed,
             JumpForce = this.JumpForce,
             RollForce = this.RollForce,
+            MaxStamina = this.MaxStamina,
             SoulLevel = this.SoulLevel,
             CurrentSouls = this.CurrentSouls,
             Vigor = this.Vigor,
@@ -94,6 +97,24 @@ public class PlayerStatus : UnitBaseStatus
             Strength = this.Strength,
             Dexterity = this.Dexterity
         };
+    }
+
+    /// <summary>
+    /// 세이브 파일의 성장 수치(PlayerSaveData)를 주입받아 런타임 스탯을 재연산
+    /// </summary>
+    public void ApplySaveData(PlayerSaveData saveData)
+    {
+        if (saveData == null) return;
+
+        SoulLevel = saveData.SoulLevel;
+        CurrentSouls = saveData.CurrentSouls;
+        Vigor = saveData.Vigor;
+        Endurance = saveData.Endurance;
+        Strength = saveData.Strength;
+        Dexterity = saveData.Dexterity;
+
+        MaxHp = CalculateMaxHp();
+        MaxStamina = CalculateMaxStamina();
     }
 }
 

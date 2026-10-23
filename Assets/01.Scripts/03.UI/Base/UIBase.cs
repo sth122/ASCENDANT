@@ -13,8 +13,8 @@ public class UIBase : MonoBehaviour, IPoolable
 
     protected CanvasGroup _canvasGroup;
     protected RectTransform _rectTransform;
-    private System.Threading.CancellationTokenSource _fadeCts;
-    public bool IsVisible { get; private set; } = false;
+    protected System.Threading.CancellationTokenSource _fadeCts;
+    public bool IsVisible { get; protected set; } = false;
 
     protected virtual void Awake()
     {

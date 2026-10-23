@@ -22,6 +22,7 @@ MonoBehaviour:
       <RotationSpeed>k__BackingField: 8
       <JumpForce>k__BackingField: 5
       <RollForce>k__BackingField: 12
+      <MaxStamina>k__BackingField: 100
       <SoulLevel>k__BackingField: 1
       <CurrentSouls>k__BackingField: 0
       <Vigor>k__BackingField: 10

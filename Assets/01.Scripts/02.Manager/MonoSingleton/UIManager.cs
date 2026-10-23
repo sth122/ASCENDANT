@@ -108,52 +108,56 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         where TPresenter : IUIPresenter, new()
         where TModel : IUIModel
     {
-        // 1. 이미 동일한 ID의 뷰가 열려있다면 해당 인스턴스 반환
-        if (_activeViews.TryGetValue(id, out UIBase existingView))
-        {
-            await existingView.ShowAsync(0.2f, ct);
-            return existingView as TView;
-        }
-
-        // 2. UIId 대역에 따른 목표 UILayer 산출 및 컨테이너 탐색
+        TView view;
         UILayer targetLayer = id.GetExpectedLayer();
-        RectTransform targetContainer = GetLayerContainer(targetLayer);
 
-        // 3. Addressables를 통해 뷰 프리팹 인스턴스화 (목표 컨테이너를 부모로 직접 지정)
-        GameObject viewGo = await AssetsManager.Instance.InstantiateAsync(addressableKey, parent: targetContainer, ct: ct);
-        if (viewGo == null)
+        // 1. 이미 생성되어 캐싱된 뷰가 존재하는지 검사
+        if (_activeViews.TryGetValue(id, out UIBase existingBase) && existingBase is TView existingView)
         {
-            Util.LogError($"UI 에셋 로드 및 인스턴스화 실패: {addressableKey} (ID: {id})");
-            return null;
+            view = existingView;
         }
 
-        TView view = viewGo.GetComponent<TView>();
-        if (view == null)
+        else
         {
-            Util.LogError($"오브젝트({viewGo.name})에서 뷰 컴포넌트({typeof(TView).Name})를 찾을 수 없음");
-            Destroy(viewGo);
-            return null;
+            // 2. 신규 생성 파이프라인
+            RectTransform targetContainer = GetLayerContainer(targetLayer);
+            GameObject viewGo = await AssetsManager.Instance.InstantiateAsync(addressableKey, parent: targetContainer, ct: ct);
+            if (viewGo == null)
+            {
+                Util.LogError($"UI 에셋 로드 및 인스턴스화 실패: {addressableKey} (ID: {id})");
+                return null;
+            }
+
+            view = viewGo.GetComponent<TView>();
+            if (view == null)
+            {
+                Util.LogError($"오브젝트({viewGo.name})에서 뷰 컴포넌트({typeof(TView).Name})를 찾을 수 없습니다.");
+                Destroy(viewGo);
+                return null;
+            }
+
+            RectTransform viewRect = view.GetComponent<RectTransform>();
+            viewRect.SetParent(targetContainer, false);
+            SetFullStretch(viewRect);
+
+            view.SetIdentity(id, targetLayer);
+            view.InitializeView();
+
+            TPresenter presenter = new TPresenter();
+            presenter.Bind(view, model);
+
+            _activeViews[id] = view;
+            _activePresenters[view] = presenter;
         }
 
-        // 4. Transform 오차 보정 및 식별 정보 주입
-        RectTransform viewRect = view.GetComponent<RectTransform>();
-        viewRect.SetParent(targetContainer, false);
-        SetFullStretch(viewRect);
-
-        view.SetIdentity(id, targetLayer);
-        view.InitializeView();
-
-        // 5. Presenter 인스턴스화 및 Model 바인딩
-        TPresenter presenter = new TPresenter();
-        presenter.Bind(view, model);
-
-        _activeViews[id] = view;
-        _activePresenters[view] = presenter;
-
-        // 6. Window 및 Popup 스택 관리
+        // 3. [핵심 해결] 캐시 재사용 여부와 무관하게 Window/Popup 스택 및 입력/일시정지 정책 공통 적용
         if (targetLayer == UILayer.Window && view is UIWindowView windowView)
         {
-            _windowStack.Push(windowView);
+            if (!_windowStack.Contains(windowView))
+            {
+                _windowStack.Push(windowView);
+            }
+
             _uiInputReader.EnableUIInput();
 
             if (windowView.PauseTimeWhenOpened && GameManager.Instance != null)
@@ -163,11 +167,14 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         }
         else if (targetLayer == UILayer.Popup)
         {
-            _popupStack.Push(view);
+            if (!_popupStack.Contains(view))
+            {
+                _popupStack.Push(view);
+            }
             _uiInputReader.EnableUIInput();
         }
 
-        // 7. 시각적 페이드 연출 실행
+        // 4. 시각적 페이드 연출 실행
         await view.ShowAsync(0.2f, ct);
 
         Util.Log($"[UI 오픈 완료] ID: {id} (Layer: {targetLayer}, Prefab: {addressableKey})");

@@ -11,6 +11,7 @@ public class SaveData
 
     [UnityEngine.Header("Checkpoint Information")]
     public SceneId LastSavedScene = SceneId.GameScene;
+    public bool HasCheckpoint = false;
     public SerializableVector3 LastBonfirePosition;
     public float LastBonfireRotationY;
 
@@ -21,6 +22,7 @@ public class SaveData
     {
         SaveTimestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         LastSavedScene = SceneId.GameScene;
+        HasCheckpoint = false;
         LastBonfirePosition = new SerializableVector3(0f, 0f, 0f);
         LastBonfireRotationY = 0f;
         PlayerData = new PlayerSaveData();

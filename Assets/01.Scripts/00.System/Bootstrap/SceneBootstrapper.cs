@@ -50,7 +50,6 @@ public abstract class SceneBootstrapper : MonoBehaviour, ISceneBootstrap
             await ObjectPoolManager.Instance.OnSceneLoadCreate(_sceneId);
         }
 
-        ServiceLocator.ClearSceneLocalServices();
         RegisterSceneServices();
         await PreloadSceneAssetsAsync();
         await SetupSceneActorsAsync();
