@@ -6,99 +6,95 @@ using Util = DebugLogger<PlayerController>;
 /// PlayerStateMachine, StatController를 중계하는 Center Controller
 /// Player의 입력 버퍼 소비 및 Action Event를 제공
 /// </summary>
+[RequireComponent(typeof(Rigidbody), typeof(Collider), typeof(PlayerStatusController))]
+[RequireComponent(typeof(PlayerAnimController))]
 public class PlayerController : UnitController<PlayerController>, IDamageable
 {
-    [Header("Runtime PlayerStat")]
-    [SerializeField] private PlayerStat _runtimePlayerStat;
-
     [Header("Lock-On Setting")]
     [SerializeField] private float _lockOnRadius = 15f;
     [SerializeField] private float _riposteRange = 2.2f; // 앞잡 유효 사거리
-
-    [Header("Lock-On Setting")]
     [SerializeField] private LayerMask _lockOnObstacleLayer;
 
-    private readonly Collider[] _lockOnHitBuffer = new Collider[8];
+    [Header("Camera Anchor")]
+    [SerializeField] private Transform _cameraTarget;
+
+    private readonly Collider[] _lockOnHitBuffer = new Collider[16];
 
     #region Properties
     public PlayerMovement Movement { get; private set; }
     public PlayerInputReader InputReader { get; private set; }
-    public PlayerStatController PlayerStatController => _statController as PlayerStatController;
+    public PlayerStatusController StatusController => _unitStatusController as PlayerStatusController;
     public PlayerAnimController AnimationController { get; private set; }
     public PlayerCombatModule CombatModule { get; private set; }
+
+    public Transform CameraTarget => _cameraTarget != null ? _cameraTarget : transform;
 
     // 락온 타켓 추적용 변수 ( 추후 타켓팅 시스템과 연동 예정 )
     public Transform CurrentLockOnTarget { get; private set; }
     public Vector3 CurrentMoveDirection { get; private set; }
     #endregion
 
-    public PlayerStat GetPlayerStat() => _runtimePlayerStat;
-
     protected override void Awake()
     {
         base.Awake();
 
         AnimationController = GetComponent<PlayerAnimController>();
-        CombatModule = new PlayerCombatModule(this, AnimationController.WeaponHitbox);
         InputReader = new PlayerInputReader();
         SubscribeInputEvents();
 
         // 메인 카메라는 CinemachineBrain에 의해 항상 활성화된 가상 카메라의 위치/각도를 반영함
-        Transform mainCameraTransform = Camera.main != null ? Camera.main.transform : null;
-        Movement = new PlayerMovement(_rigidbody, transform, mainCameraTransform, _groundLayer);
+        Movement = new PlayerMovement(_rigidbody, transform, CameraTarget, _groundLayer);
+
+        CombatModule = new PlayerCombatModule(this, AnimationController.WeaponHitbox);
+        EventBusSystem.Subscribe<GameStateChangedEvent>(HandleGameStateChanged);
     }
 
-    /// <summary>
-    /// DataManager 데이터 초기화 순서 문제로 임의로 Start 함수에 배포
-    /// </summary>
-    private void Start()
-    {
-        InitializeStatData();
-
-        _stateMachine = new PlayerStateMachine();
-        Init();
-    }
     /// <summary>
     /// DataManager로부터 유닛 스탯 데이터를 조회하고 런타임 복제본을 생성하여 주입
     /// </summary>
-    private void InitializeStatData()
+    public void InitializePlayerData(PlayerStatus runtimeStatus, float initialHp = -1f)
     {
-        if (DataManager.Instance != null && DataManager.Instance._playerStatSO != null)
+        if (runtimeStatus != null && StatusController != null)
         {
-            if (DataManager.Instance._playerStatSO.TryGetData(_unitId, out PlayerStat stat))
+            StatusController.Init(runtimeStatus);
+
+            if (initialHp >= 0f)
             {
-                _runtimePlayerStat = (PlayerStat)stat.Clone();
-                PlayerStatController?.Init(_runtimePlayerStat);
-            }
-            else
-            {
-                Util.LogError($"{gameObject.name}: UnitId ({_unitId}) 데이터를 찾을 수 없습니다.");
+                StatusController.SetHpDirectly(initialHp);
             }
         }
-    }
-    private void OnDestroy()
-    {
-        UnsubscribeInputEvents();
-        InputReader?.Dispose();
 
-        if (StatController != null)
-        {
+        _stateMachine = new PlayerStateMachine();
+        Init();
 
-            StatController.OnDieEvent -= HandleUnitDie;
-            StatController.OnPoiseBreakEvent -= HandlePoiseBreak;
-        }
+        // 씬 시작 시 메인 카메라 트랜스폼 캐시 갱신
+        Movement.CacheMainCamera();
     }
 
     public override void Init()
     {
         base.Init();
-        if (StatController != null)
+        if (StatusController != null)
         {
-            StatController.OnDieEvent -= HandleUnitDie;
-            StatController.OnPoiseBreakEvent -= HandlePoiseBreak;
-            StatController.OnDieEvent += HandleUnitDie;
-            StatController.OnPoiseBreakEvent += HandlePoiseBreak;
+            StatusController.OnDieEvent -= HandleUnitDie;
+            StatusController.OnPoiseBreakEvent -= HandlePoiseBreak;
+            StatusController.OnDieEvent += HandleUnitDie;
+            StatusController.OnPoiseBreakEvent += HandlePoiseBreak;
         }
+    }
+
+    private void OnDestroy()
+    {
+        UnsubscribeInputEvents();
+        InputReader?.Dispose();
+
+        if (StatusController != null)
+        {
+
+            StatusController.OnDieEvent -= HandleUnitDie;
+            StatusController.OnPoiseBreakEvent -= HandlePoiseBreak;
+        }
+        EventBusSystem.Unsubscribe<GameStateChangedEvent>(HandleGameStateChanged);
     }
 
     private void SubscribeInputEvents()
@@ -129,6 +125,12 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
 
     protected override void Update()
     {
+        // 방어 코드. 일시정지 중에는 물리 이동/카메라/회전 연산을 일절 수행하지 않음
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+        {
+            return;
+        }
+
         Movement.CheckGrounded();
 
         // 1. 일반 이동 벡터 연산 ( 카메라 각도 기준 )
@@ -146,7 +148,8 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
                 lookDirection.y = 0f;
                 if (lookDirection.sqrMagnitude > 0.001f)
                 {
-                    Movement.RotateTowards(lookDirection.normalized, _runtimePlayerStat.RotationSpeed, Time.deltaTime);
+                    float rotSpeed = StatusController.PlayerStatusSource != null ? StatusController.PlayerStatusSource.RotationSpeed : 10.0f;
+                    Movement.RotateTowards(lookDirection.normalized, rotSpeed, Time.deltaTime);
                 }
             }
         }
@@ -183,8 +186,8 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
         }
 
         // 5. 일반 피격 처리
-        StatController.TakeDamage(context.Damage, context.PoiseDamage);
-        if(StatController.CurrentHp <= 0f) return;
+        StatusController.TakeDamage(context.Damage, context.PoiseDamage);
+        if(StatusController.CurrentHp <= 0f) return;
 
         // 6. 패링 불가 공격 적중 시 GetHit
         if(!context.IsParryable)
@@ -197,7 +200,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
         if (_stateMachine.CurrentState is PlayerAttackState)
         {
             // 포이즈가 아직 남아있고 고갈되지 않았다면 모션 유지 (슈퍼아머 버팀)
-            if (!StatController.IsPoiseBroken && !StatController.IsPoiseDepleted) return;
+            if (!StatusController.IsPoiseBroken && !StatusController.IsPoiseDepleted) return;
 
             // 포이즈가 0으로 깨지면 공격 캔슬 후 피격 경직 발생
             _stateMachine.ChangeState((int)UnitState.GetHit, true);
@@ -206,7 +209,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
 
         // 8. 비공격(대기/이동/달리기) 상태에서의 피격 판정
         // 포이즈가 한 번 깨진 후 100% 완전 회복되기 전까지는 피격 시 무조건 GetHit
-        if (StatController.IsPoiseDepleted || StatController.IsPoiseBroken)
+        if (StatusController.IsPoiseDepleted || StatusController.IsPoiseBroken)
         {
             _stateMachine.ChangeState((int)UnitState.GetHit, true);
         }
@@ -230,31 +233,31 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
             if (col == null || col.gameObject == gameObject) continue;
 
             // 적 본체 또는 부모 객체에서 UnitStatController 탐색
-            UnitStatController enemyStat = col.GetComponentInParent<UnitStatController>();
-            if (enemyStat != null && enemyStat.IsPoiseBroken && !enemyStat.IsDead)
+            EnemyController enemy = col.GetComponentInParent<EnemyController>();
+            if (enemy != null && enemy.CanBeRiposted && enemy.StatusController.IsPoiseBroken && !enemy.StatusController.IsDead)
             {
-                // 적과 마주보고 있는지 수평 방향 벡터 내적(Dot Product) 검사
-                Vector3 dirToEnemy = enemyStat.transform.position - transform.position;
+                Vector3 dirToEnemy = enemy.transform.position - transform.position;
                 dirToEnemy.y = 0f;
 
                 if (dirToEnemy.sqrMagnitude > 0.001f)
                 {
                     dirToEnemy.Normalize();
-                    float dot = Vector3.Dot(transform.forward, dirToEnemy);
+                    float dotFacing = Vector3.Dot(transform.forward, dirToEnemy);
 
-                    // 플레이어 전방 약 70도 이내에 위치하면 앞잡 발동 승인
-                    if (dot > 0.55f)
+                    // 플레이어가 적을 바라보고 있는 각도 검사 (약 60도 이내)
+                    if (dotFacing > 0.5f)
                     {
                         if (_stateMachine is PlayerStateMachine playerSM)
                         {
-                            // 1. Riposte 상태로 전이
                             playerSM.ChangeState(UnitState.Riposte);
 
-                            // 2. 처형 대상 적 트랜스폼 주입
                             if (playerSM.CurrentState is PlayerRiposteState riposteState)
                             {
-                                riposteState.SetRiposteTarget(enemyStat.transform, enemyStat);
+                                riposteState.SetRiposteTarget(enemy.transform, enemy.StatusController);
                             }
+
+                            // 피격 적에게도 앞잡 피격 상태 강제 전이 호출
+                            enemy.OnRiposted(transform);
 
                             System.Array.Clear(_lockOnHitBuffer, 0, hitCount);
                             return true;
@@ -294,9 +297,10 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     private Transform FindNearestEnemy()
     {
         int hitCount = Physics.OverlapSphereNonAlloc(transform.position, _lockOnRadius, _lockOnHitBuffer, _targetLayer);
+        if (hitCount == 0) return null;
 
         Transform closest = null;
-        float maxSrcore = float.MaxValue;
+        float maxScore = float.MinValue; // 버그 수정: float.MaxValue -> float.MinValue
 
         Transform camTransform = Camera.main != null ? Camera.main.transform : transform;
 
@@ -305,26 +309,28 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
             Transform target = _lockOnHitBuffer[i].transform;
             if (target == transform) continue;
 
-            UnitStatController targetStat = target.GetComponentInParent<UnitStatController>();
+            UnitStatusController targetStat = target.GetComponentInParent<UnitStatusController>();
             if (targetStat != null && targetStat.IsDead) continue;
 
             Vector3 toTarget = target.position - transform.position;
-            //toTarget.y = 0f;
             float distance = toTarget.magnitude;
 
-            // 시야 차폐 검사
-            if (Physics.Linecast(transform.position + Vector3.up * 1.5f, target.position + Vector3.up * 1.0f,
-                _lockOnObstacleLayer)) continue;
+            // 벽 차폐 검사
+            if (Physics.Linecast(transform.position + Vector3.up * 1.5f, target.position + Vector3.up * 1.0f, _lockOnObstacleLayer))
+                continue;
 
-            // 카메라 정면 각도 가중치 부여
+            // 카메라 정면 벡터와의 내적을 통한 시야각 가중치 연산
             Vector3 camToTargetDir = (target.position - camTransform.position).normalized;
             float dot = Vector3.Dot(camTransform.forward, camToTargetDir);
 
-            float score = (dot * 2.0f) - (distance / _lockOnRadius);
+            // 카메라 등 뒤에 있는 적은 배제
+            if (dot < 0.1f) continue;
 
-            if (score > maxSrcore)
+            float score = (dot * 3.0f) - (distance / _lockOnRadius);
+
+            if (score > maxScore)
             {
-                maxSrcore = score;
+                maxScore = score;
                 closest = targetStat != null ? targetStat.transform : target;
             }
         }
@@ -337,7 +343,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     {
         if (CurrentLockOnTarget == null) return;
 
-        UnitStatController targetStat = CurrentLockOnTarget.GetComponentInParent<UnitStatController>();
+        UnitStatusController targetStat = CurrentLockOnTarget.GetComponentInParent<UnitStatusController>();
         if (targetStat != null && targetStat.IsDead)
         {
             ToggleLockOn(null);
@@ -360,6 +366,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     public void ToggleLockOn(Transform target)
     {
         CurrentLockOnTarget = target;
+        EventBusSystem.Publish(new LockOnTargetChangedEvent(CurrentLockOnTarget, CurrentLockOnTarget != null));
 
         if (CameraManager.Instance != null)
         {
@@ -377,19 +384,22 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     private void HandleUnitDie() => _stateMachine.ChangeState((int)UnitState.Die);
     private void HandlePoiseBreak() { }
 
-#if UNITY_EDITOR
     /// <summary>
-    /// 유니티 에디터 플레이 중 인스펙터에서 RuntimePlayerStat 수치를 변경할 때 즉각 런타임에 동기화
+    /// GameManager 상태에 따라 플레이어 액션 맵을 물리적으로 온/오프
     /// </summary>
-    private void OnValidate()
+    private void HandleGameStateChanged(GameStateChangedEvent evt)
     {
-        if (Application.isPlaying && PlayerStatController != null && _runtimePlayerStat != null)
+        if (evt.NewState == GameState.Paused)
         {
-            PlayerStatController.SyncRuntimeStats(_runtimePlayerStat);
-            Util.Log("인스펙터 스탯이 런타임 모듈에 실시간 동기화");
+            // 메뉴가 열렸을 때 플레이어 입력 맵을 즉각 비활성화 (마우스 클릭 공격 방지)
+            InputReader?.DisablePlayerInput();
+        }
+        else if (evt.NewState == GameState.Playing)
+        {
+            // 게임 재개 시 플레이어 입력 맵 복원
+            InputReader?.EnablePlayerInput();
         }
     }
-#endif
     private void OnDrawGizmosSelected()
     {
         Movement?.DrawGizmos();

@@ -30,7 +30,7 @@ public class PlayerParryState : PlayerActionState
         _playerAnimController.SetBool(AnimParamType.IsGuarding, true);
         _playerAnimController.SetTrigger(AnimParamType.Parry);
 
-        _playerStatController.StaminaRegenMultiplier = GuardStaminaRegenFactor;
+        _playerStatusController.StaminaRegenMultiplier = GuardStaminaRegenFactor;
 
         EnableEventHandler();
 
@@ -51,7 +51,7 @@ public class PlayerParryState : PlayerActionState
 
         if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
         {
-            float guardSpeed = owner.StatController.MotionStats.WalkSpeed.Value * GuardMoveSpeedFactor;
+            float guardSpeed = owner.UnitStatusController.MotionStatus.WalkSpeed.Value * GuardMoveSpeedFactor;
             owner.MoveAPI(owner.CurrentMoveDirection, guardSpeed);
         }
         else
@@ -68,7 +68,7 @@ public class PlayerParryState : PlayerActionState
         _playerAnimController.ResetTrigger(AnimParamType.Parry);
         _playerAnimController.SetFloat(AnimParamType.StrafeX, 0f);
         _playerAnimController.SetFloat(AnimParamType.StrafeZ, 0f);
-        _playerStatController.StaminaRegenMultiplier = 1.0f;
+        _playerStatusController.StaminaRegenMultiplier = 1.0f;
 
         DisableEventHandler();
 
@@ -109,9 +109,9 @@ public class PlayerParryState : PlayerActionState
         }
 
         // 2. 일반 가드 피격 시 스태미나 차감
-        if (_playerStatController != null)
+        if (_playerStatusController != null)
         {
-            bool isGuardBroken = _playerStatController.BlockAttackWithStamina(context.Damage, ShieldStability);
+            bool isGuardBroken = _playerStatusController.BlockAttackWithStamina(context.Damage, ShieldStability);
 
             if (isGuardBroken)
             {
@@ -172,6 +172,12 @@ public class PlayerParryState : PlayerActionState
         // 가드 중 위급 상황 시 즉시 가드를 풀고 회피 전이
         if (command == InputCommandType.Roll)
         {
+            // 스태미나 사전 검증
+            if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(PlayerRollState.RollStaminaCost))
+            {
+                owner.InputReader.ClearCommand(InputCommandType.Roll);
+                return;
+            }
             _playerStateMachine.ChangeState(UnitState.Roll);
         }
     }

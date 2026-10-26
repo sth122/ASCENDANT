@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using Unity.VisualScripting;
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -11,6 +12,7 @@ public class CreatureEnemyController : EnemyController
 {
     [Header("Creature Specific Settings")]
     [SerializeField] private float _callAlliesRadius = 15.0f;
+    [SerializeField] private LayerMask _allLayer;
 
     private readonly Collider[] _allyBuffer = new Collider[16];
     public float CallAlliesRadius => _callAlliesRadius;
@@ -20,7 +22,10 @@ public class CreatureEnemyController : EnemyController
         _unitId = UnitId.NightmareCreature;
         base.Awake();
     }
-
+    protected override void Start()
+    {
+        base.Start();
+    }
     protected override void InitializeStateMachine()
     {
         _stateMachine = new CreatureEnemyStateMachine(this);
@@ -30,7 +35,7 @@ public class CreatureEnemyController : EnemyController
     #region MyRegion
     protected override void HandleTargetSpotted(Transform target)
     {
-        if(_currentTarget == null)
+        if (_currentTarget == null)
         {
             SetTarget(target);
             _stateMachine.ChangeState((int)UnitState.Roar);
@@ -59,7 +64,7 @@ public class CreatureEnemyController : EnemyController
     {
         if (_currentTarget == null) return;
 
-        int count = Physics.OverlapSphereNonAlloc(transform.position, _callAlliesRadius, _allyBuffer, _targetLayer);
+        int count = Physics.OverlapSphereNonAlloc(transform.position, _callAlliesRadius, _allyBuffer, _allLayer);
         for (int i = 0; i < count; i++)
         {
             Collider col = _allyBuffer[i];
@@ -76,9 +81,9 @@ public class CreatureEnemyController : EnemyController
 
     public void ReceiveAlertSignal(Transform sharedTarget)
     {
-        if (_currentTarget != null) return;
+        if (_currentTarget != null || StatusController.IsDead) return;
         SetTarget(sharedTarget);
-        _stateMachine.ChangeState((int)UnitState.Chase);
+        _stateMachine.ChangeState((int)UnitState.RoarResponse);
     }
 
     protected override void OnDrawGizmosSelected()

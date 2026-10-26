@@ -5,7 +5,7 @@
 /// </summary>
 public class PlayerJumpState : PlayerBaseState
 {  
-    private const float JumpStaminaCost = 12.0f;
+    public const float JumpStaminaCost = 12.0f;     // 임시 외부 참조 허용. 소모값 SO나 Module을 따로 만들 예정
     private const float AirControlFactor = 0.4f;    // 공중 이동 제어 감쇠율
     private const float JumpCooldown = 0.15f;       // 도약 직후 즉시 착지 판정되는 것 방지
     private float _tiemInAir = 0f;
@@ -20,13 +20,28 @@ public class PlayerJumpState : PlayerBaseState
         _tiemInAir = 0f;
         owner.InputReader.ClearCommand(InputCommandType.Jump);
 
+        // 방어선
+        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(JumpStaminaCost))
+        {
+            if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
+            {
+                _playerStateMachine.ChangeState(owner.InputReader.IsSprinting ? UnitState.Sprint : UnitState.Move);
+            }
+            else
+            {
+                _playerStateMachine.ChangeState(UnitState.Idle);
+            }
+            return;
+        }
+
+
         // 1. 스태미나 차감
-        _playerStatController?.ConsumeStamina(JumpStaminaCost);
+        _playerStatusController?.ConsumeStamina(JumpStaminaCost);
         _playerAnimController.SetTrigger(AnimParamType.Jump);
 
         // 2. JumpForce 반영  - 점프하지 않으면 해당 부분 문제인거 체크
-        float jumpForce = _playerStatController != null && _playerStatController.PlayerMotionStats != null ?
-            _playerStatController.PlayerMotionStats.JumpForce.Value : 0.0f;
+        float jumpForce = _playerStatusController != null && _playerStatusController.PlayerMotionStats != null ?
+            _playerStatusController.PlayerMotionStats.JumpForce.Value : 0.0f;
 
         owner.ApplyJumpAPI(jumpForce);
     }
@@ -58,7 +73,7 @@ public class PlayerJumpState : PlayerBaseState
 
         if(owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
         {
-            float airSpeed = _playerStatController.MotionStats.WalkSpeed.Value * AirControlFactor;
+            float airSpeed = _playerStatusController.MotionStatus.WalkSpeed.Value * AirControlFactor;
             UnityEngine.Vector3 airVelocity = owner.CurrentMoveDirection * airSpeed;
 
             owner.Rigidbody.linearVelocity = new UnityEngine.Vector3(airVelocity.x, owner.Rigidbody.linearVelocity.y, airVelocity.z);
