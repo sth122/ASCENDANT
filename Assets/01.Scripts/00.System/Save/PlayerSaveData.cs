@@ -19,7 +19,7 @@ public class PlayerSaveData
 
     public PlayerSaveData() { }
 
-    public PlayerSaveData(PlayerStatus status, float currentHp)
+    public PlayerSaveData(PlayerInfo status, float currentHp)
     {
         if (status == null) return;
 

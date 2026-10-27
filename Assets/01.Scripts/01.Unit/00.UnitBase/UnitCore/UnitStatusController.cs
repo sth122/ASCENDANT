@@ -50,7 +50,7 @@ public class UnitStatusController : MonoBehaviour
     /// 공통 스탯 세팅 -> 자식 전용 스탯 및 모듈 확장 -> 루프 가동 순서
     /// </summary>
     /// <param name="baseStat">주입할 기본 스탯 데이터</param>
-    public void Init(UnitBaseStatus baseStat)
+    public void Init(UnitBaseInfo baseStat)
     {
         if (baseStat == null)
         {
@@ -104,7 +104,7 @@ public class UnitStatusController : MonoBehaviour
     /// 자식 클래스에서 오버라이드하여 전용 모션 모듈과 추가 스탯을 세팅하는 가상 메서드
     /// </summary>
     /// <param name="baseStat">자식 타입으로 캐스팅하여 사용할 원본 스탯</param>
-    protected virtual void SetupDerivedStats(UnitBaseStatus baseStat) { }
+    protected virtual void SetupDerivedStats(UnitBaseInfo baseStat) { }
 
     /// <summary>
     /// 강인도 회복 비동기 루프 기동

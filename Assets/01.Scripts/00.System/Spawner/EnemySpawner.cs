@@ -51,12 +51,12 @@ public class EnemySpawner : MonoBehaviour
         _isEnemyDead = false;
 
         // 2. DataManager에서 해당 UnitId의 최신 기획 스탯 데이터 획득
-        EnemyStatus runtimeStatus = null;
+        EnemyInfo runtimeStatus = null;
         if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<EnemyStatusSO>(out var enemyStatusSO))
         {
-            if (enemyStatusSO.TryGetData(_unitId, out EnemyStatus baseStatus))
+            if (enemyStatusSO.TryGetData(_unitId, out EnemyInfo baseStatus))
             {
-                runtimeStatus = (EnemyStatus)baseStatus.Clone();
+                runtimeStatus = (EnemyInfo)baseStatus.Clone();
             }
         }
 
@@ -88,12 +88,12 @@ public class EnemySpawner : MonoBehaviour
         // 살아있는 적은 위치와 체력을 초기 상태로 리셋
         if (_spawnedEnemy != null && !_isEnemyDead)
         {
-            EnemyStatus runtimeStatus = null;
+            EnemyInfo runtimeStatus = null;
             if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<EnemyStatusSO>(out var enemyStatusSO))
             {
-                if (enemyStatusSO.TryGetData(_unitId, out EnemyStatus baseStatus))
+                if (enemyStatusSO.TryGetData(_unitId, out EnemyInfo baseStatus))
                 {
-                    runtimeStatus = (EnemyStatus)baseStatus.Clone();
+                    runtimeStatus = (EnemyInfo)baseStatus.Clone();
                 }
             }
             _spawnedEnemy.SpawnInit(transform.position, runtimeStatus);

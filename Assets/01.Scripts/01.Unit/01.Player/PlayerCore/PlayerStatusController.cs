@@ -22,15 +22,15 @@ public class PlayerStatusController : UnitStatusController
     #endregion
 
     public PlayerMotionStatusModule PlayerMotionStats => MotionStatus as PlayerMotionStatusModule;
-    public PlayerStatus PlayerStatusSource { get; private set; }
+    public PlayerInfo PlayerStatusSource { get; private set; }
     public event System.Action<float, float> OnStaminaChangedEvent;
 
     /// <summary>
     /// Player 전용 스탯 및 모듈 확장부
     /// </summary>
-    protected override void SetupDerivedStats(UnitBaseStatus baseStat)
+    protected override void SetupDerivedStats(UnitBaseInfo baseStat)
     {
-        if (baseStat is PlayerStatus playerStat)
+        if (baseStat is PlayerInfo playerStat)
         {
             PlayerStatusSource = playerStat;
 
@@ -65,7 +65,7 @@ public class PlayerStatusController : UnitStatusController
     /// <summary>
     /// 인스펙터에서 수정된 PlayerStat 수치를 런타임 모듈에 실시간 주입
     /// </summary>
-    public void SyncRuntimeStats(PlayerStatus updatedStat)
+    public void SyncRuntimeStats(PlayerInfo updatedStat)
     {
         if (updatedStat == null || PlayerMotionStats == null) return;
 

@@ -7,7 +7,7 @@ using Util = DebugLogger<EnemyStatusController>;
 public class EnemyStatusController : UnitStatusController
 {
     public EnemyMotionStatusModule EnemyMotionStatus => MotionStatus as EnemyMotionStatusModule;
-    public EnemyStatus EnemyStatusSource { get; private set; }
+    public EnemyInfo EnemyStatusSource { get; private set; }
 
     [Header("Enemy ExclusiveL Souls")]
     [SerializeField] private int _dropSouls;
@@ -17,9 +17,9 @@ public class EnemyStatusController : UnitStatusController
     /// Enemy 전용 스탯 및 모듈 확장부
     /// </summary>
     /// <param name="baseStat"></param>
-    protected override void SetupDerivedStats(UnitBaseStatus baseStat)
+    protected override void SetupDerivedStats(UnitBaseInfo baseStat)
     {
-        if (baseStat is EnemyStatus enemyStat)
+        if (baseStat is EnemyInfo enemyStat)
         {
             EnemyStatusSource = enemyStat;
 

@@ -101,7 +101,7 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
             Util.LogError("PlayerStatusSO에서 PlayerStatus를 찾을 수 없습니다.");
             return;
         }
-        PlayerStatus runtimeStatus = (PlayerStatus)status.Clone();
+        PlayerInfo runtimeStatus = (PlayerInfo)status.Clone();
 
         float initialHp;
 

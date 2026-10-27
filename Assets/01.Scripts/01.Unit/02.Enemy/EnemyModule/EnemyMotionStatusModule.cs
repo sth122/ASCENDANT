@@ -5,7 +5,7 @@ public class EnemyMotionStatusModule : UnitMotionStatusModule
     public ModifiableStatus ChaseSpeed { get; }
     public ModifiableStatus PatrolSpeed { get; }
 
-    public EnemyMotionStatusModule(EnemyStatus enemyStat) : base(enemyStat)
+    public EnemyMotionStatusModule(EnemyInfo enemyStat) : base(enemyStat)
     {
         if (enemyStat == null)
         {

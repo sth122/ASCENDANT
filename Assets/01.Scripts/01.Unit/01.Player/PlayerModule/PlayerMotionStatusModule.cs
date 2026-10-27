@@ -18,7 +18,7 @@ public class PlayerMotionStatusModule : UnitMotionStatusModule
     public float WeightRatio => MaxEquipWeight > 0f ? CurrentEquipWeight / MaxEquipWeight : 0f;
     #endregion
 
-    public PlayerMotionStatusModule(PlayerStatus playerStat) : base(playerStat)
+    public PlayerMotionStatusModule(PlayerInfo playerStat) : base(playerStat)
     {
         if (playerStat == null)
         {
@@ -58,7 +58,7 @@ public class PlayerMotionStatusModule : UnitMotionStatusModule
     /// <summary>
     /// 인스펙터 튜닝 시 ModifiableStat의 기본값을 실시간 동기화
     /// </summary>
-    public void SyncBaseValues(PlayerStatus playerStat)
+    public void SyncBaseValues(PlayerInfo playerStat)
     {
         if (playerStat == null) return;
 

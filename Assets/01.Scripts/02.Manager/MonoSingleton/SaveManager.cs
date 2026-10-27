@@ -126,7 +126,7 @@ public class SaveManager : MonoSingleton<SaveManager>
     /// <summary>
     /// 화롯불(세이브 터미널)과 상호작용 시 현재 플레이어 위치 및 스탯 동기화 저장
     /// </summary>
-    public void UpdateCheckpoint(Vector3 bonfirePosition, float bonfireRotationY, SceneId currentScene, PlayerStatus status, float currentHp, int slotIndex = 0)
+    public void UpdateCheckpoint(Vector3 bonfirePosition, float bonfireRotationY, SceneId currentScene, PlayerInfo status, float currentHp, int slotIndex = 0)
     {
         if (CurrentSaveData == null)
         {

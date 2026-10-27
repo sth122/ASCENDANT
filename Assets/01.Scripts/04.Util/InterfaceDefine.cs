@@ -119,3 +119,15 @@ public interface IPlayerProvider
     bool IsPlayerSpawned { get; }
 }
 #endregion
+
+#region BT Interface
+public interface INode
+{
+    public enum ENodeState
+    {
+        ENS_Running, ENS_Success, ENS_Failure
+    }
+
+    public INode.ENodeState Evaluate();
+}
+#endregion

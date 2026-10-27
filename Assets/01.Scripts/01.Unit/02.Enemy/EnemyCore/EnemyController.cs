@@ -116,7 +116,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     /// DataManager 또는 외부 스포너로부터 전달받은 최신 기획 데이터를 주입하는 메서드
     /// </summary>
     /// <param name="overrideStat">스포너 등에서 직접 주입할 스탯 (null일 경우 DataManager에서 자동 조회)</param>
-    public void BindStatusData(EnemyStatus overrideStat = null)
+    public void BindStatusData(EnemyInfo overrideStat = null)
     {
         // 1. EnemyStatus 주입 및 동기화
         if (overrideStat != null)
@@ -125,9 +125,9 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
         }
         else if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<EnemyStatusSO>(out EnemyStatusSO statusSO))
         {
-            if (statusSO.TryGetData(_unitId, out EnemyStatus baseStatus))
+            if (statusSO.TryGetData(_unitId, out EnemyInfo baseStatus))
             {
-                EnemyStatus runtimeStatus = (EnemyStatus)baseStatus.Clone();
+                EnemyInfo runtimeStatus = (EnemyInfo)baseStatus.Clone();
                 ApplyStatus(runtimeStatus);
             }
             else
@@ -154,7 +154,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     /// <summary>
     /// 확정된 EnemyStatus 데이터를 바탕으로 런타임 수치 및 센서 사양을 동기화
     /// </summary>
-    private void ApplyStatus(EnemyStatus status)
+    private void ApplyStatus(EnemyInfo status)
     {
         _tier = status.Tier;
         StatusController.Init(status);
@@ -235,7 +235,7 @@ public abstract class EnemyController : UnitController<EnemyController>, IDamage
     /// </summary>
     /// <param name="spawnPosition">스폰될 월드 좌표</param>
     /// <param name="overrideStat">특수 튜닝된 런타임 스탯 (선택 사항)</param>
-    public virtual void SpawnInit(Vector3 spawnPosition, EnemyStatus overrideStat = null)
+    public virtual void SpawnInit(Vector3 spawnPosition, EnemyInfo overrideStat = null)
     {
         _spawnPoint = spawnPosition;
         transform.position = spawnPosition;

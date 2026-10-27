@@ -5,14 +5,14 @@
 /// 공통적인 스탯만 가지고 있고, 플레이어 및 특수 유닛에 종속적이 스탯은 하위 클래스에서 구현
 /// </summary>
 [System.Serializable]
-public abstract class UnitBaseStatus
+public abstract class UnitBaseInfo
 {
     [field: Header("Unit Base Common Statsus")]
     [field: SerializeField] public float MaxHp { get; protected set; }
     [field: SerializeField] public float Poise { get; protected set; }
     [field: SerializeField] public float WalkSpeed { get; protected set; }
 
-    public abstract UnitBaseStatus Clone();
+    public abstract UnitBaseInfo Clone();
 }
 
 #region PlayerStat
@@ -22,7 +22,7 @@ public abstract class UnitBaseStatus
 /// 성장 스탯( 생명력, 지구력, 근력, 기량 )과 Soul 데이터를 관리
 /// </summary>
 [System.Serializable]
-public class PlayerStatus : UnitBaseStatus
+public class PlayerInfo : UnitBaseInfo
 {
     [field: Header("Player Movement Physics")]
     [field: SerializeField] public float SprintSpeed { get; private set; }
@@ -75,9 +75,9 @@ public class PlayerStatus : UnitBaseStatus
     /// <summary>
     /// 원본 SO 훼손을 막기 위한 복제 메서드
     /// </summary>
-    public override UnitBaseStatus Clone()
+    public override UnitBaseInfo Clone()
     {
-        return new PlayerStatus
+        return new PlayerInfo
         {
             // 부모 필드 복사
             MaxHp = this.MaxHp,
@@ -125,11 +125,11 @@ public class PlayerStatus : UnitBaseStatus
 /// UnitBaseStat을 상속받아 추후 구현하게 될 보스 전용 스탯 클래스
 /// </summary>
 [System.Serializable]
-public class BossGimmickStatus : UnitBaseStatus
+public class BossInfo : UnitBaseInfo
 {
-    public override UnitBaseStatus Clone()
+    public override UnitBaseInfo Clone()
     {
-        return new BossGimmickStatus { };
+        return new BossInfo { };
     }
 }
 #endregion
@@ -140,7 +140,7 @@ public class BossGimmickStatus : UnitBaseStatus
 /// 일반 Enemy 전용 확장 기본 스탯 데이터 클래스
 /// </summary>
 [System.Serializable]
-public class EnemyStatus : UnitBaseStatus
+public class EnemyInfo : UnitBaseInfo
 {
     #region 등급 및 처치 보상
     [field: Header("Classification & Reward")]
@@ -176,9 +176,9 @@ public class EnemyStatus : UnitBaseStatus
     /// 원본 ScriptableObject 데이터 보호를 위한 깊은 복사(Deep Copy) 메서드
     /// 런타임 상태에서 버프/디버프 등에 의해 스탯이 변조되어도 원본 에셋이 유지되도록 처리
     /// </summary>
-    public override UnitBaseStatus Clone()
+    public override UnitBaseInfo Clone()
     {
-        return new EnemyStatus
+        return new EnemyInfo
         {
             // 1. UnitBaseStat 공통 수치 복제
             MaxHp = this.MaxHp,

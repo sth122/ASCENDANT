@@ -52,7 +52,7 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
     /// <summary>
     /// DataManager로부터 유닛 스탯 데이터를 조회하고 런타임 복제본을 생성하여 주입
     /// </summary>
-    public void InitializePlayerData(PlayerStatus runtimeStatus, float initialHp = -1f)
+    public void InitializePlayerData(PlayerInfo runtimeStatus, float initialHp = -1f)
     {
         if (runtimeStatus != null && StatusController != null)
         {
