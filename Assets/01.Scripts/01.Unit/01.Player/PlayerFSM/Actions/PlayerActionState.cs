@@ -51,14 +51,8 @@ public class PlayerActionState : PlayerBaseState
     /// </summary>
     protected void ResetActionToken()
     {
-        if (_actionCts != null)
-        {
-            _actionCts.Cancel();
-            _actionCts.Dispose();
-            _actionCts = null;
-        }
+        AsyncUtil.CancelAndDispose(ref _actionCts);
     }
-
 
     /// <summary>
     /// 액션 모션 종료 시 호출되는 상태 전이 처리기
@@ -73,16 +67,28 @@ public class PlayerActionState : PlayerBaseState
             switch(nextCommand)
             {
                 case InputCommandType.Roll:
+                    if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(PlayerRollState.RollStaminaCost))
+                    {
+                        _playerStateMachine.ChangeState(UnitState.Roll, true);
+                        return;
+                    }
                     _playerStateMachine.ChangeState(UnitState.Roll, true);
                     return;
                 case InputCommandType.Attack:
+                    // 앞잡 가능 대상이 있으면 앞잡 우선 트리거
+                    if (owner.TryTriggerRiposte()) return;
+                    if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(PlayerAttackState.AttackStaminaCost))
+                    {
+                        _playerStateMachine.ChangeState(UnitState.Attack, true);
+                        return;
+                    }
                     _playerStateMachine.ChangeState(UnitState.Attack, true);
                     return;
                 case InputCommandType.Parry:
                     _playerStateMachine.ChangeState(UnitState.Parry, true);
                     return;
                 case InputCommandType.Jump:
-                    if (owner.Movement.IsGrounded)
+                    if (owner.Movement.IsGrounded && _playerStatusController != null && _playerStatusController.HasEnoughStamina(PlayerJumpState.JumpStaminaCost))
                     {
                         _playerStateMachine.ChangeState(UnitState.Jump);
                         return;

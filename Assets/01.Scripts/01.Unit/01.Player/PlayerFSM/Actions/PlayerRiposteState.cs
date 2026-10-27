@@ -5,16 +5,17 @@
 /// </summary>
 public class PlayerRiposteState : PlayerActionState
 {
-    private const float RiposteDamage = 150.0f;
-    private const float RiposteDuration = 1.8f; // 처형 모션 총 시간
+    private const float RiposteDuration = 1.8f;
     private UnityEngine.Transform _targetEnemy;
+    private UnitStatusController _targetEnemyStat;
 
     public PlayerRiposteState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
 
-    public void SetRiposteTarget(UnityEngine.Transform targetEnemy)
+    public void SetRiposteTarget(UnityEngine.Transform targetEnemy, UnitStatusController enemyStat)
     {
         _targetEnemy = targetEnemy;
+        _targetEnemyStat = enemyStat;
     }
 
     public override void Enter()
@@ -28,6 +29,11 @@ public class PlayerRiposteState : PlayerActionState
         // 1. 처형 대상 적을 정면으로 정렬
         if (_targetEnemy != null)
         {
+            // 적의 전방 일정 거리로 위치 보정
+            UnityEngine.Vector3 snapPos = _targetEnemy.position + _targetEnemy.forward * 1.2f;
+            snapPos.y = owner.transform.position.y;
+            owner.transform.position = snapPos;
+
             UnityEngine.Vector3 lookDirection = _targetEnemy.position - owner.transform.position;
             lookDirection.y = 0f;
             if (lookDirection.sqrMagnitude > 0.001f)
@@ -37,7 +43,7 @@ public class PlayerRiposteState : PlayerActionState
         }
 
         // 2. 애니메이터 Riposte 트리거 작동
-        _animController.SetTrigger(AnimParamType.Riposte);
+        _playerAnimController.SetTrigger(AnimParamType.Riposte);
 
         // 3. 비동기 처형 타이머 가동 (모션 중 무적)
         System.Threading.CancellationToken token = CreateActionToken();
@@ -48,7 +54,8 @@ public class PlayerRiposteState : PlayerActionState
     {
         base.Exit();
         _targetEnemy = null;
-        _animController.ResetTrigger(AnimParamType.Riposte);
+        _targetEnemyStat = null;
+        _playerAnimController.ResetTrigger(AnimParamType.Riposte);
     }
     private async UniTaskVoid ExecuteRiposteAsync(System.Threading.CancellationToken token)
     {
@@ -59,15 +66,18 @@ public class PlayerRiposteState : PlayerActionState
 
         if (_targetEnemy != null && _targetEnemy.TryGetComponent(out IDamageable damageable))
         {
-            DamageContext context = new DamageContext(owner.gameObject, RiposteDamage, 100f,
-                _targetEnemy.position, owner.transform.forward);
-            damageable.ApplyDamage(context);
+            owner.CombatModule.ExecuteRiposteDamage(damageable, _targetEnemy.position);
         }
 
         // 전체 모션 완료 대기
         bool canceledFinish = await UniTask.Delay((int)((RiposteDuration * 0.55f) * 1000f),
             cancellationToken: token).SuppressCancellationThrow();
         if (canceledFinish) return;
+
+        if(_targetEnemyStat != null)
+        {
+            _targetEnemyStat.RestorePoiseToMax();
+        }
 
         CompleteActionAndEvaluateTransition();
     }

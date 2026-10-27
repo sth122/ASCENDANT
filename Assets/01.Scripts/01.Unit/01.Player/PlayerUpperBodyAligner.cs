@@ -5,11 +5,13 @@ public class PlayerUpperBodyAligner : MonoBehaviour
 {
     [Header("Bone Settings")]
     [SerializeField] private HumanBodyBones _spineBoneType = HumanBodyBones.Chest;
-    [SerializeField] private Vector3 _rotationOffset = Vector3.zero; // 미세 각도 조절용
+    [SerializeField] private Vector3 _rotationOffset = Vector3.zero;
+    [SerializeField] private float _alignSlerpSpeed = 12.0f;
 
     private PlayerController _playerController;
     private Animator _animator;
     private Transform _chestBone;
+    private Transform _mainCameraTransform;
 
     private void Awake()
     {
@@ -23,6 +25,10 @@ public class PlayerUpperBodyAligner : MonoBehaviour
             {
                 _chestBone = _animator.GetBoneTransform(HumanBodyBones.Spine);
             }
+        }
+        if (Camera.main != null)
+        {
+            _mainCameraTransform = Camera.main.transform;
         }
     }
 
@@ -45,7 +51,7 @@ public class PlayerUpperBodyAligner : MonoBehaviour
             }
             else
             {
-                targetForward = Camera.main != null ? Camera.main.transform.forward : transform.forward;
+                targetForward = _mainCameraTransform != null ? _mainCameraTransform.forward : transform.forward;
             }
 
             targetForward.y = 0f; // 수평 유지 (위아래 꺾임 방지)
@@ -55,7 +61,7 @@ public class PlayerUpperBodyAligner : MonoBehaviour
                 Quaternion targetRotation = Quaternion.LookRotation(targetForward.normalized);
 
                 // 골반 틸트의 영향을 받지 않도록 월드 회전값을 전방 각도로 보정
-                _chestBone.rotation = targetRotation * Quaternion.Euler(_rotationOffset);
+                _chestBone.rotation = Quaternion.Slerp(_chestBone.rotation, targetRotation, _alignSlerpSpeed * Time.deltaTime);
             }
         }
     }

@@ -1,16 +1,14 @@
-﻿using UnityEngine;
-
-public class PlayerBaseState : UnitBaseState<PlayerController>
+﻿public class PlayerBaseState : UnitBaseState<PlayerController>
 {
     protected readonly PlayerStateMachine _playerStateMachine;
-    protected readonly PlayerStatController _playerStatController;
-    protected readonly PlayerAnimController _animController;
+    protected readonly PlayerStatusController _playerStatusController;
+    protected readonly PlayerAnimController _playerAnimController;
 
     public PlayerBaseState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine)
     {
         _playerStateMachine = stateMachine;
-        _playerStatController = owner.PlayerStatController;
-        _animController = owner.AnimationController;
+        _playerStatusController = owner.StatusController;
+        _playerAnimController = owner.AnimationController;
     }
 }

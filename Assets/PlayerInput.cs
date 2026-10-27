@@ -303,8 +303,280 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         {
             ""name"": ""UI"",
             ""id"": ""d344fc84-c6a4-4b5e-b6b1-1c4157ef33a4"",
-            ""actions"": [],
-            ""bindings"": []
+            ""actions"": [
+                {
+                    ""name"": ""Navigate"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""7e6a8fff-7d77-4153-be3d-5a995d849b65"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Submit"",
+                    ""type"": ""Button"",
+                    ""id"": ""a4755933-2d09-4b1c-b59e-a35577e9068a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Cancel"",
+                    ""type"": ""Button"",
+                    ""id"": ""a0ad2fd1-f716-44fc-a8a8-4d3fd55005f1"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Point"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""b19687a8-f906-49f0-b0a7-587b9348dee5"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Click"",
+                    ""type"": ""Button"",
+                    ""id"": ""438d5581-4b4c-4f8f-bee4-daf562b54321"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RightClick"",
+                    ""type"": ""Button"",
+                    ""id"": ""9db1dfab-9a4d-4171-859f-9ee8ef1b9ecb"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ScrollWheel"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""4e6f2b4b-58d6-493a-9c17-9b0c54747827"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Inventory"",
+                    ""type"": ""Button"",
+                    ""id"": ""96ea216e-b5a4-4c31-bd1e-d32e00f75dae"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""7be7d45a-6462-412c-97c3-6a8fafbf2aac"",
+                    ""path"": ""<Keyboard>/enter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Submit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""bb7e11bc-541f-4ea6-990b-5ed8456adbb4"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Submit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""cd6c8ada-03f9-4659-8fdf-57b4af60acd7"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Cancel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""3d9cafe2-e0cc-4376-b3b5-c97ebe79fe20"",
+                    ""path"": ""<Keyboard>/backspace"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Cancel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""30b8cd66-b704-43f4-8a7f-9793ca78f111"",
+                    ""path"": ""<Mouse>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Point"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e71da949-667c-411a-821c-6d581be7e69f"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Click"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b8ec1f09-82ec-48ae-9d51-cb3e8e007333"",
+                    ""path"": ""<Mouse>/scroll"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ScrollWheel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fd430bbe-08fb-4d08-b4f4-d1f84221c053"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RightClick"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""baa51f18-f494-4159-bdf3-d5b743911042"",
+                    ""path"": ""<Keyboard>/i"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Inventory"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""Keyboard"",
+                    ""id"": ""8f24164c-284f-4109-bf39-975c428bc99e"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""b941eaa9-8112-493f-ae90-0f920ade61f9"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""03a14158-c9a5-42e9-a181-6f50ce012e1d"",
+                    ""path"": ""<Keyboard>/upArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""59137830-fce5-4e3a-b06e-495837dc2d17"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""c17fe6bb-dad4-4040-b0a0-13fa1cfd224b"",
+                    ""path"": ""<Keyboard>/downArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""333d2fb4-ee56-4f9e-92ab-e4a12f32726a"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""c5e36776-0ff2-4359-852a-282f1c637c41"",
+                    ""path"": ""<Keyboard>/leftArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""fddb57c6-710f-48a8-a252-a1f8d14227b6"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""467a537f-2504-437b-bd34-07d36c3b2e9d"",
+                    ""path"": ""<Keyboard>/rightArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Navigate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -321,6 +593,14 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         m_Player_Parry = m_Player.FindAction("Parry", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
+        m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
+        m_UI_Submit = m_UI.FindAction("Submit", throwIfNotFound: true);
+        m_UI_Cancel = m_UI.FindAction("Cancel", throwIfNotFound: true);
+        m_UI_Point = m_UI.FindAction("Point", throwIfNotFound: true);
+        m_UI_Click = m_UI.FindAction("Click", throwIfNotFound: true);
+        m_UI_RightClick = m_UI.FindAction("RightClick", throwIfNotFound: true);
+        m_UI_ScrollWheel = m_UI.FindAction("ScrollWheel", throwIfNotFound: true);
+        m_UI_Inventory = m_UI.FindAction("Inventory", throwIfNotFound: true);
     }
 
     ~@PlayerInput()
@@ -575,6 +855,14 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
     // UI
     private readonly InputActionMap m_UI;
     private List<IUIActions> m_UIActionsCallbackInterfaces = new List<IUIActions>();
+    private readonly InputAction m_UI_Navigate;
+    private readonly InputAction m_UI_Submit;
+    private readonly InputAction m_UI_Cancel;
+    private readonly InputAction m_UI_Point;
+    private readonly InputAction m_UI_Click;
+    private readonly InputAction m_UI_RightClick;
+    private readonly InputAction m_UI_ScrollWheel;
+    private readonly InputAction m_UI_Inventory;
     /// <summary>
     /// Provides access to input actions defined in input action map "UI".
     /// </summary>
@@ -586,6 +874,38 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// Construct a new instance of the input action map wrapper class.
         /// </summary>
         public UIActions(@PlayerInput wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "UI/Navigate".
+        /// </summary>
+        public InputAction @Navigate => m_Wrapper.m_UI_Navigate;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/Submit".
+        /// </summary>
+        public InputAction @Submit => m_Wrapper.m_UI_Submit;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/Cancel".
+        /// </summary>
+        public InputAction @Cancel => m_Wrapper.m_UI_Cancel;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/Point".
+        /// </summary>
+        public InputAction @Point => m_Wrapper.m_UI_Point;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/Click".
+        /// </summary>
+        public InputAction @Click => m_Wrapper.m_UI_Click;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/RightClick".
+        /// </summary>
+        public InputAction @RightClick => m_Wrapper.m_UI_RightClick;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/ScrollWheel".
+        /// </summary>
+        public InputAction @ScrollWheel => m_Wrapper.m_UI_ScrollWheel;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/Inventory".
+        /// </summary>
+        public InputAction @Inventory => m_Wrapper.m_UI_Inventory;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -612,6 +932,30 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_UIActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_UIActionsCallbackInterfaces.Add(instance);
+            @Navigate.started += instance.OnNavigate;
+            @Navigate.performed += instance.OnNavigate;
+            @Navigate.canceled += instance.OnNavigate;
+            @Submit.started += instance.OnSubmit;
+            @Submit.performed += instance.OnSubmit;
+            @Submit.canceled += instance.OnSubmit;
+            @Cancel.started += instance.OnCancel;
+            @Cancel.performed += instance.OnCancel;
+            @Cancel.canceled += instance.OnCancel;
+            @Point.started += instance.OnPoint;
+            @Point.performed += instance.OnPoint;
+            @Point.canceled += instance.OnPoint;
+            @Click.started += instance.OnClick;
+            @Click.performed += instance.OnClick;
+            @Click.canceled += instance.OnClick;
+            @RightClick.started += instance.OnRightClick;
+            @RightClick.performed += instance.OnRightClick;
+            @RightClick.canceled += instance.OnRightClick;
+            @ScrollWheel.started += instance.OnScrollWheel;
+            @ScrollWheel.performed += instance.OnScrollWheel;
+            @ScrollWheel.canceled += instance.OnScrollWheel;
+            @Inventory.started += instance.OnInventory;
+            @Inventory.performed += instance.OnInventory;
+            @Inventory.canceled += instance.OnInventory;
         }
 
         /// <summary>
@@ -623,6 +967,30 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UIActions" />
         private void UnregisterCallbacks(IUIActions instance)
         {
+            @Navigate.started -= instance.OnNavigate;
+            @Navigate.performed -= instance.OnNavigate;
+            @Navigate.canceled -= instance.OnNavigate;
+            @Submit.started -= instance.OnSubmit;
+            @Submit.performed -= instance.OnSubmit;
+            @Submit.canceled -= instance.OnSubmit;
+            @Cancel.started -= instance.OnCancel;
+            @Cancel.performed -= instance.OnCancel;
+            @Cancel.canceled -= instance.OnCancel;
+            @Point.started -= instance.OnPoint;
+            @Point.performed -= instance.OnPoint;
+            @Point.canceled -= instance.OnPoint;
+            @Click.started -= instance.OnClick;
+            @Click.performed -= instance.OnClick;
+            @Click.canceled -= instance.OnClick;
+            @RightClick.started -= instance.OnRightClick;
+            @RightClick.performed -= instance.OnRightClick;
+            @RightClick.canceled -= instance.OnRightClick;
+            @ScrollWheel.started -= instance.OnScrollWheel;
+            @ScrollWheel.performed -= instance.OnScrollWheel;
+            @ScrollWheel.canceled -= instance.OnScrollWheel;
+            @Inventory.started -= instance.OnInventory;
+            @Inventory.performed -= instance.OnInventory;
+            @Inventory.canceled -= instance.OnInventory;
         }
 
         /// <summary>
@@ -727,5 +1095,61 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
     /// <seealso cref="UIActions.RemoveCallbacks(IUIActions)" />
     public interface IUIActions
     {
+        /// <summary>
+        /// Method invoked when associated input action "Navigate" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnNavigate(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Submit" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSubmit(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Cancel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCancel(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Point" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPoint(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Click" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnClick(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "RightClick" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRightClick(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ScrollWheel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnScrollWheel(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Inventory" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnInventory(InputAction.CallbackContext context);
     }
 }

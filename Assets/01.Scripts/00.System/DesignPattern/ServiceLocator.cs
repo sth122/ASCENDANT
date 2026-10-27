@@ -1,22 +1,12 @@
-﻿/* 담당자 - 송태훈
-싱글톤의 결합도를 낮추고 서비스 인스턴스를 중앙에서 바인딩·조회하는 정적 서비스 로케이터
-Global/Local 수명 주기를 구분 등록하여, 씬 전환 시 씬 종속(Local) 서비스만 안전하게 일괄 해제
-*/
-
+﻿using System;
 using System.Collections.Generic;
-using System;
+using UnityEngine.SocialPlatforms;
 using Util = DebugLogger;
 
-public enum SceneId
-{
-   
-}
-public enum ServiceLifetime
-{
-    Global, // 싱글톤
-    Local   // 로컬
-}
-
+/// <summary>
+/// 싱글톤의 결합도를 낮추고 서비스 인스턴스를 중앙에서 바인딩·조회하는 정적 서비스 로케이터
+/// Global / Local 수명 주기를 구분 등록하여, 씬 전환 시 씬 종속(Local) 서비스만 안전하게 일괄 해제
+/// </summary>
 public static class ServiceLocator
 {
     private class ServiceEntry

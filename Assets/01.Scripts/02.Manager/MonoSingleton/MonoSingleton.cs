@@ -3,7 +3,7 @@
 using UnityEngine;
 public class MonoSingleton<T> : MonoBehaviour, IInitable where T : MonoBehaviour
 {
-    [SerializeField] protected bool isDDOL = false;
+    [SerializeField] protected bool _isDDOL = false;
     private static T _instance;
 
     public static T Instance
@@ -20,7 +20,7 @@ public class MonoSingleton<T> : MonoBehaviour, IInitable where T : MonoBehaviour
 
                     var singleton = _instance as MonoSingleton<T>;
 
-                    if (singleton != null && singleton.isDDOL)
+                    if (singleton != null && singleton._isDDOL)
                     {
                         DontDestroyOnLoad(obj);
                     }
@@ -29,7 +29,7 @@ public class MonoSingleton<T> : MonoBehaviour, IInitable where T : MonoBehaviour
             else
             {
                 var singleton = _instance as MonoSingleton<T>;
-                if (singleton != null && singleton.isDDOL)
+                if (singleton != null && singleton._isDDOL)
                 {
                     DontDestroyOnLoad(singleton);
                 }
@@ -45,7 +45,7 @@ public class MonoSingleton<T> : MonoBehaviour, IInitable where T : MonoBehaviour
         if (_instance == null)
         {
             _instance = this as T;
-            if (isDDOL)
+            if (_isDDOL)
             {
                 DontDestroyOnLoad(this.gameObject);
             }

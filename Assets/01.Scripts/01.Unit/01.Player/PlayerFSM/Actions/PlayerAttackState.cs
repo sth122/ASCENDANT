@@ -3,28 +3,26 @@
 /// </summary>
 public class PlayerAttackState : PlayerActionState
 {
-    #region 테스트 용 변수
-    private const float BaseDamage = 35.0f;
-    private const float BasePoiseDamage = 25.0f;
-    private const float AttackStaminaCost = 14.0f;
-    #endregion
+    public const float AttackStaminaCost = 14.0f;           // 임시 외부 참조 허용. 소모값 SO나 Module을 따로 만들 예정
 
     // 모션 진행도(normalizedTime) 기준 타임라인 설정
-    private const float InputBufferStartNormalized = 0.20f; // 20% 진행 시점부터 연타 입력 수집 (Buffer Window)
-    private const float ComboExecuteNormalized = 0.60f;     // 60% 시점에 콤보 캔슬 실행 (Execution Point)
-    private const float ActionRecoveryNormalized = 0.90f;   // 90% 시점에 후속 연타가 없으면 즉시 조작권 회복 (Recovery)
-    private const float StepLockoutDuration = 0.15f;        // 타수 전환 직후 최소 락아웃
+    private const float HitboxOpenNormalized = 0.4f;       // 타격 판정 시작
+    private const float HitboxCloseNormalized = 0.60f;      // 타격 판정 종료
+    private const float EmergencyCancelNormalized = 0.35f;  // 긴급 회피/패링 허용 시작
+    private const float ComboAdvanceStartNormalized = 0.65f;// 후속 공격 입력 수집 및 승급 시작
+    private const float MovementCancelNormalized = 0.75f;   // 캔슬 걷기 윈도우
+    private const float ActionRecoveryNormalized = 0.88f;
 
-    // 타수당 비상 안전 제한 시간 (단일 타수가 3.0초를 넘길 때만 비정상 동결로 판단하고 탈출)
-    private const float SingleStepSafetyTimeout = 3.0f;
+    // 타수당 단 1회 승급 보장 및 메카님 블렌딩 완료 시까지 탈출을 차단하는 핵심 잠금 플래그
+    private const float StepLockoutDuration = 0.18f; // 타수 전환 직후 잠금 시간
+    private const float SafetyTimeout = 2.5f;        // 비상 탈출 제한시간
 
     private int _comboStep = 1;
     private const int MaxComboStep = 3;
-
-    // 타수당 단 1회 승급 보장 및 메카님 블렌딩 완료 시까지 탈출을 차단하는 핵심 잠금 플래그
     private bool _hasAdvancedThisStep = false;
-    private bool _hasQueuedCombo = false;
+    private bool _isHitboxCurrentlyOpen = false;
     private float _stepTimer = 0f;
+
     public PlayerAttackState(PlayerController owner, PlayerStateMachine stateMachine) : base(owner, stateMachine) { }
 
     public override void Enter()
@@ -38,7 +36,7 @@ public class PlayerAttackState : PlayerActionState
         owner.InputReader.ClearCommand(InputCommandType.Attack);
 
         // 2. 스태미나 검증 (부족 시 즉시 복귀)
-        if (_playerStatController != null && !_playerStatController.HasEnoughStamina(AttackStaminaCost))
+        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(AttackStaminaCost))
         {
             CompleteActionAndEvaluateTransition();
             return;
@@ -46,7 +44,7 @@ public class PlayerAttackState : PlayerActionState
 
         _comboStep = 1;
         _hasAdvancedThisStep = false;
-        _hasQueuedCombo = false;
+        _isHitboxCurrentlyOpen = false;
         _stepTimer = 0f;
 
         // 3. 공격 방향 회전 정렬
@@ -56,9 +54,7 @@ public class PlayerAttackState : PlayerActionState
         }
 
         // 4. Root Motion 활성화 (클립의 전진 변위가 Rigidbody를 직접 추진하도록 권한 부여)
-        _animController.SetRootMotion(true);
-
-        EnableAttackEvent();
+        _playerAnimController.SetRootMotion(true);
 
         // 5. 1타 실행
         ExecuteAttackStep();
@@ -70,45 +66,64 @@ public class PlayerAttackState : PlayerActionState
 
         _stepTimer += UnityEngine.Time.deltaTime;
 
-        // 1. 현재 타수 모션이 3.0초 이상 멈춰있을 경우에만 안전 탈출
-        if (_stepTimer >= SingleStepSafetyTimeout)
+        // 1. 비정상 동결 방어 비상 탈출
+        if (_stepTimer >= SafetyTimeout)
         {
             CompleteActionAndEvaluateTransition();
             return;
         }
-        UnityEngine.Animator animator = _animController.AnimatorInstance;
-        bool isInTransition = animator.IsInTransition(0);
 
-        // 2. 메카님이 트랜지션 중(0.38초 블렌딩 중)일 때는
-        // 이전 모션의 90% 시간을 읽고 캔슬되는 것을 막기 위해 탈출 검사를 일체 보류
-        if (isInTransition)
+
+        UnityEngine.Animator animator = _playerAnimController.AnimatorInstance;
+        if (animator.IsInTransition(0)) return;
+
+        // 2. 타수 전환 중일 때는 히트박스 갱신 및 캔슬 판정을 전면 보류 (히트박스 조기 오픈 차단 핵심)
+        if (_hasAdvancedThisStep)
         {
+            CloseHitboxInternal();
+
+            // 트랜지션이 완전히 끝나고 최소 락아웃 시간이 지났을 때만 잠금 해제
+            if (_stepTimer >= StepLockoutDuration && !animator.IsInTransition(0))
+            {
+                _hasAdvancedThisStep = false;
+            }
             return;
         }
 
-        // 3. 다음 타수 모션에 완전히 안착하고 최소 락아웃이 지난 시점에만 잠금 플래그를 리셋
-        if (_hasAdvancedThisStep && _stepTimer >= StepLockoutDuration)
+        if (animator.IsInTransition(0)) return;
+
+        float normalizedTime = _playerAnimController.GetCurrentNormalizedTime(0);
+
+        UpdateHitboxWindow(normalizedTime);
+
+        // 3. 긴급 회피 및 가드 캔슬 판정
+        if (normalizedTime >= EmergencyCancelNormalized)
         {
-            _hasAdvancedThisStep = false;
+            if (owner.InputReader.TryConsumeCommand(InputCommandType.Roll))
+            {
+                // 스태미나 검증
+                if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(PlayerRollState.RollStaminaCost))
+                {
+                    CloseHitboxInternal();
+                    _playerStateMachine.ChangeState(UnitState.Roll);
+                    return;
+                }
+            }
+
+            if (owner.InputReader.TryConsumeCommand(InputCommandType.Parry))
+            {
+                CloseHitboxInternal();
+                _playerStateMachine.ChangeState(UnitState.Parry);
+                return;
+            }
         }
 
-        // 최소 락아웃 검사
-        if (_stepTimer < StepLockoutDuration)
-        {
-            return;
-        }
-
-        UnityEngine.AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-
-        float normalizedTime = stateInfo.normalizedTime;
-
-        // 4. 콤보 연계 판정 3타 미만이고 아직 다음 타수로 승급하지 않았을 때
+        // 4. 콤보 연계 판정
         if (_comboStep < MaxComboStep && !_hasAdvancedThisStep)
         {
-            // 80% 진행 시점에 도달했을 때, 미리 예약된 입력이 있거나 실시간 버퍼 입력이 있다면 승급
-            if (normalizedTime >= ComboExecuteNormalized && normalizedTime < ActionRecoveryNormalized)
+            if (normalizedTime >= ComboAdvanceStartNormalized && normalizedTime < ActionRecoveryNormalized)
             {
-                if (_hasQueuedCombo || owner.InputReader.TryConsumeCommand(InputCommandType.Attack))
+                if (owner.InputReader.TryConsumeCommand(InputCommandType.Attack))
                 {
                     AdvanceCombo();
                     return;
@@ -116,11 +131,20 @@ public class PlayerAttackState : PlayerActionState
             }
         }
 
-        // 5. 다음 타수 승급이 발생하지 않았고, 모션이 90%에 도달했으면 즉시 대기/이동 복귀
+        // 5. 후딜레이 캔슬 이동 판정 (조작감 향상)
+        if (!_hasAdvancedThisStep && normalizedTime >= MovementCancelNormalized)
+        {
+            if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
+            {
+                CompleteActionAndEvaluateTransition();
+                return;
+            }
+        }
+
+        // 6. 모션 완료 시 복귀
         if (!_hasAdvancedThisStep && normalizedTime >= ActionRecoveryNormalized)
         {
             CompleteActionAndEvaluateTransition();
-            return;
         }
     }
 
@@ -129,18 +153,17 @@ public class PlayerAttackState : PlayerActionState
         base.Exit();
 
         // 공격이 종료되면 Root Motion을 회수하여 일반 이동 제어권 복원
-        _animController.SetRootMotion(false);
-        _animController.WeaponHitbox?.CloseHitBox();
-        DisableAttackEvent();
+        _playerAnimController.SetRootMotion(false);
+        CloseHitboxInternal();
 
         // 상태 탈출 시 잔여 트리거 및 콤보 스텝 초기화
-        _animController.ResetTrigger(AnimParamType.Attack);
-        _animController.SetInteger(AnimParamType.ComboStep, 0);
+        _playerAnimController.ResetTrigger(AnimParamType.Attack);
+        _playerAnimController.SetInteger(AnimParamType.ComboStep, 0);
 
         owner.InputReader.ClearCommand(InputCommandType.Attack);
 
         _hasAdvancedThisStep = false;
-        _hasQueuedCombo = false;
+        _isHitboxCurrentlyOpen = false;
         _comboStep = 0;
         _stepTimer = 0f;
     }
@@ -150,14 +173,13 @@ public class PlayerAttackState : PlayerActionState
     /// </summary>
     private void ExecuteAttackStep()
     {
-        _stepTimer = 0f;
-        _hasQueuedCombo = false;
+        _isHitboxCurrentlyOpen = false;
 
         // 스태미나 차감
-        _playerStatController?.ConsumeStamina(AttackStaminaCost);
+        _playerStatusController?.ConsumeStamina(AttackStaminaCost);
 
-        _animController.SetInteger(AnimParamType.ComboStep, _comboStep);
-        _animController.SetTrigger(AnimParamType.Attack);
+        _playerAnimController.SetInteger(AnimParamType.ComboStep, _comboStep);
+        _playerAnimController.SetTrigger(AnimParamType.Attack);
     }
 
     /// <summary>
@@ -166,25 +188,15 @@ public class PlayerAttackState : PlayerActionState
     private void AdvanceCombo()
     {
         // 다음 타수에 필요한 스태미나가 없으면 콤보 연계를 차단하고 현재 타수의 후딜을 유지
-        if (_playerStatController != null && !_playerStatController.HasEnoughStamina(AttackStaminaCost))
-        {
-            _hasQueuedCombo = false;
-            return;
-        }
+        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(AttackStaminaCost)) return;
 
+        CloseHitboxInternal();
         // 다음 타수가 메카님에 완전히 안착할 때까지 잠금 유지
         _hasAdvancedThisStep = true;
-        _hasQueuedCombo = false;
+        _stepTimer = 0f;
 
         // 3타 이후에는 1타로 순환(Loop)
-        if (_comboStep >= MaxComboStep)
-        {
-            _comboStep = 1;
-        }
-        else
-        {
-            _comboStep++;
-        }
+        _comboStep = (_comboStep >= MaxComboStep) ? 1 : _comboStep + 1;
 
         owner.InputReader.ClearCommand(InputCommandType.Attack);
 
@@ -197,96 +209,36 @@ public class PlayerAttackState : PlayerActionState
         ExecuteAttackStep();
     }
 
-    #region Animation Event
-    private void HandleHitboxOpen()
+    private void UpdateHitboxWindow(float normalizedTime)
     {
-        float multiplier = 1.0f + (_comboStep - 1) * 0.3f;
-        _animController.WeaponHitbox.OpenHitBox(owner.gameObject, BaseDamage * multiplier, BasePoiseDamage * multiplier);
-    }
-
-    private void HandleHitboxClose() => _animController.WeaponHitbox?.CloseHitBox();
-
-    private void HandleComboWindowOpen()
-    {
-        // 1. 회피 선입력 우선 캔슬
-        if (owner.InputReader.TryConsumeCommand(InputCommandType.Roll))
+        // 콤보 승급 대기 중일 때는 절대 열지 않음
+        if (_hasAdvancedThisStep)
         {
-            _playerStateMachine.ChangeState(UnitState.Roll);
+            CloseHitboxInternal();
             return;
         }
 
-        // 2. 가드/패리 선입력 캔슬
-        if (owner.InputReader.TryConsumeCommand(InputCommandType.Parry))
+        if (!_isHitboxCurrentlyOpen && normalizedTime >= HitboxOpenNormalized && normalizedTime < HitboxCloseNormalized)
         {
-            _playerStateMachine.ChangeState(UnitState.Parry);
-            return;
+            OpenHitboxInternal();
+        }
+        else if (_isHitboxCurrentlyOpen && normalizedTime >= HitboxCloseNormalized)
+        {
+            CloseHitboxInternal();
         }
     }
 
-    private void HandleComboWindowClose() { }
-
-    private void HandleActionCompleted()
+    private void OpenHitboxInternal()
     {
-        if (!_hasAdvancedThisStep)
-        {
-            CompleteActionAndEvaluateTransition();
-        }
+        if (_isHitboxCurrentlyOpen) return;
+        _isHitboxCurrentlyOpen = true;
+        owner.CombatModule.OpenWeaponHitbox(_comboStep);
     }
-    #endregion
 
-    #region Input Event
-    private void HandleCommandDuringAttack(InputCommandType command)
+    private void CloseHitboxInternal()
     {
-        switch (command)
-        {
-            case InputCommandType.Roll:
-                // 모션 50% 이후 긴급 회피 캔슬 허용
-                if (_animController.GetCurrentNormalizedTime(0) >= InputBufferStartNormalized)
-                {
-                    owner.InputReader.ClearCommand(InputCommandType.Roll);
-                    _playerStateMachine.ChangeState(UnitState.Roll);
-                }
-                break;
-
-            case InputCommandType.Parry:
-                // 모션 50% 이후 긴급 가드 캔슬 허용
-                if (_animController.GetCurrentNormalizedTime(0) >= InputBufferStartNormalized)
-                {
-                    owner.InputReader.ClearCommand(InputCommandType.Parry);
-                    _playerStateMachine.ChangeState(UnitState.Parry);
-                }
-                break;
-
-            case InputCommandType.Attack:
-                // 3타(피니셔) 완주 중에는 연타 예약 차단
-                if (_comboStep >= MaxComboStep) return;
-
-                // 공격 도중 들어온 모든 연타 클릭은 100% 예약 수집
-                _hasQueuedCombo = true;
-                break;
-        }
-    }
-    #endregion
-
-    private void EnableAttackEvent()
-    {
-        DisableAttackEvent();
-        _animController.OnHitboxOpenEvent += HandleHitboxOpen;
-        _animController.OnHitboxCloseEvent += HandleHitboxClose;
-        _animController.OnComboWindowOpenEvent += HandleComboWindowOpen;
-        _animController.OnComboWindowCloseEvent += HandleComboWindowClose;
-        _animController.OnActionCompletedEvent += HandleActionCompleted;
-
-        owner.InputReader.OnCommandInputEvent += HandleCommandDuringAttack;
-    }
-    private void DisableAttackEvent()
-    {
-        _animController.OnHitboxOpenEvent -= HandleHitboxOpen;
-        _animController.OnHitboxCloseEvent -= HandleHitboxClose;
-        _animController.OnComboWindowOpenEvent -= HandleComboWindowOpen;
-        _animController.OnComboWindowCloseEvent -= HandleComboWindowClose;
-        _animController.OnActionCompletedEvent -= HandleActionCompleted;
-
-        owner.InputReader.OnCommandInputEvent -= HandleCommandDuringAttack;
+        if (!_isHitboxCurrentlyOpen) return;
+        _isHitboxCurrentlyOpen = false;
+        owner.CombatModule.CloseWeaponHitbox();
     }
 }

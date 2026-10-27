@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: 04.VFX
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: 04.VFX
+  m_GUID: ecd128a0601a528438df45a51539859f
+  m_SerializeEntries:
+  - m_GUID: d3e8d27b9d68ac549970ccbd90a768b6
+    m_Address: HitVFX_Slash
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 7026aa4d763780a49862f1c5ad971903, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: d389c4ed0ddd33f418d5c3da0f24e28e, type: 2}
+    - {fileID: 11400000, guid: f84cd612025ce704fa0847a16e5a5b0c, type: 2}
