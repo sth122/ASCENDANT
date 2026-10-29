@@ -154,7 +154,7 @@ public class AssetsManager : MonoSingleton<AssetsManager>
         {
             Addressables.ReleaseInstance(instance);
             _instanceHandles.Remove(instance);
-            Util.LogError($"[인스턴스 해제] {instance.name}");
+            Util.Log($"[인스턴스 해제] {instance.name}");
         }
         else
         {
