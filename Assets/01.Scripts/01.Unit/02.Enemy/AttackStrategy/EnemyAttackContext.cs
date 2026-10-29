@@ -7,12 +7,12 @@ public readonly struct EnemyAttackContext
     public readonly UnityEngine.Transform OwnerTransform;
     public readonly EnemyMovement Movement;
     public readonly EnemyAnimController AnimController;
-    public readonly WeaponSweepHitbox MainHitbox;
+    public readonly WeaponSweepHitboxTest2 MainHitbox;
     public readonly float BaseAttackPower;
     public readonly float BasePoiseDamage;
 
     public EnemyAttackContext(UnityEngine.GameObject attackerObject,  UnityEngine.Transform ownerTransform,
-        EnemyMovement movement, EnemyAnimController animController, WeaponSweepHitbox mainHitbox,
+        EnemyMovement movement, EnemyAnimController animController, WeaponSweepHitboxTest2 mainHitbox,
         float baseAttackPower, float basePoiseDamage)
     {
         AttackerObject = attackerObject;

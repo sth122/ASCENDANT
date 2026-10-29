@@ -94,29 +94,14 @@ public class DataManager : MonoSingleton<DataManager>, ILoadable
     private void RegisterAsset(ScriptableObject asset)
     {
         if (asset == null) return;
-
         Type assetType = asset.GetType();
 
-        // 1. 단일 타입 캐시에 등록
         _singleDataCache[assetType] = asset;
 
-        // 2. SO 내부 초기화 메서드 탐색 및 자동 실행
-        if (asset is EnemyAttackDatabaseSO attackDb)
+        // IInitable 인터페이스 다형성을 통한 무결성 일괄 초기화
+        if (asset is IInitable initable)
         {
-            attackDb.InitDatabase();
-        }
-        else if (asset is AnimationDataSO animData)
-        {
-            animData.Init();
-        }
-        else
-        {
-            // KeyedDataSO 계열(PlayerStatusSO, EnemyStatusSO 등)의 InitializeDictionary 리플렉션 호출
-            var initMethod = assetType.GetMethod("InitializeDictionary");
-            if (initMethod != null)
-            {
-                initMethod.Invoke(asset, null);
-            }
+            initable.Init();
         }
 
         Util.Log($"[SO 캐시 등록 완료] Type: {assetType.Name}");

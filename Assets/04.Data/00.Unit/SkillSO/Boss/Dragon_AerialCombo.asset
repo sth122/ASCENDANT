@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b65fba738f1ffe4aa1ec1a2d57355a1, type: 3}
+  m_Name: Dragon_AerialCombo
+  m_EditorClassIdentifier: Assembly-CSharp::DragonAerialComboSkillSO
+  _info:
+    Id: 3005
+    AnimState: 1006
+    TargetHitboxSlot: 2
+    ImpactType: 1
+    KnockbackForce: 16
+    RequiredPhase: 2
+    BaseDamage: 110
+    BasePoiseDamage: 60
+    Cooldown: 25
+    Range: 20
+    IsParryable: 0
+    HitboxStartNormalized: 0.25
+    HitboxEndNormalized: 0.8
+    ActionEndNormalized: 0.9
+  _timelineSteps:
+  - StateType: 1000
+    SpeedMultiplier: 1
+    FaceTargetOnEnter: 1
+    HasHitbox: 0
+    TargetHitboxSlot: 0
+    HitboxStartNormalized: 0
+    HitboxEndNormalized: 0
+    HasCustomEvent: 0
+    EventTriggerNormalized: 0
+  - StateType: 1009
+    SpeedMultiplier: 1
+    FaceTargetOnEnter: 0
+    HasHitbox: 0
+    TargetHitboxSlot: 0
+    HitboxStartNormalized: 0
+    HitboxEndNormalized: 0
+    HasCustomEvent: 0
+    EventTriggerNormalized: 0
+  - StateType: 0
+    SpeedMultiplier: 1
+    FaceTargetOnEnter: 0
+    HasHitbox: 1
+    TargetHitboxSlot: 2
+    HitboxStartNormalized: 0.2
+    HitboxEndNormalized: 0.85
+    HasCustomEvent: 1
+    EventTriggerNormalized: 0.25
+  - StateType: 1010
+    SpeedMultiplier: 1
+    FaceTargetOnEnter: 0
+    HasHitbox: 0
+    TargetHitboxSlot: 0
+    HitboxStartNormalized: 0
+    HitboxEndNormalized: 0
+    HasCustomEvent: 0
+    EventTriggerNormalized: 0

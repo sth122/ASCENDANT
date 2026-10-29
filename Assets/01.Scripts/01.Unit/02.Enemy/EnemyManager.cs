@@ -9,7 +9,7 @@ using Util = DebugLogger<EnemyManager>;
 public class EnemyManager : MonoBehaviour, IEnemyManager
 {
     // 현재 씬에 등록된 모든 에너미 인스턴스 목록 (비활성화 상태 포함)
-    private readonly List<EnemyController> _registeredEnemies = new List<EnemyController>(64);
+    private readonly List<EnemyBTController> _registeredEnemies = new List<EnemyBTController>(64);
 
     // 이미 처치되어 리젠되면 안 되는 보스/네임드 몬스터의 고유 ID 목록
     private readonly HashSet<string> _defeatedPermanentIds = new HashSet<string>();
@@ -50,7 +50,7 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     /// <summary>
     /// 에너미 스폰 또는 씬 초기화 시 관리 목록에 등록
     /// </summary>
-    public void RegisterEnemy(EnemyController enemy)
+    public void RegisterEnemy(EnemyBTController enemy)
     {
         if (enemy != null && !_registeredEnemies.Contains(enemy))
         {
@@ -61,7 +61,7 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     /// <summary>
     /// 에너미가 완전히 파괴(Destroy)될 때 관리 목록에서 제외
     /// </summary>
-    public void UnregisterEnemy(EnemyController enemy)
+    public void UnregisterEnemy(EnemyBTController enemy)
     {
         if (enemy != null)
         {
@@ -99,7 +99,7 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     {
         for (int i = _registeredEnemies.Count - 1; i >= 0; i--)
         {
-            EnemyController enemy = _registeredEnemies[i];
+            EnemyBTController enemy = _registeredEnemies[i];
             if (enemy == null)
             {
                 _registeredEnemies.RemoveAt(i);
@@ -107,7 +107,7 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
             }
 
             // 개별 적의 3단계 초기화 메서드 호출
-            enemy.ResetToOriginState();
+            //enemy.ResetToOriginState();
         }
 
         Util.Log($"총 {_registeredEnemies.Count}기의 적 초기화 프로세스 완료");

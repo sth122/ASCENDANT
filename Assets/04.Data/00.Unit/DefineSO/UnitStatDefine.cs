@@ -49,9 +49,11 @@ public class PlayerInfo : UnitBaseInfo
     [field: Tooltip("기량 (Dexterity): 무기 장착치 및 공격 속도")]
     [field: SerializeField] public int Dexterity { get; private set; }
 
-    // 스탯 수치 기반 유도 계산식
-    public float CalculateMaxHp() => MaxHp + (Vigor * 25f);
-    public float CalculateMaxStamina() => MaxStamina + (Endurance * 2f);
+    [field: SerializeField] public float BaseMaxHp { get; private set; } = 500f;
+    [field: SerializeField] public float BaseMaxStamina { get; private set; } = 100f;
+
+    public float CalculateMaxHp() => BaseMaxHp + (Vigor * 25f);
+    public float CalculateMaxStamina() => BaseMaxStamina + (Endurance * 2f);
     public float CalculateMaxEquipWeight() => 40f + (Endurance * 1.5f);
 
     /// <summary>
@@ -83,6 +85,9 @@ public class PlayerInfo : UnitBaseInfo
             MaxHp = this.MaxHp,
             Poise = this.Poise,
             WalkSpeed = this.WalkSpeed,
+
+            BaseMaxHp = this.BaseMaxHp,
+            BaseMaxStamina = this.BaseMaxStamina,
 
             // 플레이어 고유 필드 복사
             SprintSpeed = this.SprintSpeed,
@@ -125,11 +130,62 @@ public class PlayerInfo : UnitBaseInfo
 /// UnitBaseStat을 상속받아 추후 구현하게 될 보스 전용 스탯 클래스
 /// </summary>
 [System.Serializable]
-public class BossInfo : UnitBaseInfo
+public class BossInfo : EnemyInfo
 {
+    [field: Header("Boss Phase & Gimmick Balance")]
+    [field: Tooltip("2페이즈 전환 체력 비율")]
+    [field: SerializeField] public float Phase2ThresholdRatio { get; private set; } = 0.30f;
+
+    [field: Tooltip("2페이즈 전환 시 체력 즉시 회복 비율")]
+    [field: SerializeField] public float Phase2HealRatio { get; private set; } = 0.10f;
+
+    [field: Tooltip("2페이즈 공격력 및 애니메이션 속도 배율")]
+    [field: SerializeField] public float Phase2StatBuffMultiplier { get; private set; } = 1.30f;
+
+    [field: Tooltip("스킬 사이클 기본 발동 간격")]
+    [field: SerializeField] public float SkillCycleInterval { get; private set; } = 15.0f;
+
+    [field: Tooltip("2페이즈 스킬 즉시 쿨타임 초기화 확률")]
+    [field: SerializeField] public float SkillCooldownResetChance { get; private set; } = 0.30f;
+
+    public BossInfo()
+    {
+        Tier = EnemyTier.Boss;
+    }
+
+    /// <summary>
+    /// 부모 필드(MaxHp, Poise 등) 유실을 원천 방지하는 완전한 깊은 복제(Deep Copy)
+    /// </summary>
     public override UnitBaseInfo Clone()
     {
-        return new BossInfo { };
+        return new BossInfo
+        {
+            // UnitBaseInfo 공통
+            MaxHp = this.MaxHp,
+            Poise = this.Poise,
+            WalkSpeed = this.WalkSpeed,
+
+            // EnemyInfo 계승
+            Tier = EnemyTier.Boss,
+            DropSouls = this.DropSouls,
+            AttackPower = this.AttackPower,
+            BasePoiseDamage = this.BasePoiseDamage,
+            AttackRange = this.AttackRange,
+            AttackCooldown = this.AttackCooldown,
+            ChaseSpeed = this.ChaseSpeed,
+            PatrolSpeed = this.PatrolSpeed,
+            MaxLeashDistance = this.MaxLeashDistance,
+            SightRadius = this.SightRadius,
+            SightAngle = this.SightAngle,
+            HearingRadius = this.HearingRadius,
+
+            // BossInfo 고유 기믹
+            Phase2ThresholdRatio = this.Phase2ThresholdRatio,
+            Phase2HealRatio = this.Phase2HealRatio,
+            Phase2StatBuffMultiplier = this.Phase2StatBuffMultiplier,
+            SkillCycleInterval = this.SkillCycleInterval,
+            SkillCooldownResetChance = this.SkillCooldownResetChance
+        };
     }
 }
 #endregion

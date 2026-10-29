@@ -24,32 +24,14 @@ public interface IState
 }
 
 /// <summary>
-/// 공격 및 타격 시 전달되는 순수 데이터 컨텍스트 구조체
-/// </summary>
-public readonly struct DamageContext
-{
-    public readonly UnityEngine.GameObject Attacker;
-    public readonly float Damage;
-    public readonly float PoiseDamage;
-    public readonly UnityEngine.Vector3 HitPoint;
-    public readonly UnityEngine.Vector3 HitNormal;
-    public readonly bool IsParryable;
-
-    public DamageContext(UnityEngine.GameObject attacker, float damage, float poiseDamage, UnityEngine.Vector3 hitPoint, UnityEngine.Vector3 hitNormal, bool isParryable = true)
-    {
-        Attacker = attacker;
-        Damage = damage;
-        PoiseDamage = poiseDamage;
-        HitPoint = hitPoint;
-        HitNormal = hitNormal;
-        IsParryable = isParryable;
-    }
-}
-
-/// <summary>
 /// 공격 수신 인터페이스 (플레이어, 몬스터, 보스 공통)
 /// </summary>
 public interface IDamageable
+{
+    void ApplyDamage(in DamageContextTest2 context);
+}
+
+public interface IDamageableTest
 {
     void ApplyDamage(in DamageContext context);
 }
@@ -70,8 +52,8 @@ public interface IEnemyAttackStrategy
 /// </summary>
 public interface IEnemyManager
 {
-    void RegisterEnemy(EnemyController enemy);
-    void UnregisterEnemy(EnemyController enemy);
+    void RegisterEnemy(EnemyBTController enemy);
+    void UnregisterEnemy(EnemyBTController enemy);
     void RegisterDefeatedPermanentEnemy(string permanentId);
     bool IsPermanentEnemyDefeated(string permanentId);
     void ResetAllEnemies();
@@ -129,5 +111,14 @@ public interface INode
     }
 
     public INode.ENodeState Evaluate();
+}
+#endregion
+
+#region Skill Interface
+public interface ISkillable
+{
+    bool CanExecuteSkill(SkillId skillId);
+    Cysharp.Threading.Tasks.UniTask<bool> ExecuteSkillAsync(SkillId skillId, System.Threading.CancellationToken ct);
+    void CancelSkill();
 }
 #endregion

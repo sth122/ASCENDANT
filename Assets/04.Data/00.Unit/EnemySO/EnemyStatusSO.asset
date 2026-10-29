@@ -23,10 +23,10 @@ MonoBehaviour:
       <AttackPower>k__BackingField: 50
       <BasePoiseDamage>k__BackingField: 20
       <AttackRange>k__BackingField: 2
-      <AttackCooldown>k__BackingField: 3
+      <AttackCooldown>k__BackingField: 4
       <ChaseSpeed>k__BackingField: 4.5
       <PatrolSpeed>k__BackingField: 3
       <MaxLeashDistance>k__BackingField: 20
       <SightRadius>k__BackingField: 5
       <SightAngle>k__BackingField: 120
-      <HearingRadius>k__BackingField: 8
+      <HearingRadius>k__BackingField: 5

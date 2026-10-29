@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d23bdd67b868959459735dfc9cd2274e, type: 3}
+  m_Name: UnitCombatDatabaseSO
+  m_EditorClassIdentifier: Assembly-CSharp::UnitCombatDatabaseSO
+  _entries:
+  - Id: 11
+    Value:
+      BasicAttacks:
+      - AnimState: 8
+        AttackData:
+          _attackAnimStateType: 8
+          _impactType: 0
+          _attackRange: 2
+          _attackCooldown: 2.5
+          _hitboxStartNormalized: 0.25
+          _hitboxEndNormalized: 0.6
+          _actionEndNormalized: 0.9
+          _isParryable: 1
+          _knockbackForce: 0
+      - AnimState: 9
+        AttackData:
+          _attackAnimStateType: 9
+          _impactType: 0
+          _attackRange: 2
+          _attackCooldown: 4
+          _hitboxStartNormalized: 0.25
+          _hitboxEndNormalized: 0.6
+          _actionEndNormalized: 0.9
+          _isParryable: 1
+          _knockbackForce: 0
+      - AnimState: 10
+        AttackData:
+          _attackAnimStateType: 10
+          _impactType: 0
+          _attackRange: 2
+          _attackCooldown: 4
+          _hitboxStartNormalized: 0.25
+          _hitboxEndNormalized: 0.6
+          _actionEndNormalized: 0.9
+          _isParryable: 1
+          _knockbackForce: 0
+      Skills: []
+  - Id: 101
+    Value:
+      BasicAttacks:
+      - AnimState: 6
+        AttackData:
+          _attackAnimStateType: 8
+          _impactType: 0
+          _attackRange: 5
+          _attackCooldown: 2
+          _hitboxStartNormalized: 0.25
+          _hitboxEndNormalized: 0.6
+          _actionEndNormalized: 0.9
+          _isParryable: 1
+          _knockbackForce: 12
+      - AnimState: 9
+        AttackData:
+          _attackAnimStateType: 7
+          _impactType: 0
+          _attackRange: 5
+          _attackCooldown: 2
+          _hitboxStartNormalized: 0.25
+          _hitboxEndNormalized: 0.6
+          _actionEndNormalized: 0.9
+          _isParryable: 1
+          _knockbackForce: 12
+      Skills:
+      - {fileID: 11400000, guid: fe5f148970e07f842a597eb98be5927c, type: 2}
+      - {fileID: 11400000, guid: fb0842dc70a1f5c4d8a3afe45c61a4bf, type: 2}
+      - {fileID: 11400000, guid: ab8e4675e7cfeb2409b1ed2922027cab, type: 2}
+      - {fileID: 11400000, guid: c589cab935c787247a68b750aa1414a0, type: 2}
+      - {fileID: 11400000, guid: 433a0b881acf69c4593effc42f8b198e, type: 2}

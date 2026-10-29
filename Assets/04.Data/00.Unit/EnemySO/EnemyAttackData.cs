@@ -1,71 +1,110 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 /// <summary>
 /// Enemy의 개별 공격 패턴을 정의하는 구조체
+/// 단일 타격 및 ActionTimelineStep 기반 다단 연계 시퀀스
 /// </summary>
 [System.Serializable]
 public struct EnemyAttackData
 {
     [Header("공격 식별")]
-    [Tooltip("AnimationDataSO에 등록된 재생 대상 애니메이션 상태 Enum")]
-    [field: SerializeField] private AnimStateType _attackAnimStateType;
+    [SerializeField] private AnimStateType _attackAnimStateType;
 
-    [Header("전투 모션 배율 (Motion Value Multipliers)")]
-    [Tooltip("모션 피해 배율")]
-    [SerializeField] private float _damageMultiplier;
-    [Tooltip("강인도 피해 배율")]
-    [SerializeField] private float _poiseMultiplier;
+    [Header("충격 판정 속성")]
+    [SerializeField] private AttackImpactType _impactType;
+
     [Header("사거리 및 쿨타임")]
     [SerializeField] private float _attackRange;
     [SerializeField] private float _attackCooldown;
 
-    [Header("코드 타임라인 정규화 시간 (0.0 ~ 1.0)")]
-    [Tooltip("히트박스가 열리는 애니메이션 진행도 (기본 0.25)")]
+    [Header("단일 공격 정규화 타임라인 (0.0 ~ 1.0)")]
     [SerializeField] private float _hitboxStartNormalized;
-    [Tooltip("히트박스가 닫히는 애니메이션 진행도 (기본 0.60)")]
     [SerializeField] private float _hitboxEndNormalized;
-    [Tooltip("공격 후딜레이가 끝나고 다음 상태로 전이 가능한 진행도 (기본 0.90)")]
-    [SerializeField] private float _actionEndNormalized;
 
-    [Header("소울라이크 패링 메타데이터")]
+    [Header("복합 타임라인 스텝 (비어있으면 위 단일 설정값으로 1-Step 자동 구성)")]
+    [SerializeField] private List<ActionTimelineStep> _customSteps;
+
+    [Header("소울라이크 패링 및 넉백")]
     [Tooltip("패링이 허용되는 일반 패턴인지 여부")]
     [SerializeField] private bool _isParryable;
+    [Tooltip("강공격 적중 시 플레이어를 밀어내는 임펄스 넉백 힘")]
+    [SerializeField] private float _knockbackForce;
 
     #region Properties
     public AnimStateType AttackAnimStateType => _attackAnimStateType;
-    public float DamageMultiplier => _damageMultiplier;
-    public float PoiseMultiplier => _poiseMultiplier;
-    public float AttackRange => _attackRange;
-    public float AttackCooldown => _attackCooldown;
+    public AttackImpactType ImpactType => _impactType;
+    public float AttackRange => _attackRange > 0f ? _attackRange : 2.2f;
+    public float AttackCooldown => _attackCooldown >= 0f ? _attackCooldown : 2.0f;
     public bool IsParryable => _isParryable;
+    public float KnockbackForce => _knockbackForce;
 
     public float HitboxStartNormalized => _hitboxStartNormalized >= 0f ? _hitboxStartNormalized : 0.25f;
     public float HitboxEndNormalized => _hitboxEndNormalized > 0f ? _hitboxEndNormalized : 0.60f;
-    public float ActionEndNormalized => _actionEndNormalized > 0f ? _actionEndNormalized : 0.90f;
+    /// <summary>
+    /// AttackImpactType에 따라 자동으로 부여되는 대미지 계수
+    /// </summary>
+    public float AutoDamageMultiplier => _impactType switch
+    {
+        AttackImpactType.Light => 1.0f,
+        AttackImpactType.Heavy => 1.8f,
+        AttackImpactType.DoT => 0.4f,
+        _ => 1.0f
+    };
+
+    /// <summary>
+    /// AttackImpactType에 따라 자동으로 부여되는 강인도 파괴 계수
+    /// </summary>
+    public float AutoPoiseMultiplier => _impactType switch
+    {
+        AttackImpactType.Light => 1.0f,
+        AttackImpactType.Heavy => 2.2f,
+        AttackImpactType.DoT => 0.0f,
+        _ => 1.0f
+    };
     #endregion
 
-    public EnemyAttackData(AnimStateType animState, float damageMultiplier, float poiseMultiplier, float range, 
-        float cooldown, bool isParryable, float hitboxStart = 0.25f, float hitboxEnd = 0.60f, float actionEnd = 0.90f)
+    public EnemyAttackData(AnimStateType animState, AttackImpactType impactType, float range, float cooldown,
+        bool isParryable, float knockbackForce = 0f, float hitboxStart = 0.25f, float hitboxEnd = 0.60f)
     {
         _attackAnimStateType = animState;
-        _damageMultiplier = damageMultiplier;
-        _poiseMultiplier = poiseMultiplier;
+        _impactType = impactType;
         _attackRange = range;
         _attackCooldown = cooldown;
         _isParryable = isParryable;
+        _knockbackForce = knockbackForce;
         _hitboxStartNormalized = hitboxStart;
         _hitboxEndNormalized = hitboxEnd;
-        _actionEndNormalized = actionEnd;
+        _customSteps = null;
     }
 
     /// <summary>
-    /// 유닛의 기준 스탯과 모션 배율을 결합하여 최종 판정 피해량을 산출하는 연산 메서드
+    /// 유닛의 기준 공격력에 ImpactType 자동 배율을 결합하여 최종 대미지 산출
     /// </summary>
-    public float CalculateFinalDamage(float baseAttackPower)
-        => baseAttackPower * _damageMultiplier;
+    public float CalculateFinalDamage(float baseAttackPower) => baseAttackPower * AutoDamageMultiplier;
 
     /// <summary>
-    /// 유닛의 기준 강인도 공격력과 모션 배율을 결합하여 최종 강인도 피해량을 산출하는 연산 메서드
+    /// 유닛의 기준 포이즈 공격력에 ImpactType 자동 배율을 결합하여 최종 강인도 피해량 산출
     /// </summary>
-    public float CalculateFinalPoiseDamage(float basePoiseDamage) 
-        => basePoiseDamage * _poiseMultiplier;
+    public float CalculateFinalPoiseDamage(float basePoiseDamage) => basePoiseDamage * AutoPoiseMultiplier;
+
+    /// <summary>
+    /// ActionTimelineRunner에 주입할 유효 Step 배열 반환
+    /// </summary>
+    public ActionTimelineStep[] GetTimelineSteps()
+    {
+        if (_customSteps != null && _customSteps.Count > 0)
+        {
+            return _customSteps.ToArray();
+        }
+
+        return new ActionTimelineStep[]
+        {
+            ActionTimelineStep.CreateSingleAttack(
+                _attackAnimStateType,
+                HitboxSlot.MainWeapon,
+                HitboxStartNormalized,
+                HitboxEndNormalized
+            )
+        };
+    }
 }

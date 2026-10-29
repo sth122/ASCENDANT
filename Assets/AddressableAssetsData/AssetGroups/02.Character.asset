@@ -25,9 +25,14 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 988e68d3092fee8469195b86bbc371da
+    m_Address: BossDragon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 7026aa4d763780a49862f1c5ad971903, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: d24428c9a44726c44a5f1b14461f4cee, type: 2}
     - {fileID: 11400000, guid: ead4cd99d070b8b48ae13d88a1a8f6e5, type: 2}
+    - {fileID: 11400000, guid: d24428c9a44726c44a5f1b14461f4cee, type: 2}

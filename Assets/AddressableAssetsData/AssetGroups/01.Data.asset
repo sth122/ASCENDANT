@@ -15,14 +15,14 @@ MonoBehaviour:
   m_GroupName: 01.Data
   m_GUID: f82b32457735cbb48bfacff5bef57855
   m_SerializeEntries:
-  - m_GUID: 2723aa284ae59f440b9a68b0a41df536
-    m_Address: EnemyStatusSO
+  - m_GUID: 1297d4ae7cd334c46b72381d12704bb5
+    m_Address: UnitCombatDatabaseSO
     m_ReadOnly: 0
     m_SerializedLabels:
     - Static_Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4461b0ffc5a1ae345aee10215f188c06
-    m_Address: EnemyAttackDatabaseSO
+  - m_GUID: 2723aa284ae59f440b9a68b0a41df536
+    m_Address: EnemyStatusSO
     m_ReadOnly: 0
     m_SerializedLabels:
     - Static_Data
@@ -35,6 +35,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8faec110d4afb5e47b67c75a78c48947
     m_Address: PlayerStatusSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Static_Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b4893bb1ef4430246b8b67af2f4842ea
+    m_Address: BossInfoSO
     m_ReadOnly: 0
     m_SerializedLabels:
     - Static_Data

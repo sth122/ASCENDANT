@@ -19,3 +19,7 @@ MonoBehaviour:
       PreloadCount: 5
     - Type: 3010
       PreloadCount: 5
+  - TargetScene: 3
+    Items:
+    - Type: 2001
+      PreloadCount: 5

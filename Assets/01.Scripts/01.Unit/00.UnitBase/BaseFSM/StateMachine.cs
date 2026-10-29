@@ -68,16 +68,3 @@ public class StateMachine<T> where T : class
     public void FixedUpdate() => currentState?.FixedUpdate();
 }
 #endregion
-
-// Unit 전용 제네릭 StateMachine, UnitController<T>를 상속받는 타입만 사용 가능
-#region UnitStateMachine
-public abstract class UnitStateMachine<T> : StateMachine<T> where T : UnitController<T>
-{
-    public void AddState(UnitState stateKey, IState state) 
-        => base.AddState((int)stateKey, state);
-    public void ChangeState(UnitState newStateKey, bool _forceReenter = false) 
-        => base.ChangeState((int)newStateKey, _forceReenter);
-
-    public void Initialize(UnitState stateKey) => base.Initialize((int)stateKey);
-}
-#endregion

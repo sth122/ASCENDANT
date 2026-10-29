@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96ffc6090e08224438a24684c523eca2, type: 3}
+  m_Name: Dragon_BackstepBreath
+  m_EditorClassIdentifier: Assembly-CSharp::DragonGenericSkillSO
+  _info:
+    Id: 3001
+    AnimState: 1002
+    TargetHitboxSlot: 2
+    ImpactType: 1
+    KnockbackForce: 14
+    RequiredPhase: 1
+    BaseDamage: 80
+    BasePoiseDamage: 45
+    Cooldown: 16
+    Range: 8
+    IsParryable: 0
+    HitboxStartNormalized: 0.25
+    HitboxEndNormalized: 0.7
+    ActionEndNormalized: 0.8
+  _timelineSteps:
+  - StateType: 1000
+    SpeedMultiplier: 1
+    FaceTargetOnEnter: 0
+    HasHitbox: 0
+    TargetHitboxSlot: 0
+    HitboxStartNormalized: 0
+    HitboxEndNormalized: 0
+    HasCustomEvent: 0
+    EventTriggerNormalized: 0
+  - StateType: 1002
+    SpeedMultiplier: 1
+    FaceTargetOnEnter: 0
+    HasHitbox: 1
+    TargetHitboxSlot: 2
+    HitboxStartNormalized: 0.25
+    HitboxEndNormalized: 0.7
+    HasCustomEvent: 0
+    EventTriggerNormalized: 0

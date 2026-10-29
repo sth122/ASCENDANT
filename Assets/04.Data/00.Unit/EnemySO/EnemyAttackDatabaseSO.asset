@@ -15,47 +15,47 @@ MonoBehaviour:
   _databaseEntries:
   - UnitIdentifier: 11
     Attacks:
-    - AnimState: 6
-      AttackData:
-        _attackAnimStateType: 6
-        _damageMultiplier: 1
-        _poiseMultiplier: 1
-        _attackRange: 2.5
-        _attackCooldown: 2.5
-        _hitboxStartNormalized: 0.25
-        _hitboxEndNormalized: 0.6
-        _actionEndNormalized: 0.9
-        _isParryable: 1
-    - AnimState: 7
-      AttackData:
-        _attackAnimStateType: 7
-        _damageMultiplier: 1.2
-        _poiseMultiplier: 1
-        _attackRange: 2.5
-        _attackCooldown: 2.5
-        _hitboxStartNormalized: 0.25
-        _hitboxEndNormalized: 0.6
-        _actionEndNormalized: 0.9
-        _isParryable: 1
     - AnimState: 8
       AttackData:
         _attackAnimStateType: 8
-        _damageMultiplier: 1.5
-        _poiseMultiplier: 2
+        _impactType: 0
+        _attackRange: 2.5
+        _attackCooldown: 2.5
+        _hitboxStartNormalized: 0.25
+        _hitboxEndNormalized: 0.6
+        _actionEndNormalized: 0.9
+        _isParryable: 1
+        _knockbackForce: 0
+    - AnimState: 9
+      AttackData:
+        _attackAnimStateType: 9
+        _impactType: 0
+        _attackRange: 2.5
+        _attackCooldown: 2.5
+        _hitboxStartNormalized: 0.25
+        _hitboxEndNormalized: 0.6
+        _actionEndNormalized: 0.9
+        _isParryable: 1
+        _knockbackForce: 0
+    - AnimState: 10
+      AttackData:
+        _attackAnimStateType: 10
+        _impactType: 0
         _attackRange: 2.5
         _attackCooldown: 4
         _hitboxStartNormalized: 0.25
         _hitboxEndNormalized: 0.6
         _actionEndNormalized: 0.9
         _isParryable: 0
-    - AnimState: 9
+        _knockbackForce: 0
+    - AnimState: 11
       AttackData:
-        _attackAnimStateType: 9
-        _damageMultiplier: 1.5
-        _poiseMultiplier: 2
+        _attackAnimStateType: 11
+        _impactType: 0
         _attackRange: 2.5
         _attackCooldown: 4
         _hitboxStartNormalized: 0.25
         _hitboxEndNormalized: 0.6
         _actionEndNormalized: 0.9
         _isParryable: 1
+        _knockbackForce: 0

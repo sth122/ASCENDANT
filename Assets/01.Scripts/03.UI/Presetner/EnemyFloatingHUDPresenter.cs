@@ -5,7 +5,7 @@
 /// 컴포넌트 라이프사이클을 활용하여 풀에서 View를 배정받고 반환하며,
 /// 부모 캔버스를 UIManager의 HUD 레이어로 안전하게 리패런팅
 /// </summary>
-[RequireComponent(typeof(EnemyController), typeof(UnitStatusController))]
+[RequireComponent(typeof(EnemyBTController), typeof(UnitStatusController))]
 public class EnemyFloatingHUDPresenter : MonoBehaviour
 {
     [Header("Tracking Offset")]
@@ -39,8 +39,7 @@ public class EnemyFloatingHUDPresenter : MonoBehaviour
 
         // 1. UIManager의 HUD 레이어 컨테이너(@Layer_100_HUD) 획득
         RectTransform hudContainer = UIManager.Instance != null
-            ? UIManager.Instance.GetLayerContainer(UILayer.HUD)
-            : null;
+            ? UIManager.Instance.GetLayerContainer(UILayer.HUD) : null;
 
         // 2. 풀에서 View 인스턴스 획득 (부모를 캔버스 HUD 레이어로 즉시 지정)
         _floatingView = ObjectPoolManager.Instance.Spawn<EnemyFloatingHUDView>(

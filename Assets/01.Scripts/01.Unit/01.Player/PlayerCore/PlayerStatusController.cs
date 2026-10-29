@@ -22,7 +22,7 @@ public class PlayerStatusController : UnitStatusController
     #endregion
 
     public PlayerMotionStatusModule PlayerMotionStats => MotionStatus as PlayerMotionStatusModule;
-    public PlayerInfo PlayerStatusSource { get; private set; }
+    public PlayerInfo PlayerInfoSource { get; private set; }
     public event System.Action<float, float> OnStaminaChangedEvent;
 
     /// <summary>
@@ -32,7 +32,7 @@ public class PlayerStatusController : UnitStatusController
     {
         if (baseStat is PlayerInfo playerStat)
         {
-            PlayerStatusSource = playerStat;
+            PlayerInfoSource = (PlayerInfo)playerStat.Clone();
 
             // Player 전용 공식에 의한 Max 수치 계산
             _maxHp = playerStat.CalculateMaxHp();
@@ -69,7 +69,7 @@ public class PlayerStatusController : UnitStatusController
     {
         if (updatedStat == null || PlayerMotionStats == null) return;
 
-        PlayerStatusSource = updatedStat;
+        PlayerInfoSource = updatedStat;
         _maxHp = updatedStat.CalculateMaxHp();
         _maxStamina = updatedStat.CalculateMaxStamina();
 

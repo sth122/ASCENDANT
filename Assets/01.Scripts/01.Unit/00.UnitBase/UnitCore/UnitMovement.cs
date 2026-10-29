@@ -1,72 +1,130 @@
 ﻿using UnityEngine;
 
 [System.Serializable]
+public struct GroundCheckConfig
+{
+    [Tooltip("지면 감지 스피어 구체 반경")]
+    public float SphereRadius;
+
+    [Tooltip("스피어캐스트 발사 원점 Y축 오프셋")]
+    public float CastOriginOffsetY;
+
+    [Tooltip("스피어캐스트 하향 투영 거리")]
+    public float CastDistance;
+
+    [Tooltip("올라갈 수 있는 최대 경사 각도")]
+    public float MaxSlopeAngle;
+
+    public static GroundCheckConfig Default => new GroundCheckConfig
+    {
+        SphereRadius = 0.35f,
+        CastOriginOffsetY = 0.4f,
+        CastDistance = 0.15f,
+        MaxSlopeAngle = 45f
+    };
+
+    public GroundCheckConfig(float radius, float offsetY, float distance, float maxSlope)
+    {
+        SphereRadius = radius;
+        CastOriginOffsetY = offsetY;
+        CastDistance = distance;
+        MaxSlopeAngle = maxSlope;
+    }
+}
+
+[System.Serializable]
 public abstract class UnitMovement
 {
     protected readonly Rigidbody _rb;
     protected readonly Transform _transform;
     protected readonly LayerMask _groundLayer;
+    protected GroundCheckConfig _groundConfig;
 
-    #region 지면 감지 및 경사면 변수 - 각 캐릭터마다 달라질 수 있기 때문에 수정 필요함
-    [field: SerializeField] protected float SphereRadius = 0.35f;
-    [field: SerializeField] protected float CastOriginOffsetY = 0.4f;
-    [field: SerializeField] protected float CastDistance = 0.15f;
-    [field: SerializeField] protected float MaxSlopeAngle = 45f; // 오를 수 있는 최대 경사 각도
+    #region 지면 및 경사면 프로퍼티
+    public bool IsGrounded { get; protected set; }
+    public bool IsOnSlope { get; protected set; }
+    public bool IsOnSteepSlope { get; protected set; }
+    public float CurrentSlopeAngle { get; protected set; }
+    public Vector3 GroundNormal { get; protected set; } = Vector3.up;
+    public RaycastHit GroundHit => _groundHit;
+    public GroundCheckConfig GroundConfig => _groundConfig;
     #endregion
 
-    public RaycastHit GroundHit { get; protected set; }
-    public bool IsGrounded { get; protected set; }
-    public float CurrentSlopeAngle { get; protected set; }
+    protected RaycastHit _groundHit;
 
-    protected UnitMovement(Rigidbody rb, Transform transform, LayerMask groundLayer)
+    protected UnitMovement(Rigidbody rb, Transform transform, LayerMask groundLayer, GroundCheckConfig groundConfig)
     {
         this._rb = rb;
         this._transform = transform;
         this._groundLayer = groundLayer;
+        this._groundConfig = groundConfig;
     }
 
     /// <summary>
     /// SphereCast를 통해 지면 접촉 여부와 경사면 법선을 판정
     /// </summary>
-    public virtual void CheckGrounded()
+    public virtual bool CheckGrounded()
     {
-        Vector3 origin = _transform.position + Vector3.up * CastOriginOffsetY;
+        if (_transform == null) return false;
 
-        IsGrounded = Physics.SphereCast( origin, SphereRadius, Vector3.down, out RaycastHit hit,
-            CastDistance, _groundLayer, QueryTriggerInteraction.Ignore);
+        Vector3 origin = _transform.position + Vector3.up * _groundConfig.CastOriginOffsetY;
 
-        GroundHit = hit;
+        bool checkGrounded = Physics.SphereCast(origin, _groundConfig.SphereRadius, Vector3.down, out _groundHit,
+            _groundConfig.CastDistance, _groundLayer, QueryTriggerInteraction.Ignore);
 
-        if (IsGrounded)
+        if (checkGrounded)
         {
-            // 바닥과 수직(Vector3.up) 사이의 경사 각도 산출
-            CurrentSlopeAngle = Vector3.Angle(Vector3.up, GroundHit.normal);
+            GroundNormal = _groundHit.normal;
+            CurrentSlopeAngle = Vector3.Angle(Vector3.up, GroundNormal);
+
+            // 정상 등판 가능한 경사각 판정
+            if (CurrentSlopeAngle <= _groundConfig.MaxSlopeAngle)
+            {
+                IsGrounded = true;
+                IsOnSteepSlope = false;
+                // 평지가 아닌 경사면인지 판별 (0.5도 초과)
+                IsOnSlope = CurrentSlopeAngle > 0.5f;
+            }
+            else
+            {
+                // 최대 경사각을 초과한 급경사 (등판 불가 지대)
+                IsGrounded = false;
+                IsOnSlope = false;
+                IsOnSteepSlope = true;
+            }
+
+            return IsGrounded;
         }
-        else
-        {
-            CurrentSlopeAngle = 0f;
-        }
+        GroundNormal = Vector3.up;
+        CurrentSlopeAngle = 0f;
+        IsGrounded = false;
+        IsOnSlope = false;
+        IsOnSteepSlope = false;
+        return false;
     }
 
     /// <summary>
-    /// 이동 벡터를 경사면 바닥 표면에 투영(project)하여 경사면 이동 방향을 산출하는 반환 메서드
+    /// 수평 입력 방향 벡터를 경사면 표면 법선 평면에 평행하게 투영
     /// </summary>
-    /// <param name="direction"></param>
-    /// <returns></returns>
-    public virtual Vector3 AdjustDirectionToSlope(Vector3 direction)
+    public Vector3 ProjectDirectionOnSlope(Vector3 horizontalDirection)
     {
-        if(IsGrounded && CurrentSlopeAngle <= MaxSlopeAngle)
-        {
-            return Vector3.ProjectOnPlane(direction, GroundHit.normal).normalized;
-        }
-        return direction;
+        return Vector3.ProjectOnPlane(horizontalDirection, GroundNormal).normalized;
+    }
+
+    /// <summary>
+    /// 등판 불가 급경사에서 미끄러져 내려가는 중력 방향 벡터 산출
+    /// </summary>
+    public Vector3 GetSteepSlopeSlideDirection()
+    {
+        return Vector3.ProjectOnPlane(Vector3.down, GroundNormal).normalized;
     }
 
     public virtual void RotateTowards(Vector3 targetDirection, float rotationSpeed, float deltaTime)
     {
-        if (targetDirection.sqrMagnitude < 0.001f) return;
+        if (targetDirection.sqrMagnitude < 0.001f || _transform == null) return;
 
-        Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+        targetDirection.y = 0f;
+        Quaternion targetRotation = Quaternion.LookRotation(targetDirection.normalized);
         _transform.rotation = Quaternion.Slerp(_transform.rotation, targetRotation, rotationSpeed * deltaTime);
     }
 
@@ -79,22 +137,39 @@ public abstract class UnitMovement
         }
     }
 
+    public virtual void UpdateGroundConfig(GroundCheckConfig newConfig) => _groundConfig = newConfig;
+
     public virtual void DrawGizmos()
     {
         if (_transform == null) return;
 
-        Vector3 startCenter = _transform.position + Vector3.up * CastOriginOffsetY;
-        Vector3 endCenter = startCenter + Vector3.down * CastDistance;
+        Vector3 origin = _transform.position + Vector3.up * _groundConfig.CastOriginOffsetY;
+        Vector3 end = origin + Vector3.down * _groundConfig.CastDistance;
 
-        Gizmos.color = IsGrounded ? new Color(0f, 1f, 0f, 0.6f) : new Color(1f, 0f, 0f, 0.6f);
-        Gizmos.DrawWireSphere(startCenter, SphereRadius);
-        Gizmos.DrawWireSphere(endCenter, SphereRadius);
-
-        if (IsGrounded)
+        // 접지: 녹색, 공중: 적색, 급경사: 주황색
+        if (IsOnSteepSlope)
         {
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawSphere(GroundHit.point, 0.05f);
-            Gizmos.DrawRay(GroundHit.point, GroundHit.normal * 0.5f);
+            Gizmos.color = new Color(1f, 0.5f, 0f, 0.7f);
+        }
+        else
+        {
+            Gizmos.color = IsGrounded ? new Color(0f, 1f, 0.2f, 0.7f) : new Color(1f, 0.15f, 0.15f, 0.7f);
+        }
+
+        Gizmos.DrawWireSphere(origin, _groundConfig.SphereRadius);
+        Gizmos.DrawWireSphere(end, _groundConfig.SphereRadius);
+
+        Gizmos.DrawLine(origin + Vector3.left * _groundConfig.SphereRadius, end + Vector3.left * _groundConfig.SphereRadius);
+        Gizmos.DrawLine(origin + Vector3.right * _groundConfig.SphereRadius, end + Vector3.right * _groundConfig.SphereRadius);
+        Gizmos.DrawLine(origin + Vector3.forward * _groundConfig.SphereRadius, end + Vector3.forward * _groundConfig.SphereRadius);
+        Gizmos.DrawLine(origin + Vector3.back * _groundConfig.SphereRadius, end + Vector3.back * _groundConfig.SphereRadius);
+
+        // 경사면 표면 법선(Normal) 레이 렌더링
+        if (IsGrounded && IsOnSlope)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawRay(_transform.position, GroundNormal * 1.5f);
         }
     }
 }
+

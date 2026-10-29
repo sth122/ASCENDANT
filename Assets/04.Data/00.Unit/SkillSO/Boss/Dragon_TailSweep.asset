@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96ffc6090e08224438a24684c523eca2, type: 3}
+  m_Name: Dragon_TailSweep
+  m_EditorClassIdentifier: Assembly-CSharp::DragonGenericSkillSO
+  _info:
+    Id: 3003
+    AnimState: 1004
+    TargetHitboxSlot: 3
+    ImpactType: 1
+    KnockbackForce: 15
+    RequiredPhase: 1
+    BaseDamage: 60
+    BasePoiseDamage: 40
+    Cooldown: 10
+    Range: 5
+    IsParryable: 1
+    HitboxStartNormalized: 0.3
+    HitboxEndNormalized: 0.6
+    ActionEndNormalized: 0.85
+  _timelineSteps:
+  - StateType: 1004
+    SpeedMultiplier: 1
+    FaceTargetOnEnter: 0
+    HasHitbox: 1
+    TargetHitboxSlot: 3
+    HitboxStartNormalized: 0.3
+    HitboxEndNormalized: 0.6
+    HasCustomEvent: 0
+    EventTriggerNormalized: 0

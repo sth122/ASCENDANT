@@ -63,7 +63,7 @@ public class EnemyPerceptionModule : UnitBaseModule, System.IDisposable
             Collider col = _overlapBuffer[i];
             PlayerController player = col.GetComponentInParent<PlayerController>();
 
-            if (player == null || player.UnitStatusController.IsDead) continue;
+            if (player == null || player.StatusController.IsDead) continue;
 
             Vector3 eyePos = _ownerTransform.position + Vector3.up * 1.5f;
             Vector3 targetHeadPos = player.transform.position + Vector3.up * 1.2f;

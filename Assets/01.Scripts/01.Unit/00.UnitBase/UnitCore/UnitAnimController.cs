@@ -7,9 +7,16 @@ public class UnitAnimController : MonoBehaviour
 {
     [field: SerializeField] protected Animator _animator;
     [field: SerializeField] protected AnimationDataSO _animData;
+    private AnimStateType _currentStateType = (AnimStateType)(-1);
+    private int _currentStateHash = 0;
+
+
+    private readonly System.Collections.Generic.Dictionary<int, float> _clipDurationMap = new System.Collections.Generic.Dictionary<int, float>();
 
     public Animator AnimatorInstance => _animator;
     public AnimationDataSO AnimData => _animData;
+    public AnimStateType CurrentStateType => _currentStateType;
+    public int CurrentStateHash => _currentStateHash;
 
     protected virtual void Awake()
     {
@@ -23,6 +30,7 @@ public class UnitAnimController : MonoBehaviour
         }
         // 일반 로코모션 상태에서는 스크립트 물리 이동을 기본으로 사용
         SetRootMotion(false);
+        CacheClipDurations();
     }
 
     #region Animator 공통 사용 구현부
@@ -47,49 +55,6 @@ public class UnitAnimController : MonoBehaviour
         AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(layerIndex);
         return stateInfo.normalizedTime;
     }
-
-    /// <summary>
-    /// 목표 상태(targetStateHash)의 진행도를 안전하게 추출하는 메서드
-    /// 트랜지션 중에는 다음 상태(NextState)의 진행도를 읽고, 
-    /// 목표 상태가 아니면 0f를 반환하여 이전 루프 모션 시간(예: BattleIdle 3.5) 오독을 원천 방지
-    /// </summary>
-    public float GetCurrentNormalizedTimeOfState(int targetStateHash, int layerIndex = 0)
-    {
-        if (_animator == null) return 0f;
-
-        // 1. 현재 트랜지션 중인 경우
-        if (_animator.IsInTransition(layerIndex))
-        {
-            AnimatorStateInfo nextInfo = _animator.GetNextAnimatorStateInfo(layerIndex);
-            if (nextInfo.shortNameHash == targetStateHash)
-            {
-                return nextInfo.normalizedTime;
-            }
-            return 0f; // 아직 전환 대상이 아니면 0 반환
-        }
-
-        // 2. 트랜지션이 완료된 현재 상태인 경우
-        AnimatorStateInfo currentInfo = _animator.GetCurrentAnimatorStateInfo(layerIndex);
-        if (currentInfo.shortNameHash == targetStateHash)
-        {
-            return currentInfo.normalizedTime;
-        }
-
-        return 0f;
-    }
-
-    /// <summary>
-    /// 현재 클립이 완전히 1회 종료되었는지 검사 (트랜지션 중이 아닐 때)
-    /// </summary>
-    public bool IsAnimationFinished(int layerIndex = 0)
-    {
-        if (_animator == null) return true;
-
-        AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(layerIndex);
-        return stateInfo.normalizedTime >= 1.0f && !_animator.IsInTransition(layerIndex);
-    }
-
-    public bool IsInTransition(int layerIndex = 0) => _animator != null && _animator.IsInTransition(layerIndex);
 
     public void SetTrigger(AnimParamType paramType)
     {
@@ -131,27 +96,77 @@ public class UnitAnimController : MonoBehaviour
         }
     }
 
-    public int GetStateHash(AnimStateType stateType)
-    {
-        if (_animData != null && _animData.TryGetState(stateType, out int hash, out _))
-        {
-            return hash;
-        }
-        return 0;
-    }
-
-    public void PlayState(AnimStateType stateType)
+    public void PlayState(AnimStateType stateType, bool force = false)
     {
         if (_animData == null || _animator == null) return;
+        if (!force && _currentStateType == stateType) return;
 
         if (_animData.TryGetState(stateType, out int hash, out float duration))
         {
+            _currentStateType = stateType;
+            _currentStateHash = hash;
+
             // 베이스 레이어(0)에 해당 상태 해시가 실제로 존재하는지 검증 후 재생
             if (_animator.HasState(0, hash))
             {
                 _animator.CrossFadeInFixedTime(hash, duration, 0);
             }
         }
+    }
+    /// <summary>
+    /// 외부에서 강제로 상태 캐시를 무효화해야 할 때 호출 (상태 강제 리셋용)
+    /// </summary>
+    public void ResetStateCache()
+    {
+        _currentStateType = (AnimStateType)(-1);
+        _currentStateHash = 0;
+    }
+
+    /// <summary>
+    /// RuntimeAnimatorController에 바인딩된 모든 애니메이션 클립의 길이를 사전 캐싱
+    /// </summary>
+    private void CacheClipDurations()
+    {
+        if (_animator == null || _animator.runtimeAnimatorController == null) return;
+
+        _clipDurationMap.Clear();
+        AnimationClip[] clips = _animator.runtimeAnimatorController.animationClips;
+
+        for (int i = 0; i < clips.Length; i++)
+        {
+            AnimationClip clip = clips[i];
+            if (clip != null)
+            {
+                int clipHash = Animator.StringToHash(clip.name);
+                _clipDurationMap[clipHash] = clip.length;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 지정된 애니메이션 상태(State)의 실제 재생 길이(초 단위)를 반환
+    /// 상태명과 일치하는 클립 길이를 우선 조회하며, 없을 경우 기본 1.0초를 안전 반환합니다.
+    /// </summary>
+    public float GetStateDuration(AnimStateType stateType)
+    {
+        int stateHash = Animator.StringToHash(stateType.ToString());
+
+        if (_clipDurationMap.TryGetValue(stateHash, out float duration))
+        {
+            return duration;
+        }
+
+        // AnimatorStateInfo 기반 런타임 폴백 조회
+        if (_animator != null)
+        {
+            AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+            if (stateInfo.shortNameHash == stateHash && stateInfo.length > 0f)
+            {
+                return stateInfo.length;
+            }
+        }
+
+        return 1.0f; // 기본 안전값
     }
     #endregion
 }

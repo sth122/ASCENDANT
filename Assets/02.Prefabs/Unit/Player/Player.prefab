@@ -87,13 +87,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 272450887761488706}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.183, y: -0.043, z: 0.708}
+  m_LocalRotation: {x: 0.023219012, y: 0.12753174, z: -0.05568762, w: 0.9899977}
+  m_LocalPosition: {x: 0.119, y: -0.028, z: 0.46}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8887357624683360664}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 3.45, y: 14.5, z: -6}
 --- !u!1 &298045869515758727
 GameObject:
   m_ObjectHideFlags: 0
@@ -293,13 +293,19 @@ MonoBehaviour:
     m_Bits: 256
   _targetLayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 640
+  _groundCheckConfig:
+    SphereRadius: 0.35
+    CastOriginOffsetY: 0.4
+    CastDistance: 0.15
+    MaxSlopeAngle: 45
   _lockOnRadius: 6.8
   _riposteRange: 2.2
   _lockOnObstacleLayer:
     serializedVersion: 2
     m_Bits: 257
   _cameraTarget: {fileID: 2071464979527174977}
+  _playerWeaponHitboxTest: {fileID: 0}
 --- !u!114 &1367710400141555128
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -333,7 +339,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimController
   _animator: {fileID: 6154414749331959791}
   _animData: {fileID: 11400000, guid: 7cf5a792f59363b48beb41107a8377a1, type: 2}
-  _weaponHitbox: {fileID: 5235879976498268096}
 --- !u!114 &1029992816194024196
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2890,7 +2895,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4726213732300155967}
-  - component: {fileID: 5235879976498268096}
+  - component: {fileID: 5188569304975187055}
   m_Layer: 6
   m_Name: Hitbox_Holder
   m_TagString: Untagged
@@ -2913,7 +2918,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 254720903385380245}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5235879976498268096
+--- !u!114 &5188569304975187055
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2922,15 +2927,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 8398495261192888608}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 10f71135621d2a24fb27d6bdefd3bcec, type: 3}
+  m_Script: {fileID: 11500000, guid: c014035a7eba6bb418a203c503cd7ecc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponSweepHitbox
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponSweepHitboxTest
+  _boxHalfExtents: {x: 0.04, y: 0.02, z: 0.35}
   _hitPoints:
   - {fileID: 996156633369132583}
-  _hitRadius: 0.18
   _targetLayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 640
 --- !u!1 &8665115859030281466
 GameObject:
   m_ObjectHideFlags: 0

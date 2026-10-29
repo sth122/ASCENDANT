@@ -6,10 +6,12 @@
 public class PlayerMovement : UnitMovement
 {
     private Transform _cameraTransform;
+    private const float SteepSlopeSlideSpeed = 8.0f;
 
-    public PlayerMovement(Rigidbody rb, Transform transform, Transform cameraTransform, LayerMask groundLayer)
-        : base(rb, transform, groundLayer)
+    public PlayerMovement(Rigidbody rb, Transform transform, Transform cameraTransform, LayerMask groundLayer, GroundCheckConfig groundConfig)
+        : base(rb, transform, groundLayer, groundConfig)
     {
+        _cameraTransform = cameraTransform;
         CacheMainCamera();
     }
 
@@ -29,25 +31,19 @@ public class PlayerMovement : UnitMovement
     /// </summary>
     public Vector3 CalculateCameraRelativeDirection(Vector2 input)
     {
-        if (input.sqrMagnitude < 0.001f || _cameraTransform == null)
-            return Vector3.zero;
+        if (input.sqrMagnitude < 0.001f) return Vector3.zero;
 
-        // 카메라 참조가 소실된 경우 재탐색
-        if (_cameraTransform == null)
-        {
-            CacheMainCamera();
-            if (_cameraTransform == null) return Vector3.zero;
-        }
+        if (_cameraTransform == null) CacheMainCamera();
 
-        Vector3 forward = _cameraTransform.forward;
-        Vector3 right = _cameraTransform.right;
+        Vector3 camForward = _cameraTransform != null ? _cameraTransform.forward : Vector3.forward;
+        Vector3 camRight = _cameraTransform != null ? _cameraTransform.right : Vector3.right;
 
-        forward.y = 0f;
-        right.y = 0f;
-        forward.Normalize();
-        right.Normalize();
+        camForward.y = 0f;
+        camRight.y = 0f;
+        camForward.Normalize();
+        camRight.Normalize();
 
-        return (forward * input.y + right * input.x).normalized;
+        return (camForward * input.y + camRight * input.x).normalized;
     }
 
     /// <summary>
@@ -55,35 +51,55 @@ public class PlayerMovement : UnitMovement
     /// </summary>
     public void Move(Vector3 direction, float speed)
     {
-        if (direction.sqrMagnitude < 0.001f)
+        if (_rb == null) return;
+
+        // 1. 최대 경사각 초과 급경사: 아래로 강제 미끄러짐
+        if (IsOnSteepSlope)
         {
-            StopMovement();
+            Vector3 slideDir = GetSteepSlopeSlideDirection();
+            _rb.linearVelocity = slideDir * SteepSlopeSlideSpeed;
             return;
         }
 
-        // 1. 경사면에 맞춘 3D 이동 벡터 생성
-        Vector3 slopeDirection = AdjustDirectionToSlope(direction);
-        Vector3 targetVelocity = slopeDirection * speed;
-
-        // 2. 경사면 이동 시 Y 축 물리 처리
-        if (IsGrounded && CurrentSlopeAngle <= MaxSlopeAngle)
+        // 2. 이동 입력이 없는 정지 상태
+        if (direction.sqrMagnitude < 0.001f)
         {
-            // 상향 경사 등반 시에는 경사면 y속도를 온전히 보존하고, 평지/내리막에서만 지면 밀착 스냅 적용
-            if (slopeDirection.y > 0.01f)
+            if (IsGrounded)
             {
-                _rb.linearVelocity = targetVelocity;
+                // 경사면 정지 시 중력에 의해 슬금슬금 미끄러지는 현상 방지
+                _rb.linearVelocity = Vector3.zero;
             }
             else
             {
-                float downSnap = Mathf.Clamp(-0.5f - (CurrentSlopeAngle * 0.05f), -2.5f, -0.5f);
-                targetVelocity.y = downSnap;
+                // 공중에서는 수직 낙하 속도만 유지
+                _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
+            }
+            return;
+        }
+
+        // 3. 정상 이동
+        if (IsGrounded)
+        {
+            if (IsOnSlope)
+            {
+                // 경사면 표면 방향으로 투영하여 오르막 감속 및 내리막 붕 뜸 방지
+                Vector3 slopeDirection = ProjectDirectionOnSlope(direction);
+                _rb.linearVelocity = slopeDirection * speed;
+            }
+            else
+            {
+                // 평지 이동
+                Vector3 targetVelocity = direction * speed;
+                targetVelocity.y = _rb.linearVelocity.y;
                 _rb.linearVelocity = targetVelocity;
             }
         }
         else
         {
-            // 공중 상태이거나 오를 수 없는 급경사일 때 → 기존 수직 속도(중력) 보존
-            _rb.linearVelocity = new Vector3(targetVelocity.x, _rb.linearVelocity.y, targetVelocity.z);
+            // 공중 제어 (Air Control)
+            Vector3 targetVelocity = direction * speed;
+            targetVelocity.y = _rb.linearVelocity.y;
+            _rb.linearVelocity = targetVelocity;
         }
     }
     /// <summary>
@@ -91,6 +107,11 @@ public class PlayerMovement : UnitMovement
     /// </summary>
     public void ApplyJump(float jumpForce)
     {
+        if (_rb == null) return;
+
+        IsGrounded = false;
+        IsOnSlope = false;
+
         _rb.linearVelocity = new Vector3(_rb.linearVelocity.x, 0f, _rb.linearVelocity.z);
         _rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
     }
@@ -100,21 +121,16 @@ public class PlayerMovement : UnitMovement
     /// </summary>
     public void ApplyRoll(Vector3 rollDirection, float maxSpeed, float normalizedTime)
     {
-        float speedMultiplier = Mathf.Clamp01(1.0f - normalizedTime);
-        float currentSpeed = maxSpeed * speedMultiplier;
+        if (_rb == null) return;
 
-        Vector3 slopeRollDir = AdjustDirectionToSlope(rollDirection);
-        if (IsGrounded && CurrentSlopeAngle <= MaxSlopeAngle)
+        float speedMultiplier = Mathf.Sin(Mathf.Clamp01(normalizedTime) * Mathf.PI);
+        Vector3 finalRollDir = rollDirection;
+
+        if (IsGrounded && IsOnSlope)
         {
-            // 지면 위에서 구를 때는 경사면을 따라 흐르도록 완전한 투영 속도 반영
-            _rb.linearVelocity = slopeRollDir * currentSpeed;
+            finalRollDir = ProjectDirectionOnSlope(rollDirection);
         }
-        else
-        {
-            // 공중에 떴을 때만 기존 중력 보존
-            Vector3 targetVel = slopeRollDir * currentSpeed;
-            targetVel.y = _rb.linearVelocity.y;
-            _rb.linearVelocity = targetVel;
-        }
+
+        _rb.linearVelocity = finalRollDir * (maxSpeed * speedMultiplier);
     }
 }

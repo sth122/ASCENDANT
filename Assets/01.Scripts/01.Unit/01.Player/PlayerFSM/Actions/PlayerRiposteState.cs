@@ -64,7 +64,7 @@ public class PlayerRiposteState : PlayerActionState
             cancellationToken: token).SuppressCancellationThrow();
         if (canceledHalf) return;
 
-        if (_targetEnemy != null && _targetEnemy.TryGetComponent(out IDamageable damageable))
+        if (_targetEnemy != null && _targetEnemy.TryGetComponent(out IDamageableTest damageable))
         {
             owner.CombatModule.ExecuteRiposteDamage(damageable, _targetEnemy.position);
         }

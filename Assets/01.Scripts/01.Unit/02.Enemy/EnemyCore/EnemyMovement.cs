@@ -9,7 +9,8 @@ public class EnemyMovement : UnitMovement
     public NavMeshAgent Agent => _navAgent;
     private const float RotationSpeed = 4.5f;
 
-    public EnemyMovement(UnityEngine.Rigidbody rb, UnityEngine.Transform transform, NavMeshAgent agent, UnityEngine.LayerMask groundLayer) : base(rb, transform, groundLayer)
+    public EnemyMovement(UnityEngine.Rigidbody rb, UnityEngine.Transform transform, NavMeshAgent agent, 
+        UnityEngine.LayerMask groundLayer, GroundCheckConfig groundConfig) : base(rb, transform, groundLayer, groundConfig)
     {
         this._navAgent = agent;
         if (_navAgent != null)
@@ -18,6 +19,22 @@ public class EnemyMovement : UnitMovement
             _navAgent.updatePosition = true;
             _navAgent.stoppingDistance = 1.6f;
         }
+    }
+
+    public override bool CheckGrounded()
+    {
+        base.CheckGrounded();
+
+        // 물리 판정이 실패했더라도 NavMeshAgent가 NavMesh 위에 정상 안착되어 있다면 지면 접지 인정
+        if (!IsGrounded && _navAgent != null && _navAgent.isOnNavMesh)
+        {
+            IsGrounded = true;
+            IsOnSlope = false;
+            IsOnSteepSlope = false;
+            GroundNormal = UnityEngine.Vector3.up;
+        }
+
+        return IsGrounded;
     }
 
     /// <summary>
@@ -98,6 +115,25 @@ public class EnemyMovement : UnitMovement
         if (direction.sqrMagnitude > 0.001f)
         {
             RotateTowards(direction.normalized, rotationSpeed, deltaTime);
+        }
+    }
+
+    /// <summary>
+    /// 베이스 지면 기즈모 + NavMeshAgent의 경로(Path Corner) 렌더링
+    /// </summary>
+    public override void DrawGizmos()
+    {
+        base.DrawGizmos();
+
+        if (_navAgent != null && _navAgent.hasPath)
+        {
+            UnityEngine.Gizmos.color = UnityEngine.Color.magenta;
+            UnityEngine.Vector3[] corners = _navAgent.path.corners;
+            for (int i = 0; i < corners.Length - 1; i++)
+            {
+                UnityEngine.Gizmos.DrawLine(corners[i], corners[i + 1]);
+                UnityEngine.Gizmos.DrawSphere(corners[i], 0.15f);
+            }
         }
     }
 }

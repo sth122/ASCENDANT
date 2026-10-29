@@ -110,13 +110,17 @@ public enum PoolType
 
     // 투사체 및 인게임 드랍 (2000 ~)
     SoulOrb = 2000,
+    MeteorShower = 2001,
 
     // 풀링 UI (3000 ~)
     DamageText = 3000,
     EnemyFloatingHpBar = 3010,
 
     // 소환 몬스터 (4000 ~)
-    NightmareCreature = 4000
+    NightmareCreature = 4000,
+
+    // 보스 몬스터 (6000 ~)
+    BossDragon = 6000,
 }
 #endregion
 
@@ -160,6 +164,8 @@ public enum AnimStateType
     BattleIdle,
     Walk,
     Run,
+    Patrol,
+    PatrolIdle,
 
     // 공격 패턴
     Attack1,
@@ -169,8 +175,6 @@ public enum AnimStateType
     PowerAttack,
 
     // 크리처 전용 특수 상태
-    Crawl,
-    CrawlIdle,
     CrawlToState,
     StateToCrawl,
     Roar,
@@ -180,8 +184,23 @@ public enum AnimStateType
     Hit2 = 101,
 
     // 사망
-    Death1 = 200,
-    Death2 = 201
+    Death = 200,
+    Death2 = 201,
+
+    // 드래곤 보스 전용 세부 애니메이션 클립 매핑 (1000 ~)
+    Backstep                = 1000,     // 백스탭
+    Dragon_LinearBreath     = 1001,     // 전방 직선 관통 브레스
+    Dragon_BackstepBreath   = 1002,     // 후퇴 후 우 -> 좌 브레스
+    BackstepCharge          = 1003,     // 후퇴 후 돌진
+    TailSweep               = 1004,     // 360도 회전 꼬리 강타
+
+    Dragon_HoverLoop        = 1005,     // 공중 체공 호버링 루프
+    Dragon_AerialBreath_dz  = 1006,     // 공중 체공 중 하방 브레스
+    Dragon_Takeoff_InPlace  = 1007,     // 제자리 도약
+    Dragon_Landing_InPlace  = 1008,     // 제자리 착지
+    Dragon_Takeoff_dz       = 1009,     // 백스탭 도약
+    Dragon_Landing_dz       = 1010,     // 백스탭 지점 착지
+    Berserk                 = 1011,     // 광폭화
 }
 #endregion
 
@@ -194,33 +213,33 @@ public enum UIId
     None = 0,
 
     // 1000 ~ 1999 : Background & Scene (배경 및 전체화면 씬 UI)
-    TitleBackgroundUI = 1001,     // 타이틀 아트/배경 연출
-    GameOverBackgroundUI = 1002,     // 게임오버 배경 연출
+    TitleBackgroundUI       = 1001,     // 타이틀 아트/배경 연출
+    GameOverBackgroundUI    = 1002,     // 게임오버 배경 연출
 
 
     // 2000 ~ 2999 : HUD (인게임 상시 오버레이 및 플로팅 게이지)
-    PlayerHUD = 2001,     // 플레이어 HP/스태미나/Poise 3-Bar HUD
-    EnemyFloatingHUD = 2002,     // 일반 몬스터 머리 위 플로팅 게이지
-    BossHUD = 2003,     // 화면 하단 보스 전용 대형 체력바
+    PlayerHUD               = 2001,     // 플레이어 HP/스태미나/Poise 3-Bar HUD
+    EnemyFloatingHUD        = 2002,     // 일반 몬스터 머리 위 플로팅 게이지
+    BossHUD                 = 2003,     // 화면 하단 보스 전용 대형 체력바
 
 
     // 3000 ~ 3999 : Window (ESC 스택으로 제어되며 입력을 점유하는 독립 창)
-    TitleMenuUI = 3001,     // 타이틀 메뉴 버튼 창 (새 게임, 이어하기, 설정)
-    SystemMenuUI = 3002,     // 인게임 ESC 일시정지 시스템 창
-    InventoryUI = 3003,     // 인벤토리 창 (Tab/I 토글)
-    EquipmentUI = 3004,     // 장비 장착/변경 창
-    StatusUI = 3005,     // 캐릭터 상세 스탯 정보 창
-    GameOverUI = 3006,
+    TitleMenuUI             = 3001,     // 타이틀 메뉴 버튼 창 (새 게임, 이어하기, 설정)
+    SystemMenuUI            = 3002,     // 인게임 ESC 일시정지 시스템 창
+    InventoryUI             = 3003,     // 인벤토리 창 (Tab/I 토글)
+    EquipmentUI             = 3004,     // 장비 장착/변경 창
+    StatusUI                = 3005,     // 캐릭터 상세 스탯 정보 창
+    GameOverUI              = 3006,
 
     // 4000 ~ 4999 : Popup (비동기 결과 대기 및 확인/경고 모달 다이얼로그)
-    ConfirmPopup = 4001,     // 확인/취소 모달 팝업
-    NoticePopup = 4002,     // 단일 확인 알림 모달 팝업
-    KeyBindingPopup = 4003,     // 키 매핑 변경 팝업
+    ConfirmPopup            = 4001,     // 확인/취소 모달 팝업
+    NoticePopup             = 4002,     // 단일 확인 알림 모달 팝업
+    KeyBindingPopup         = 4003,     // 키 매핑 변경 팝업
 
 
     // 5000 ~ 5999 : System (최상위 화면 제어, 화면 전환 및 시스템 인디케이터)
-    FadeCurtainUI = 5001,     // 씬 전환 암전용 페이드 디머
-    LoadingScreenUI = 5002,     // 비동기 씬 로딩 스크린 프로그레스바
+    FadeCurtainUI           = 5001,     // 씬 전환 암전용 페이드 디머
+    LoadingScreenUI         = 5002,     // 비동기 씬 로딩 스크린 프로그레스바
 }
 
 /// <summary>
@@ -228,11 +247,41 @@ public enum UIId
 /// </summary>
 public enum UILayer 
 {
-    Background = 0,     // 배경/타이틀
-    World,              // 월드 스페이스 UI
-    HUD = 100,          // HUD
-    Window = 200,       // 인벤토리, 장비창, 시스템 메뉴 (ESC 스택 관리)
-    Popup = 300,        // 팝업
-    System = 400,       // 로딩 뷰, 페이드 딤
+    Background      = 0,     // 배경/타이틀
+    World,                   // 월드 스페이스 UI
+    HUD             = 100,   // HUD
+    Window          = 200,   // 인벤토리, 장비창, 시스템 메뉴 (ESC 스택 관리)
+    Popup           = 300,   // 팝업
+    System          = 400,   // 로딩 뷰, 페이드 딤
+}
+#endregion
+
+#region Unit Attack + Skill
+public enum HitboxSlot
+{
+    None = 0,
+    MainWeapon,
+    Mouth,
+    Tail,
+    WholeBody,
+}
+
+public enum AttackImpactType
+{
+    Light,     // 약공격: 일반 피격 경직
+    Heavy,     // 강공격: 넉백 + 2초 다운 + 1초 기상 무적
+    DoT        // 장판 틱딜
+}
+
+public enum SkillId
+{
+    None = 0,
+
+    // Dragon Boss Skills
+    Dragon_BackstepBreath = 3001,
+    Dragon_BackstepCharge = 3002,
+    Dragon_TailSweep = 3003,
+    Dragon_LinearBreath = 3004,
+    Dragon_AerialCombo = 3005
 }
 #endregion

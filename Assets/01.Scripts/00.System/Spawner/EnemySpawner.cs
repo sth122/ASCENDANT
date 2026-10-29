@@ -18,7 +18,7 @@ public class EnemySpawner : MonoBehaviour
     [Header("Spawn Settings")]
     [SerializeField] private bool _spawnOnStart = true;
 
-    private EnemyController _spawnedEnemy;
+    private EnemyBTController _spawnedEnemy;
     private bool _isEnemyDead = false;
 
     private void Start()
@@ -38,7 +38,7 @@ public class EnemySpawner : MonoBehaviour
         if (_spawnedEnemy != null && !_isEnemyDead) return;
 
         // 1. 오브젝트 풀에서 컴포넌트 타입으로 인스턴스 획득 (어떤 Enemy 파생 클래스든 수용)
-        _spawnedEnemy = ObjectPoolManager.Instance.Spawn<EnemyController>(
+        _spawnedEnemy = ObjectPoolManager.Instance.Spawn<EnemyBTController>(
             _enemyPoolType, transform.position, transform.rotation
         );
 
@@ -61,7 +61,7 @@ public class EnemySpawner : MonoBehaviour
         }
 
         // 3. 다형성 초기화 메서드 호출 (위치 및 스탯 확정 바인딩)
-        _spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
+        //_spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
 
         // 4. 사망 이벤트 리스너 바인딩 (화롯불 리셋 추적용)
         _spawnedEnemy.StatusController.OnDieEvent -= HandleEnemyDied;
@@ -96,7 +96,7 @@ public class EnemySpawner : MonoBehaviour
                     runtimeStatus = (EnemyInfo)baseStatus.Clone();
                 }
             }
-            _spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
+            //_spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
         }
         // 이미 사망한 적은 풀에서 새로 스폰하여 제자리에 배치
         else if (_isEnemyDead)

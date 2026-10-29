@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 using Util = DebugLogger<PlayerController>;
 
 /// <summary>
@@ -8,138 +9,120 @@ using Util = DebugLogger<PlayerController>;
 /// </summary>
 [RequireComponent(typeof(Rigidbody), typeof(Collider), typeof(PlayerStatusController))]
 [RequireComponent(typeof(PlayerAnimController))]
-public class PlayerController : UnitController<PlayerController>, IDamageable
+public class PlayerController : UnitController, IDamageableTest
 {
     [Header("Lock-On Setting")]
     [SerializeField] private float _lockOnRadius = 15f;
-    [SerializeField] private float _riposteRange = 2.2f; // 앞잡 유효 사거리
+    [SerializeField] private float _riposteRange = 2.2f;
     [SerializeField] private LayerMask _lockOnObstacleLayer;
 
     [Header("Camera Anchor")]
     [SerializeField] private Transform _cameraTarget;
 
+    [Header("Combat Hitbox Component")]
+    [SerializeField] private WeaponSweepHitbox _playerWeaponHitboxTest;
+
     private readonly Collider[] _lockOnHitBuffer = new Collider[16];
 
+    #region 도메인 컴포넌트 및 모듈
+    protected PlayerMovement _movement;
+    protected PlayerInputReader _inputReader;
+    protected PlayerStatusController _statusController;
+    protected PlayerAnimController _animController;
+    protected PlayerCombatModule _combatModule;
+    protected PlayerStateMachine _stateMachine;
+    #endregion
+
     #region Properties
-    public PlayerMovement Movement { get; private set; }
-    public PlayerInputReader InputReader { get; private set; }
-    public PlayerStatusController StatusController => _unitStatusController as PlayerStatusController;
-    public PlayerAnimController AnimationController { get; private set; }
-    public PlayerCombatModule CombatModule { get; private set; }
+    public override UnitStatusController BaseStatusController => _statusController;
+    public override UnitAnimController BaseAnimController => _animController;
+
+    public PlayerMovement Movement => _movement;
+    public PlayerInputReader InputReader => _inputReader;
+    public PlayerStatusController StatusController => _statusController;
+    public PlayerAnimController AnimationController => _animController;
+    public PlayerCombatModule CombatModule => _combatModule;
+    public PlayerStateMachine StateMachineInstance => _stateMachine;
 
     public Transform CameraTarget => _cameraTarget != null ? _cameraTarget : transform;
-
-    // 락온 타켓 추적용 변수 ( 추후 타켓팅 시스템과 연동 예정 )
     public Transform CurrentLockOnTarget { get; private set; }
     public Vector3 CurrentMoveDirection { get; private set; }
     #endregion
 
-    protected override void Awake()
+    protected override void SetupComponents()
     {
-        base.Awake();
+        _unitId = UnitId.Player;
 
-        AnimationController = GetComponent<PlayerAnimController>();
-        InputReader = new PlayerInputReader();
+        _statusController = GetComponent<PlayerStatusController>();
+        _animController = GetComponent<PlayerAnimController>();
+
+        _inputReader = new PlayerInputReader();
         SubscribeInputEvents();
 
-        // 메인 카메라는 CinemachineBrain에 의해 항상 활성화된 가상 카메라의 위치/각도를 반영함
-        Movement = new PlayerMovement(_rigidbody, transform, CameraTarget, _groundLayer);
+        if (_cameraTarget == null) _cameraTarget = transform;
+        _movement = new PlayerMovement(_rigidbody, transform, CameraTarget, _groundLayer, _groundCheckConfig);
 
-        CombatModule = new PlayerCombatModule(this, AnimationController.WeaponHitbox);
+        if (_playerWeaponHitboxTest == null)
+        {
+            _playerWeaponHitboxTest = GetComponentInChildren<WeaponSweepHitbox>();
+        }
+        _combatModule = new PlayerCombatModule(this, _playerWeaponHitboxTest);
+
         EventBusSystem.Subscribe<GameStateChangedEvent>(HandleGameStateChanged);
     }
 
     /// <summary>
-    /// DataManager로부터 유닛 스탯 데이터를 조회하고 런타임 복제본을 생성하여 주입
+    /// DataManager로부터 런타임 스탯을 주입받아 초기화 수행
     /// </summary>
     public void InitializePlayerData(PlayerInfo runtimeStatus, float initialHp = -1f)
     {
-        if (runtimeStatus != null && StatusController != null)
+        if (runtimeStatus != null && _statusController != null)
         {
-            StatusController.Init(runtimeStatus);
+            _statusController.Init(runtimeStatus);
 
             if (initialHp >= 0f)
             {
-                StatusController.SetHpDirectly(initialHp);
+                _statusController.SetHpDirectly(initialHp);
             }
         }
 
-        _stateMachine = new PlayerStateMachine();
         Init();
-
-        // 씬 시작 시 메인 카메라 트랜스폼 캐시 갱신
-        Movement.CacheMainCamera();
+        _movement.CacheMainCamera();
     }
 
     public override void Init()
     {
         base.Init();
-        if (StatusController != null)
+        InitializeStateMachine();
+
+        if (_statusController != null)
         {
-            StatusController.OnDieEvent -= HandleUnitDie;
-            StatusController.OnPoiseBreakEvent -= HandlePoiseBreak;
-            StatusController.OnDieEvent += HandleUnitDie;
-            StatusController.OnPoiseBreakEvent += HandlePoiseBreak;
+            _statusController.OnDieEvent -= HandleUnitDie;
+            _statusController.OnDieEvent += HandleUnitDie;
         }
     }
 
-    private void OnDestroy()
+    protected virtual void InitializeStateMachine()
     {
-        UnsubscribeInputEvents();
-        InputReader?.Dispose();
-
-        if (StatusController != null)
-        {
-
-            StatusController.OnDieEvent -= HandleUnitDie;
-            StatusController.OnPoiseBreakEvent -= HandlePoiseBreak;
-        }
-        EventBusSystem.Unsubscribe<GameStateChangedEvent>(HandleGameStateChanged);
+        _stateMachine = new PlayerStateMachine();
+        _stateMachine.SetUpPlayerState(this);
+        _stateMachine.Initialize(UnitState.Idle);
     }
 
-    private void SubscribeInputEvents()
+    protected override void TickController()
     {
-        if (InputReader != null)
-        {
-            InputReader.OnLockOnEvent -= HandleLockOnInput;
-            InputReader.OnLockOnEvent += HandleLockOnInput;
-        }
-    }
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused) return;
 
-    private void UnsubscribeInputEvents()
-    {
-        if (InputReader != null)
-        {
-            InputReader.OnLockOnEvent -= HandleLockOnInput;
-        }
-    }
+        // 지면 감지
+        _movement.CheckGrounded();
 
-    protected override void InitializeStateMachine()
-    {
-        if (_stateMachine != null && _stateMachine is PlayerStateMachine playerSM)
-        {
-            playerSM.SetUpPlayerState(this);
-            playerSM.Initialize(UnitState.Idle);
-        }
-    }
+        // 카메라 기준 상대 이동 벡터 계산
+        CurrentMoveDirection = _movement.CalculateCameraRelativeDirection(_inputReader.MoveInput);
 
-    protected override void Update()
-    {
-        // 방어 코드. 일시정지 중에는 물리 이동/카메라/회전 연산을 일절 수행하지 않음
-        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
-        {
-            return;
-        }
-
-        Movement.CheckGrounded();
-
-        // 1. 일반 이동 벡터 연산 ( 카메라 각도 기준 )
-        CurrentMoveDirection = Movement.CalculateCameraRelativeDirection(InputReader.MoveInput);
-
-        // 2. Lock-On 타켓 유실 자동 해제 검사
+        // 락온 타깃 유효성 검사
         ValidateCurrentLockOnTarget();
 
-        // 3. Lock-On 상태 회전 보정 (단, ParryState 상태가 아닐 때만 적용)
+        // 락온 상태 회전 보정 (가드/패링 중이 아닐 때)
         if (!(_stateMachine.CurrentState is PlayerParryState))
         {
             if (CameraManager.Instance != null && CameraManager.Instance.IsLockOnMode && CurrentLockOnTarget != null)
@@ -148,81 +131,114 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
                 lookDirection.y = 0f;
                 if (lookDirection.sqrMagnitude > 0.001f)
                 {
-                    float rotSpeed = StatusController.PlayerStatusSource != null ? StatusController.PlayerStatusSource.RotationSpeed : 10.0f;
-                    Movement.RotateTowards(lookDirection.normalized, rotSpeed, Time.deltaTime);
+                    float rotSpeed = (_statusController != null && _statusController.PlayerInfoSource != null)
+                        ? _statusController.PlayerInfoSource.RotationSpeed : 10.0f;
+                    _movement.RotateTowards(lookDirection.normalized, rotSpeed, Time.deltaTime);
                 }
             }
         }
 
-        base.Update();
+        // FSM Update 루프 가동
+        _stateMachine?.Update();
     }
 
-    #region PlayerMovement Facade API
-    public void MoveAPI(Vector3 direction, float speed) => Movement.Move(direction, speed);
-    public void StopMovementAPI() => Movement.StopMovement();
-    public void ApplyRollAPI(Vector3 rollDirection, float speed, float normalizedTime) => Movement.ApplyRoll(rollDirection, speed, normalizedTime);
-    public void ApplyJumpAPI(float jumpForce) => Movement.ApplyJump(jumpForce);
-    public void RotateTowardsAPI(Vector3 targetDirection, float rotationSpeed, float deltaTime)
-        => Movement.RotateTowards(targetDirection, rotationSpeed, deltaTime);
+    protected override void FixedTickController()
+    {
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused) return;
+
+        // FSM 물리 고정 프레임 틱 가동
+        _stateMachine?.FixedUpdate();
+    }
+
+    #region Movement Facade API
+    public void MoveAPI(Vector3 direction, float speed) => _movement.Move(direction, speed);
+    public void StopMovementAPI() => _movement.StopMovement();
+    public void ApplyRollAPI(Vector3 rollDirection, float speed, float normalizedTime) => _movement.ApplyRoll(rollDirection, speed, normalizedTime);
+    public void ApplyJumpAPI(float jumpForce) => _movement.ApplyJump(jumpForce);
+    public void RotateTowardsAPI(Vector3 targetDirection, float rotationSpeed, float deltaTime) => _movement.RotateTowards(targetDirection, rotationSpeed, deltaTime);
     #endregion
 
-    #region IDamageable 피격/가드 수신부
+    #region IDamageableTest 피격 수신부
     public void ApplyDamage(in DamageContext context)
     {
-        // 1. 사망 판정 데미지 무시
+        // 1. 사망 상태 판정
         if (_stateMachine.CurrentState is PlayerDieState) return;
 
-        // 2. 무적 판정 중(구르기 등)에는 데미지 무시
+        // 2. 구르기 무적 판정
         if (_stateMachine.CurrentState is PlayerRollState rollState && rollState.IsInvincible) return;
 
-        // 3. 처형 상태 중에는 데미지 무시
+        // 3. 기상 무적 판정
+        if (_stateMachine.CurrentState is PlayerKnockdownState knockdownState && knockdownState.IsInvincibleDuringWakeUp) return;
+
+        // 4. 처형 액션 중 무적
         if (_stateMachine.CurrentState is PlayerRiposteState) return;
 
-        // 4. 가드/패리 상태인 경우 분기 연산
+        // 5. 가드 및 패링 판정 분기
         if (_stateMachine.CurrentState is PlayerParryState parryState)
         {
-            bool isBlocked = parryState.TryProcessBlockOrParry(context, out bool parrySuccess);
+            DamageContextTest2 legacyContext = new DamageContextTest2(
+                context.Attacker, context.Damage, context.PoiseDamage,
+                context.HitPoint, context.HitNormal, context.IsParryable
+            );
+
+            bool isBlocked = parryState.TryProcessBlockOrParry(in legacyContext, out bool parrySuccess);
             if (isBlocked) return;
         }
 
-        // 5. 일반 피격 처리
-        StatusController.TakeDamage(context.Damage, context.PoiseDamage);
-        if(StatusController.CurrentHp <= 0f) return;
-
-        // 6. 패링 불가 공격 적중 시 GetHit
-        if(!context.IsParryable)
+        // 6. 장판 도트 대미지 (DoT): 모션 경직 없이 체력만 감산
+        if (context.ImpactType == AttackImpactType.DoT)
         {
-            _stateMachine.ChangeState((int)UnitState.GetHit, true);
+            _statusController.TakeDamage(context.Damage, 0f);
             return;
         }
 
-        // 7. 공격 중일 때의 포이즈 슈퍼아머 판정
+        // 7. 기본 체력 및 포이즈 차감
+        _statusController.TakeDamage(context.Damage, context.PoiseDamage);
+        if (_statusController.CurrentHp <= 0f) return;
+
+        // 8. 보스 강공격 (Heavy Impact): 물리 넉백 + 2초 다운 상태 전이
+        if (context.ImpactType == AttackImpactType.Heavy)
+        {
+            ApplyKnockbackImpulse(context.HitNormal, context.KnockbackForce);
+            _stateMachine.ChangeState(UnitState.Stun, true);
+            return;
+        }
+
+        // 9. 패링 불가 공격 적중 시 경직
+        if (!context.IsParryable)
+        {
+            _stateMachine.ChangeState(UnitState.GetHit, true);
+            return;
+        }
+
+        // 10. 공격 중 슈퍼아머 버티기 판정
         if (_stateMachine.CurrentState is PlayerAttackState)
         {
-            // 포이즈가 아직 남아있고 고갈되지 않았다면 모션 유지 (슈퍼아머 버팀)
-            if (!StatusController.IsPoiseBroken && !StatusController.IsPoiseDepleted) return;
-
-            // 포이즈가 0으로 깨지면 공격 캔슬 후 피격 경직 발생
-            _stateMachine.ChangeState((int)UnitState.GetHit, true);
+            if (!_statusController.IsPoiseBroken && !_statusController.IsPoiseDepleted) return;
+            _stateMachine.ChangeState(UnitState.GetHit, true);
             return;
         }
 
-        // 8. 비공격(대기/이동/달리기) 상태에서의 피격 판정
-        // 포이즈가 한 번 깨진 후 100% 완전 회복되기 전까지는 피격 시 무조건 GetHit
-        if (StatusController.IsPoiseDepleted || StatusController.IsPoiseBroken)
+        // 11. 비공격 상태 일반 피격 경직
+        _stateMachine.ChangeState(UnitState.GetHit, true);
+    }
+
+    private void ApplyKnockbackImpulse(Vector3 hitNormal, float force)
+    {
+        if (_rigidbody != null && force > 0.01f)
         {
-            _stateMachine.ChangeState((int)UnitState.GetHit, true);
+            Vector3 knockbackDir = -hitNormal;
+            knockbackDir.y = 0.2f;
+            _rigidbody.linearVelocity = Vector3.zero;
+            _rigidbody.AddForce(knockbackDir.normalized * force, ForceMode.Impulse);
         }
     }
     #endregion
 
-    /// <summary>
-    /// 공격 키 입력 시 전방의 그로기(Poise Broken) 적을 검사하여 앞잡(Riposte) 또는 일반 공격 분기
-    /// </summary>
+    #region 앞잡(Riposte) 판정
     public bool TryTriggerRiposte()
     {
-        // 공중 상태에서는 발동 차단
-        if(!Movement.IsGrounded) return false;
+        if (!_movement.IsGrounded) return false;
 
         int hitCount = Physics.OverlapSphereNonAlloc(transform.position, _riposteRange, _lockOnHitBuffer, _targetLayer);
         if (hitCount == 0) return false;
@@ -232,37 +248,24 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
             Collider col = _lockOnHitBuffer[i];
             if (col == null || col.gameObject == gameObject) continue;
 
-            // 적 본체 또는 부모 객체에서 UnitStatController 탐색
-            EnemyController enemy = col.GetComponentInParent<EnemyController>();
-            if (enemy != null && enemy.CanBeRiposted && enemy.StatusController.IsPoiseBroken && !enemy.StatusController.IsDead)
+            // BT 에너미 또는 보스 컨트롤러 탐색
+            EnemyBTController enemy = col.GetComponentInParent<EnemyBTController>();
+            if (enemy != null && enemy.StatusController != null && enemy.StatusController.IsPoiseBroken && !enemy.IsDead)
             {
                 Vector3 dirToEnemy = enemy.transform.position - transform.position;
                 dirToEnemy.y = 0f;
 
-                if (dirToEnemy.sqrMagnitude > 0.001f)
+                if (dirToEnemy.sqrMagnitude > 0.001f && Vector3.Dot(transform.forward, dirToEnemy.normalized) > 0.5f)
                 {
-                    dirToEnemy.Normalize();
-                    float dotFacing = Vector3.Dot(transform.forward, dirToEnemy);
+                    _stateMachine.ChangeState(UnitState.Riposte);
 
-                    // 플레이어가 적을 바라보고 있는 각도 검사 (약 60도 이내)
-                    if (dotFacing > 0.5f)
+                    if (_stateMachine.CurrentState is PlayerRiposteState riposteState)
                     {
-                        if (_stateMachine is PlayerStateMachine playerSM)
-                        {
-                            playerSM.ChangeState(UnitState.Riposte);
-
-                            if (playerSM.CurrentState is PlayerRiposteState riposteState)
-                            {
-                                riposteState.SetRiposteTarget(enemy.transform, enemy.StatusController);
-                            }
-
-                            // 피격 적에게도 앞잡 피격 상태 강제 전이 호출
-                            enemy.OnRiposted(transform);
-
-                            System.Array.Clear(_lockOnHitBuffer, 0, hitCount);
-                            return true;
-                        }
+                        riposteState.SetRiposteTarget(enemy.transform, enemy.StatusController);
                     }
+
+                    System.Array.Clear(_lockOnHitBuffer, 0, hitCount);
+                    return true;
                 }
             }
         }
@@ -270,20 +273,34 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
         System.Array.Clear(_lockOnHitBuffer, 0, hitCount);
         return false;
     }
+    #endregion
 
-    /// <summary>
-    /// Z 입력 시 실행되는 핸들러
-    /// </summary>
+    #region 락온 타겟팅
+    private void SubscribeInputEvents()
+    {
+        if (_inputReader != null)
+        {
+            _inputReader.OnLockOnEvent -= HandleLockOnInput;
+            _inputReader.OnLockOnEvent += HandleLockOnInput;
+        }
+    }
+
+    private void UnsubscribeInputEvents()
+    {
+        if (_inputReader != null)
+        {
+            _inputReader.OnLockOnEvent -= HandleLockOnInput;
+        }
+    }
+
     private void HandleLockOnInput()
     {
-        // 1. 이미 락온 중이라면 락온 해제
         if (CurrentLockOnTarget != null)
         {
             ToggleLockOn(null);
             return;
         }
 
-        // 2. 락온 대상이 없다면 주변에서 가장 가까운 적 탐색
         Transform nearestEnemy = FindNearestEnemy();
         if (nearestEnemy != null)
         {
@@ -291,17 +308,13 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
         }
     }
 
-    /// <summary>
-    /// 주변 반경 내 적 콜라이더 검출 후 최단거리 적 반환
-    /// </summary>
     private Transform FindNearestEnemy()
     {
         int hitCount = Physics.OverlapSphereNonAlloc(transform.position, _lockOnRadius, _lockOnHitBuffer, _targetLayer);
         if (hitCount == 0) return null;
 
         Transform closest = null;
-        float maxScore = float.MinValue; // 버그 수정: float.MaxValue -> float.MinValue
-
+        float maxScore = float.MinValue;
         Transform camTransform = Camera.main != null ? Camera.main.transform : transform;
 
         for (int i = 0; i < hitCount; i++)
@@ -315,19 +328,14 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
             Vector3 toTarget = target.position - transform.position;
             float distance = toTarget.magnitude;
 
-            // 벽 차폐 검사
             if (Physics.Linecast(transform.position + Vector3.up * 1.5f, target.position + Vector3.up * 1.0f, _lockOnObstacleLayer))
                 continue;
 
-            // 카메라 정면 벡터와의 내적을 통한 시야각 가중치 연산
             Vector3 camToTargetDir = (target.position - camTransform.position).normalized;
             float dot = Vector3.Dot(camTransform.forward, camToTargetDir);
-
-            // 카메라 등 뒤에 있는 적은 배제
             if (dot < 0.1f) continue;
 
             float score = (dot * 3.0f) - (distance / _lockOnRadius);
-
             if (score > maxScore)
             {
                 maxScore = score;
@@ -380,32 +388,80 @@ public class PlayerController : UnitController<PlayerController>, IDamageable
             }
         }
     }
+    #endregion
 
-    private void HandleUnitDie() => _stateMachine.ChangeState((int)UnitState.Die);
-    private void HandlePoiseBreak() { }
+    private void HandleUnitDie() => _stateMachine.ChangeState(UnitState.Die);
 
-    /// <summary>
-    /// GameManager 상태에 따라 플레이어 액션 맵을 물리적으로 온/오프
-    /// </summary>
     private void HandleGameStateChanged(GameStateChangedEvent evt)
     {
         if (evt.NewState == GameState.Paused)
         {
-            // 메뉴가 열렸을 때 플레이어 입력 맵을 즉각 비활성화 (마우스 클릭 공격 방지)
-            InputReader?.DisablePlayerInput();
+            _inputReader?.DisablePlayerInput();
         }
         else if (evt.NewState == GameState.Playing)
         {
-            // 게임 재개 시 플레이어 입력 맵 복원
-            InputReader?.EnablePlayerInput();
+            _inputReader?.EnablePlayerInput();
         }
     }
-    private void OnDrawGizmosSelected()
-    {
-        Movement?.DrawGizmos();
 
-        // 락온 탐색 반경 기즈모 표시 (노란색 와이어 구체)
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, _lockOnRadius);
+#if UNITY_EDITOR
+    protected override void OnValidate()
+    {
+        base.OnValidate();
+        // 에디터 플레이 모드에서 지면 감지 수치를 실시간 수정했을 때 Movement에 즉각 반영
+        if (Application.isPlaying && _movement != null)
+        {
+            _movement.UpdateGroundConfig(_groundCheckConfig);
+        }
+    }
+#endif
+
+    #region 기즈모 시각화
+    protected virtual void OnDrawGizmosSelected()
+    {
+        // 지면 판정 및 경사면 법선 기즈모 호출
+        _movement?.DrawGizmos();
+
+        Vector3 playerPos = transform.position;
+        Vector3 eyePos = playerPos + Vector3.up * 1.5f;
+
+#if UNITY_EDITOR
+        // 락온 탐색 반경 (청록색)
+        Handles.color = new Color(0f, 0.9f, 0.8f, 0.1f);
+        Handles.DrawSolidDisc(playerPos, Vector3.up, _lockOnRadius);
+        Handles.color = new Color(0f, 0.9f, 0.8f, 0.5f);
+        Handles.DrawWireDisc(playerPos, Vector3.up, _lockOnRadius);
+
+        // 앞잡(Riposte) 처형 가능 부채꼴 (주황색: 120도, 2.2m)
+        Vector3 forwardDir = transform.forward;
+        float riposteAngle = 120.0f;
+        Vector3 leftBoundary = Quaternion.AngleAxis(-riposteAngle * 0.5f, Vector3.up) * forwardDir;
+
+        Handles.color = new Color(1.0f, 0.5f, 0.0f, 0.2f);
+        Handles.DrawSolidArc(playerPos + Vector3.up * 0.1f, Vector3.up, leftBoundary, riposteAngle, _riposteRange);
+        Handles.color = new Color(1.0f, 0.5f, 0.0f, 0.8f);
+        Handles.DrawWireArc(playerPos + Vector3.up * 0.1f, Vector3.up, leftBoundary, riposteAngle, _riposteRange);
+#endif
+
+        // 락온 타깃 연결선
+        if (CurrentLockOnTarget != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(eyePos, CurrentLockOnTarget.position + Vector3.up * 1.2f);
+            Gizmos.DrawWireSphere(CurrentLockOnTarget.position + Vector3.up * 1.2f, 0.35f);
+        }
+    }
+    #endregion
+
+    private void OnDestroy()
+    {
+        UnsubscribeInputEvents();
+        _inputReader?.Dispose();
+
+        if (_statusController != null)
+        {
+            _statusController.OnDieEvent -= HandleUnitDie;
+        }
+        EventBusSystem.Unsubscribe<GameStateChangedEvent>(HandleGameStateChanged);
     }
 }

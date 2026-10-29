@@ -51,7 +51,7 @@ public class PlayerParryState : PlayerActionState
 
         if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
         {
-            float guardSpeed = owner.UnitStatusController.MotionStatus.WalkSpeed.Value * GuardMoveSpeedFactor;
+            float guardSpeed = owner.StatusController.MotionStatus.WalkSpeed.Value * GuardMoveSpeedFactor;
             owner.MoveAPI(owner.CurrentMoveDirection, guardSpeed);
         }
         else
@@ -79,7 +79,7 @@ public class PlayerParryState : PlayerActionState
     /// 공격 수신 시 가드 또는 패링 분기 연산
     /// 수평면 투영(Dot Product)을 통해 높낮이 지형에 의한 판정 뚫림 완벽 차단
     /// </summary>
-    public bool TryProcessBlockOrParry(in DamageContext context, out bool parrySuccess)
+    public bool TryProcessBlockOrParry(in DamageContextTest2 context, out bool parrySuccess)
     {
         parrySuccess = false;
 
@@ -132,7 +132,7 @@ public class PlayerParryState : PlayerActionState
         // 적 유닛 피격/경직 인터페이스 호출
         if (attacker != null)
         {
-            EnemyController enemy = attacker.GetComponentInParent<EnemyController>();
+            EnemyBTController enemy = attacker.GetComponentInParent<EnemyBTController>();
             if (enemy != null)
             {
                 // 상대 그로기 유발
