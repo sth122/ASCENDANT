@@ -12,7 +12,7 @@ using Util = DebugLogger;
 /// 기본 패턴: 순찰 -> 추격 -> 공격 -> 복귀 / 피격, 사망
 /// </summary>
 [RequireComponent(typeof(NavMeshAgent), typeof(EnemyAnimController), typeof(EnemyStatusController))]
-public class EnemyBTController : UnitController, IDamageableTest, IPoolable
+public class EnemyBTController : UnitController, IDamageable, IPoolable
 {
     #region SerializeField
     [Header("Hitbox Socket Registry")]

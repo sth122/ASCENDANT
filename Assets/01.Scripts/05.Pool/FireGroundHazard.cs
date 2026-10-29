@@ -7,7 +7,7 @@ public class FireGroundHazard : MonoBehaviour
     [SerializeField] private float _tickInterval = 0.5f;
     [SerializeField] private float _lifeTime = 5.0f;
 
-    private readonly Dictionary<IDamageableTest, float> _nextTickTimes = new Dictionary<IDamageableTest, float>();
+    private readonly Dictionary<IDamageable, float> _nextTickTimes = new Dictionary<IDamageable, float>();
     private float _expireTime;
 
     private void Start() => _expireTime = Time.time + _lifeTime;
@@ -19,7 +19,7 @@ public class FireGroundHazard : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
-        IDamageableTest target = other.GetComponentInParent<IDamageableTest>();
+        IDamageable target = other.GetComponentInParent<IDamageable>();
         if (target == null || !other.CompareTag("Player")) return;
 
         if (!_nextTickTimes.TryGetValue(target, out float nextTime) || Time.time >= nextTime)
@@ -43,7 +43,7 @@ public class FireGroundHazard : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        IDamageableTest target = other.GetComponentInParent<IDamageableTest>();
+        IDamageable target = other.GetComponentInParent<IDamageable>();
         if (target != null) _nextTickTimes.Remove(target);
     }
 }

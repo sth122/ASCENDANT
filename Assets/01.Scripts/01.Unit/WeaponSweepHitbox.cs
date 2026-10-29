@@ -17,7 +17,7 @@ public class WeaponSweepHitbox : MonoBehaviour
 
     private readonly RaycastHit[] _hitBuffer = new RaycastHit[16];
     private readonly Collider[] _overlapBuffer = new Collider[16];
-    private readonly HashSet<IDamageableTest> _alreadyHitTargets = new HashSet<IDamageableTest>();
+    private readonly HashSet<IDamageable> _alreadyHitTargets = new HashSet<IDamageable>();
 
     private Vector3[] _previousPositions;
     private Quaternion[] _previousRotations;
@@ -103,7 +103,7 @@ public class WeaponSweepHitbox : MonoBehaviour
                     // [자해 방지] 피격 개체의 최상위 부모가 공격자 루트와 일치하면 무시
                     if (hitCol.transform.root.gameObject == _attackerRoot) continue;
 
-                    IDamageableTest damageable = hitCol.GetComponentInParent<IDamageableTest>();
+                    IDamageable damageable = hitCol.GetComponentInParent<IDamageable>();
                     if (damageable == null || _alreadyHitTargets.Contains(damageable)) continue;
 
                     _alreadyHitTargets.Add(damageable);
@@ -134,7 +134,7 @@ public class WeaponSweepHitbox : MonoBehaviour
                 Collider col = _overlapBuffer[o];
                 if (col.transform.root.gameObject == _attackerRoot) continue;
 
-                IDamageableTest damageable = col.GetComponentInParent<IDamageableTest>();
+                IDamageable damageable = col.GetComponentInParent<IDamageable>();
                 if (damageable == null || _alreadyHitTargets.Contains(damageable)) continue;
 
                 _alreadyHitTargets.Add(damageable);

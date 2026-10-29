@@ -130,7 +130,7 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
     protected override async Cysharp.Threading.Tasks.UniTask SetupSceneUIAsync()
     {
         PlayerHUDModel hudModel = new PlayerHUDModel();
-        await UIManager.Instance.OpenUIAsync<PlayerHUDView, PlayerHUDPresetner, PlayerHUDModel>(
+        await UIManager.Instance.OpenUIAsync<PlayerHUDView, PlayerHUDPresenter, PlayerHUDModel>(
             UIId.PlayerHUD, "PlayerHUD", hudModel, ct: this.destroyCancellationToken
         );
     }

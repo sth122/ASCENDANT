@@ -23,28 +23,9 @@ public interface IState
     public void FixedUpdate();
 }
 
-/// <summary>
-/// 공격 수신 인터페이스 (플레이어, 몬스터, 보스 공통)
-/// </summary>
 public interface IDamageable
 {
-    void ApplyDamage(in DamageContextTest2 context);
-}
-
-public interface IDamageableTest
-{
     void ApplyDamage(in DamageContext context);
-}
-
-/// <summary>
-/// Enemy 공격 실행 전략 인터페이스
-/// </summary>
-public interface IEnemyAttackStrategy
-{
-    bool CanExecute(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data);
-    void Execute(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data);
-    void Update(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data, float normalizedTime);
-    void Stop(in EnemyAttackContext context);
 }
 
 /// <summary>

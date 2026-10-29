@@ -2,7 +2,7 @@
 /// Player HUD의 MVP 프리젠터 클래스
 /// EventBus의 체력, 스태미나, 강인도 이벤트를 수신하여 View를 동기화합니다.
 /// </summary>
-public class PlayerHUDPresetner : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
+public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
 {
     protected override void OnBind()
     {

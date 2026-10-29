@@ -9,7 +9,7 @@ using Util = DebugLogger<PlayerController>;
 /// </summary>
 [RequireComponent(typeof(Rigidbody), typeof(Collider), typeof(PlayerStatusController))]
 [RequireComponent(typeof(PlayerAnimController))]
-public class PlayerController : UnitController, IDamageableTest
+public class PlayerController : UnitController, IDamageable
 {
     [Header("Lock-On Setting")]
     [SerializeField] private float _lockOnRadius = 15f;

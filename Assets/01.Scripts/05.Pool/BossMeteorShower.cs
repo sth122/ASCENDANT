@@ -81,7 +81,7 @@ public class BossMeteorShower : MonoBehaviour, IPoolable
             Collider col = _hitOverlapBuffer[i];
             if (col == null) continue;
 
-            IDamageableTest target = col.GetComponentInParent<IDamageableTest>();
+            IDamageable target = col.GetComponentInParent<IDamageable>();
             if (target != null)
             {
                 DamageContext ctx = new DamageContext(gameObject, _meteorDamage, _meteorPoiseDamage, explosionPos, Vector3.up,

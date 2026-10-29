@@ -43,7 +43,7 @@ public class PlayerCombatModule : UnitBaseModule
     /// <summary>
     /// 처형(앞잡) 대미지 산출 및 단일 컨텍스트 주입
     /// </summary>
-    public void ExecuteRiposteDamage(IDamageableTest target, Vector3 hitPoint)
+    public void ExecuteRiposteDamage(IDamageable target, Vector3 hitPoint)
     {
         if (target == null) return;
 
