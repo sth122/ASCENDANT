@@ -5,7 +5,7 @@
 ///  각 공통된 초기화가 필요할 시 Init에 작성. 그 외엔 base.Init()
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class NonMonoSingleton<T> where T : class, IInitable, new()
+public class NonMonoSingleton<T> : IInitable where T : class, new()
 {
     private static T _instance;
 

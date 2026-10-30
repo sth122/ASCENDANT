@@ -21,9 +21,9 @@ public abstract class BossSkillDataSO : UnityEngine.ScriptableObject
 public class TimelineBossSkill : BossSkill
 {
     protected readonly ActionTimelineStep[] CachedSteps;
-    protected readonly System.Func<UniTask> CustomEventCallback;
+    protected readonly System.Func<BossBTController, UniTask> CustomEventCallback;
 
-    public TimelineBossSkill(BossBTController owner, in SkillInfo info, ActionTimelineStep[] steps, System.Func<UniTask> customEvent = null)
+    public TimelineBossSkill(BossBTController owner, in SkillInfo info, ActionTimelineStep[] steps, System.Func<BossBTController, UniTask> customEvent = null)
         : base(owner, info)
     {
         CachedSteps = steps;

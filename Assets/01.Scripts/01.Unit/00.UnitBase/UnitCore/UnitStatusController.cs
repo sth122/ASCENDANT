@@ -167,8 +167,7 @@ public class UnitStatusController : MonoBehaviour
 
         OnDieEvent?.Invoke();
 
-        UnitId id = UnitId.NightmareCreature;
-        if (TryGetComponent<PlayerController>(out _)) id = UnitId.Player;
+        UnitId id = GetComponent<UnitController>().UnitIdentifier;
 
         EventBusSystem.Publish(new UnitDiedEvent(gameObject, id));
         Util.Log($"{gameObject.name} 사망");
@@ -206,23 +205,31 @@ public class UnitStatusController : MonoBehaviour
     /// </summary>
     private async UniTaskVoid PoiseRecoveryLoopAsync(System.Threading.CancellationToken token)
     {
+        float lastPublishedPoise = _currentPoise;
+
         while (!token.IsCancellationRequested)
         {
-            bool isCanceled =  await UniTask.Yield(token).SuppressCancellationThrow();
-            if(isCanceled) return;
+            bool isCanceled = await UniTask.Delay(100, cancellationToken: token).SuppressCancellationThrow();
+            if (isCanceled) return;
 
             // 강인도 회복 정지 상태 or 사망 or 최대치라면 보류
             if (_isPoiseRecoveryPaused || _isDead ||_currentPoise >= _maxPoise) continue;
 
             if (_poiseRecoveryTimer > 0f)
             {
-                _poiseRecoveryTimer -= Time.deltaTime;
+                _poiseRecoveryTimer -= 0.1f;
             }
             else
             {
-                _currentPoise = Mathf.Min(_maxPoise, _currentPoise + PoiseRecoveryRate * Time.deltaTime);
-                OnPoiseChangedEvent?.Invoke(_currentPoise, _maxPoise);
-                EventBusSystem.Publish(new UnitPoiseChangedEvent(gameObject, _currentPoise, _maxPoise));
+                _currentPoise = Mathf.Min(_maxPoise, _currentPoise + PoiseRecoveryRate * 0.1f);
+
+                if (Mathf.Abs(_currentPoise - lastPublishedPoise) >= 1.0f || _currentPoise >= _maxPoise)
+                {
+                    lastPublishedPoise = _currentPoise;
+                    OnPoiseChangedEvent?.Invoke(_currentPoise, _maxPoise);
+                    EventBusSystem.Publish(new UnitPoiseChangedEvent(gameObject, _currentPoise, _maxPoise));
+                }
+
                 if (_currentPoise >= _maxPoise)
                 {
                     _isPoiseDepleted = false;

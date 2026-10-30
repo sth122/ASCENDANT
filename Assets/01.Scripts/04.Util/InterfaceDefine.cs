@@ -23,9 +23,32 @@ public interface IState
     public void FixedUpdate();
 }
 
+/// <summary>
+/// 공격 수신 인터페이스
+/// </summary>
 public interface IDamageable
 {
     void ApplyDamage(in DamageContext context);
+}
+
+/// <summary>
+/// 그로기 및 앞잡(Riposte / 처형) 피격 대상 인터페이스
+/// </summary>
+public interface IRiposteable
+{
+    bool CanBeRiposted { get; }
+    bool IsDead { get; }
+    UnityEngine.Transform RiposteSocket { get; }
+    void OnRiposted(UnityEngine.Transform attacker);
+}
+
+/// <summary>
+/// 강인도 고갈(Poise Break) 가능 개체 인터페이스
+/// </summary>
+public interface IPoiseBreakable
+{
+    bool IsPoiseBroken { get; }
+    void OnPoiseBroken();
 }
 
 /// <summary>
@@ -101,5 +124,15 @@ public interface ISkillable
     bool CanExecuteSkill(SkillId skillId);
     Cysharp.Threading.Tasks.UniTask<bool> ExecuteSkillAsync(SkillId skillId, System.Threading.CancellationToken ct);
     void CancelSkill();
+}
+#endregion
+
+#region Interact Interface
+/// <summary>
+/// 인게임 상호작용 규약
+/// </summary>
+public interface IInteractable
+{
+    void OnInteract(PlayerController player);
 }
 #endregion

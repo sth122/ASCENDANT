@@ -4,8 +4,10 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Util = DebugLogger<AssetsManager>;
 
-public class AssetsManager : MonoSingleton<AssetsManager>
+public class AssetsManager : MonoSingleton<AssetsManager>, ILoadable
 {
+    public int LoadOrder => 0;
+
     // 전역 유지 에셋 핸들
     private readonly Dictionary<string, AsyncOperationHandle> _globalAssetHandles = new Dictionary<string, AsyncOperationHandle>();
 
@@ -20,6 +22,12 @@ public class AssetsManager : MonoSingleton<AssetsManager>
         _isDDOL = true;
         base.Awake();
     }
+
+    #region ILoadable 구현부
+    public UniTask OnSceneLoadCreate(SceneId scene) => UniTask.CompletedTask;
+    public void Init(SceneId scene) => Util.Log($"[{scene}] AssetsManager 준비 완료");
+    public void OnSceneDestroy(SceneId scene) => ReleaseSceneAssets();
+    #endregion
 
     #region UniTask(비동기) 에셋 로드
     /// <summary>

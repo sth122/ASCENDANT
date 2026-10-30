@@ -122,22 +122,6 @@ public class PlayerController : UnitController, IDamageable
         // 락온 타깃 유효성 검사
         ValidateCurrentLockOnTarget();
 
-        // 락온 상태 회전 보정 (가드/패링 중이 아닐 때)
-        if (!(_stateMachine.CurrentState is PlayerParryState))
-        {
-            if (CameraManager.Instance != null && CameraManager.Instance.IsLockOnMode && CurrentLockOnTarget != null)
-            {
-                Vector3 lookDirection = CurrentLockOnTarget.position - transform.position;
-                lookDirection.y = 0f;
-                if (lookDirection.sqrMagnitude > 0.001f)
-                {
-                    float rotSpeed = (_statusController != null && _statusController.PlayerInfoSource != null)
-                        ? _statusController.PlayerInfoSource.RotationSpeed : 10.0f;
-                    _movement.RotateTowards(lookDirection.normalized, rotSpeed, Time.deltaTime);
-                }
-            }
-        }
-
         // FSM Update 루프 가동
         _stateMachine?.Update();
     }
@@ -176,16 +160,11 @@ public class PlayerController : UnitController, IDamageable
         // 5. 가드 및 패링 판정 분기
         if (_stateMachine.CurrentState is PlayerParryState parryState)
         {
-            DamageContextTest2 legacyContext = new DamageContextTest2(
-                context.Attacker, context.Damage, context.PoiseDamage,
-                context.HitPoint, context.HitNormal, context.IsParryable
-            );
-
-            bool isBlocked = parryState.TryProcessBlockOrParry(in legacyContext, out bool parrySuccess);
+            bool isBlocked = parryState.TryProcessBlockOrParry(in context, out bool parrySuccess);
             if (isBlocked) return;
         }
 
-        // 6. 장판 도트 대미지 (DoT): 모션 경직 없이 체력만 감산
+        // 6. 장판 도트 대미지 (DoT)
         if (context.ImpactType == AttackImpactType.DoT)
         {
             _statusController.TakeDamage(context.Damage, 0f);
@@ -196,7 +175,7 @@ public class PlayerController : UnitController, IDamageable
         _statusController.TakeDamage(context.Damage, context.PoiseDamage);
         if (_statusController.CurrentHp <= 0f) return;
 
-        // 8. 보스 강공격 (Heavy Impact): 물리 넉백 + 2초 다운 상태 전이
+        // 8. 보스 강공격 (Heavy Impact): 물리 넉백 + 2초 다운
         if (context.ImpactType == AttackImpactType.Heavy)
         {
             ApplyKnockbackImpulse(context.HitNormal, context.KnockbackForce);
@@ -248,11 +227,11 @@ public class PlayerController : UnitController, IDamageable
             Collider col = _lockOnHitBuffer[i];
             if (col == null || col.gameObject == gameObject) continue;
 
-            // BT 에너미 또는 보스 컨트롤러 탐색
-            EnemyBTController enemy = col.GetComponentInParent<EnemyBTController>();
-            if (enemy != null && enemy.StatusController != null && enemy.StatusController.IsPoiseBroken && !enemy.IsDead)
+            // IRiposteable 인터페이스로 추상화
+            IRiposteable riposteTarget = col.GetComponentInParent<IRiposteable>();
+            if (riposteTarget != null && riposteTarget.CanBeRiposted && !riposteTarget.IsDead)
             {
-                Vector3 dirToEnemy = enemy.transform.position - transform.position;
+                Vector3 dirToEnemy = riposteTarget.RiposteSocket.position - transform.position;
                 dirToEnemy.y = 0f;
 
                 if (dirToEnemy.sqrMagnitude > 0.001f && Vector3.Dot(transform.forward, dirToEnemy.normalized) > 0.5f)
@@ -261,7 +240,7 @@ public class PlayerController : UnitController, IDamageable
 
                     if (_stateMachine.CurrentState is PlayerRiposteState riposteState)
                     {
-                        riposteState.SetRiposteTarget(enemy.transform, enemy.StatusController);
+                        riposteState.SetRiposteTarget(riposteTarget);
                     }
 
                     System.Array.Clear(_lockOnHitBuffer, 0, hitCount);

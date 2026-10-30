@@ -6,10 +6,10 @@ public class DragonAerialComboSkillSO : BossSkillDataSO
 {
     public override BossSkill CreateSkill(BossBTController owner)
     {
-        return new TimelineBossSkill(owner, _info, _timelineSteps.ToArray(), () => SpawnMeteorShowerAsync(owner));
+        return new TimelineBossSkill(owner, _info, _timelineSteps.ToArray(), OnSpawnMeteorShowerRequested);
     }
 
-    private Cysharp.Threading.Tasks.UniTask SpawnMeteorShowerAsync(BossBTController owner)
+    private static Cysharp.Threading.Tasks.UniTask OnSpawnMeteorShowerRequested(BossBTController owner)
     {
         if (owner.CurrentTarget != null && ObjectPoolManager.Instance != null)
         {

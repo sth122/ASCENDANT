@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEditor;
@@ -12,7 +11,7 @@ using Util = DebugLogger;
 /// 기본 패턴: 순찰 -> 추격 -> 공격 -> 복귀 / 피격, 사망
 /// </summary>
 [RequireComponent(typeof(NavMeshAgent), typeof(EnemyAnimController), typeof(EnemyStatusController))]
-public class EnemyBTController : UnitController, IDamageable, IPoolable
+public class EnemyBTController : UnitController, IDamageable, IPoolable, IRiposteable
 {
     #region SerializeField
     [Header("Hitbox Socket Registry")]
@@ -26,7 +25,10 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
     [Header("Spawn Settings (풀링 소환 대기)")]
     [SerializeField] protected float _spawnWaitDuration = 3.0f;
 
-    [Serializable]
+    [Header("Riposte Alignment Socket")]
+    [SerializeField] private Transform _riposteSocket;
+
+    [System.Serializable]
     public struct HitboxMapping
     {
         public HitboxSlot Slot;
@@ -51,9 +53,11 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
     public EnemyAnimController AnimController => _enemyAnim;
     public EnemyMovement Movement => _movement;
     public Transform CurrentTarget => _currentTarget;
+    public Transform RiposteSocket => _riposteSocket != null ? _riposteSocket : transform;
     public Vector3 SpawnPoint => _spawnPoint;
     public bool IsDead => _enemyStatus != null && _enemyStatus.IsDead;
     public bool CanBeRiposted { get; protected set; } = false;
+
     #endregion
 
     #region 변수
@@ -67,6 +71,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
     protected readonly Dictionary<AnimStateType, EnemyAttackData> _basicAttacks = new Dictionary<AnimStateType, EnemyAttackData>();
     protected readonly Dictionary<AnimStateType, float> _attackCooldowns = new Dictionary<AnimStateType, float>();
     protected readonly List<EnemyAttackData> _validAttackCandidates = new List<EnemyAttackData>();
+    private readonly Collider[] _targetAcquireBuffer = new Collider[8];
     #endregion
 
     #region BT 구동 및 비동기 수명주기
@@ -249,7 +254,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
         {
             await PlayStateAndWaitAsync(AnimStateType.BattleIdle, token, force: true, _spawnWaitDuration);
         }
-        catch (OperationCanceledException) { return; }
+        catch (System.OperationCanceledException) { return; }
         finally
         {
             _isActionExecuting = false;
@@ -261,16 +266,17 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
 
     protected void AcquireNearestTarget()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, 25.0f, _targetLayer);
-        for (int i = 0; i < hits.Length; i++)
+        int hitCount = Physics.OverlapSphereNonAlloc(transform.position, 25.0f, _targetAcquireBuffer, _targetLayer);
+        for (int i = 0; i < hitCount; i++)
         {
-            PlayerController player = hits[i].GetComponentInParent<PlayerController>();
+            PlayerController player = _targetAcquireBuffer[i].GetComponentInParent<PlayerController>();
             if (player != null && !player.StatusController.IsDead)
             {
                 SetTarget(player.transform);
                 break;
             }
         }
+        System.Array.Clear(_targetAcquireBuffer, 0, hitCount);
     }
     #endregion
 
@@ -476,7 +482,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
 
     private async UniTaskVoid WaitAndPickNextPointAsync(CancellationToken token)
     {
-        bool canceled = await UniTask.Delay(TimeSpan.FromSeconds(2.5f), cancellationToken: token).SuppressCancellationThrow();
+        bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(2.5f), cancellationToken: token).SuppressCancellationThrow();
         if (canceled) return;
 
         PickNextPatrolPoint();
@@ -561,7 +567,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
 
         for (int i = 0; i < _hitboxMappings.Count; i++)
         {
-            if (_hitboxMappings[i].Hitbox != null && _hitboxMap.ContainsKey(_hitboxMappings[i].Slot))
+            if (_hitboxMappings[i].Hitbox != null && !_hitboxMap.ContainsKey(_hitboxMappings[i].Slot))
             {
                 _hitboxMap.Add(_hitboxMappings[i].Slot, _hitboxMappings[i].Hitbox);
             }
@@ -640,7 +646,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
             // 패링 경직 3초
             await PlayStateAndWaitAsync(AnimStateType.Hit1, token, force: true, 3f);
         }
-        catch (OperationCanceledException) { }
+        catch (System.OperationCanceledException) { }
         finally
         {
             _isActionExecuting = false;
@@ -664,7 +670,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
         {
             await PlayStateAndWaitAsync(AnimStateType.Stun, ct, force: true, customDuration: _groggyRecoveryDuration);
         }
-        catch (OperationCanceledException)
+        catch (System.OperationCanceledException)
         {
             // 플레이어 처형(Riposte)에 의해 인터럽트된 경우
             return false;
@@ -716,7 +722,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
             // 처형 모션 및 기상 대기
             await PlayStateAndWaitAsync(AnimStateType.Hit2, token, force: true, 3f);
         }
-        catch (OperationCanceledException) { }
+        catch (System.OperationCanceledException) { }
         finally
         {
             // 처형 완료 후 포이즈 재설정 및 복귀
@@ -818,7 +824,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable
             // Hit 모션이 짧은 경우도 생각해야함
             await PlayStateAndWaitAsync(AnimStateType.Hit1, token, force: true);
         }
-        catch (OperationCanceledException) { }
+        catch (System.OperationCanceledException) { }
         finally
         {
             _isActionExecuting = false;

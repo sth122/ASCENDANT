@@ -1,4 +1,6 @@
-﻿/// <summary>
+﻿using UnityEngine;
+
+/// <summary>
 /// Player 방패 가드 유지 및 패링을 전담하는 Player FSM 액션 상태 클래스
 /// 가드를 올린 직후 짧은 프레임 동안 패링 판정을 활성화하고,
 /// 가드 유지 중에는 이동 속도 및 스태미나 회복 속도 감소
@@ -79,10 +81,11 @@ public class PlayerParryState : PlayerActionState
     /// 공격 수신 시 가드 또는 패링 분기 연산
     /// 수평면 투영(Dot Product)을 통해 높낮이 지형에 의한 판정 뚫림 완벽 차단
     /// </summary>
-    public bool TryProcessBlockOrParry(in DamageContextTest2 context, out bool parrySuccess)
+    public bool TryProcessBlockOrParry(in DamageContext context, out bool parrySuccess)
     {
         parrySuccess = false;
 
+        // 1. 방어 각도 검사
         if (context.Attacker != null)
         {
             UnityEngine.Vector3 dirToAttacker = context.Attacker.transform.position - owner.transform.position;
@@ -90,56 +93,76 @@ public class PlayerParryState : PlayerActionState
 
             if (dirToAttacker.sqrMagnitude > 0.001f)
             {
-                dirToAttacker.Normalize();
-                float dot = UnityEngine.Vector3.Dot(owner.transform.forward, dirToAttacker);
+                float dot = UnityEngine.Vector3.Dot(owner.transform.forward, dirToAttacker.normalized);
                 float minDot = UnityEngine.Mathf.Cos((GuardBlockAngle * 0.5f) * UnityEngine.Mathf.Deg2Rad);
-
-                // 방어 허용 각도를 벗어난 측후면 피격은 방어 실패
-                if (dot < minDot) return false;
+                if (dot < minDot) return false; // 측후면 가드 불가
             }
         }
 
-        // 1. 패링 윈도우 적중 시 패링 카운터 발동
-        if (IsParryWindow && context.IsParryable)
+        // 2. 패링 불가 공격은 가드 및 패링 관통 -> 넉다운 처리
+        if (!context.IsParryable)
         {
-            parrySuccess = true;
+            _playerStateMachine.ChangeState(UnitState.Stun, true);
+            return false;
+        }
+
+        // 3. 패링 윈도우 적중 시 분기
+        if (IsParryWindow)
+        {
             IsParryWindow = false;
+
+            // [강공격 패링]: 캐릭터가 밀려나는 역임펄스 Stagger 발생
+            if (context.ImpactType == AttackImpactType.Heavy)
+            {
+                _playerAnimController.SetTrigger(AnimParamType.GetHit);
+                if (owner.Rigidbody != null)
+                {
+                    owner.Rigidbody.AddForce(-owner.transform.forward * 5.0f, ForceMode.Impulse);
+                }
+                return true;
+            }
+
+            // [약공격 패링]: 일반 패링 성공 및 상대 그로기 유발
+            parrySuccess = true;
             TriggerParrySuccess(context.Attacker);
             return true;
         }
 
-        // 2. 일반 가드 피격 시 스태미나 차감
+        // 4. 일반 가드 처리: 스태미나 차감 및 가드 브레이크 연산
         if (_playerStatusController != null)
         {
-            bool isGuardBroken = _playerStatusController.BlockAttackWithStamina(context.Damage, ShieldStability);
+            float staminaCost = context.Damage * (1.0f - ShieldStability);
+            float currentStamina = _playerStatusController.CurrentStamina;
 
-            if (isGuardBroken)
+            // 스태미나가 부족하면 가드 파쇄 발생
+            if (currentStamina < staminaCost)
             {
-                _playerStateMachine.ChangeState(UnitState.Stun);
+                float chipRatio = (staminaCost - currentStamina) / Mathf.Max(1.0f, staminaCost);
+                _playerStatusController.ConsumeStamina(currentStamina);
+                _playerStatusController.TakeDamage(context.Damage * chipRatio, context.PoiseDamage);
+
+                // 가드 파쇄 스턴 강제 전이
+                _playerStateMachine.ChangeState(UnitState.Stun, true);
+                return true;
             }
-            else
-            {
-                // 가드 사운드 및 히트 이팩트 처리
-            }
+
+            _playerStatusController.ConsumeStamina(staminaCost);
         }
+
         return true;
     }
 
-    private void TriggerParrySuccess(UnityEngine.GameObject attacker)
+    private void TriggerParrySuccess(GameObject attacker)
     {
         _playerAnimController.SetTrigger(AnimParamType.ParrySuccess);
 
-        // 적 유닛 피격/경직 인터페이스 호출
         if (attacker != null)
         {
             EnemyBTController enemy = attacker.GetComponentInParent<EnemyBTController>();
             if (enemy != null)
             {
-                // 상대 그로기 유발
                 enemy.OnParried();
             }
-     
-            // 패링 성공 연출
         }
     }
 

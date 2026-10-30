@@ -106,11 +106,28 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
                 continue;
             }
 
-            // 개별 적의 3단계 초기화 메서드 호출
-            //enemy.ResetToOriginState();
+            // 보스나 네임드 몬스터는 리셋 대상에서 영구 제외
+            if (IsPermanentEnemyDefeated(enemy.name))
+            {
+                enemy.gameObject.SetActive(false);
+                continue;
+            }
+
+            // 일반 몬스터: 스폰 지점으로 워프 및 상태 완전 회복
+            enemy.transform.position = enemy.SpawnPoint;
+            if (enemy.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) && agent.isOnNavMesh)
+            {
+                agent.Warp(enemy.SpawnPoint);
+            }
+
+            enemy.gameObject.SetActive(true);
+            enemy.StatusController.HealHp(enemy.StatusController.MaxHp);
+            enemy.StatusController.RestorePoiseToMax();
+            enemy.ClearTarget();
+            enemy.Init();
         }
 
-        Util.Log($"총 {_registeredEnemies.Count}기의 적 초기화 프로세스 완료");
+        Util.Log($"총 {_registeredEnemies.Count}기의 적 화톳불 리셋 프로세스 완료");
     }
     #endregion
 }

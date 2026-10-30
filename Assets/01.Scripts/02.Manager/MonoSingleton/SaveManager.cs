@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Util = DebugLogger<SaveManager>;
 /// <summary>
@@ -21,20 +20,20 @@ public class SaveManager : MonoSingleton<SaveManager>
 
     private string GetSaveDirectoryPath()
     {
-        return Path.Combine(Application.persistentDataPath, "Saves");
+        return System.IO.Path.Combine(Application.persistentDataPath, "Saves");
     }
 
     private string GetSaveFilePath(int slotIndex)
     {
-        return Path.Combine(GetSaveDirectoryPath(), $"{SaveFilePrefix}{slotIndex}{SaveFileExtension}");
+        return System.IO.Path.Combine(GetSaveDirectoryPath(), $"{SaveFilePrefix}{slotIndex}{SaveFileExtension}");
     }
 
     private void EnsureSaveDirectory()
     {
         string dirPath = GetSaveDirectoryPath();
-        if (!Directory.Exists(dirPath))
+        if (!System.IO.Directory.Exists(dirPath))
         {
-            Directory.CreateDirectory(dirPath);
+            System.IO.Directory.CreateDirectory(dirPath);
             Util.Log($"세이브 디렉토리 생성 완료: {dirPath}");
         }
     }
@@ -45,7 +44,7 @@ public class SaveManager : MonoSingleton<SaveManager>
     public bool HasSaveData(int slotIndex = 0)
     {
         string filePath = GetSaveFilePath(slotIndex);
-        return File.Exists(filePath);
+        return System.IO.File.Exists(filePath);
     }
 
     /// <summary>
@@ -56,7 +55,7 @@ public class SaveManager : MonoSingleton<SaveManager>
         CurrentSaveData = new SaveData
         {
             SaveSlotIndex = slotIndex,
-            SaveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            SaveTimestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
             LastSavedScene = SceneId.GameScene,
             LastBonfirePosition = new SerializableVector3(0f, 0.1f, 0f),
             LastBonfireRotationY = 0f,
@@ -75,7 +74,7 @@ public class SaveManager : MonoSingleton<SaveManager>
     {
         string filePath = GetSaveFilePath(slotIndex);
 
-        if (!File.Exists(filePath))
+        if (!System.IO.File.Exists(filePath))
         {
             Util.LogWarning($"세이브 파일을 찾을 수 없습니다: {filePath}");
             CurrentSaveData = null;
@@ -84,12 +83,12 @@ public class SaveManager : MonoSingleton<SaveManager>
 
         try
         {
-            string json = File.ReadAllText(filePath);
+            string json = System.IO.File.ReadAllText(filePath);
             CurrentSaveData = JsonUtility.FromJson<SaveData>(json);
             Util.Log($"[세이브 로드 성공] 슬롯: {slotIndex}, 타임스탬프: {CurrentSaveData.SaveTimestamp}");
             return true;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             Util.LogError($"세이브 데이터 역직렬화 실패: {ex.Message}");
             CurrentSaveData = null;
@@ -110,14 +109,34 @@ public class SaveManager : MonoSingleton<SaveManager>
 
         try
         {
-            CurrentSaveData.SaveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            CurrentSaveData.SaveTimestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             string json = JsonUtility.ToJson(CurrentSaveData, prettyPrint: true);
             string filePath = GetSaveFilePath(slotIndex);
 
-            File.WriteAllText(filePath, json);
+            System.IO.File.WriteAllText(filePath, json);
             Util.Log($"[세이브 파일 기록 완료] 경로: {filePath}");
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
+        {
+            Util.LogError($"세이브 파일 쓰기 실패: {ex.Message}");
+        }
+    }
+
+    public async UniTask SaveCurrentGameAsync(int slotIndex = 0)
+    {
+        if (CurrentSaveData == null) return;
+
+        try
+        {
+            CurrentSaveData.SaveTimestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string json = JsonUtility.ToJson(CurrentSaveData, prettyPrint: true);
+            string filePath = GetSaveFilePath(slotIndex);
+
+            // 메인 스레드 멈춤 없이 비동기로 디스크 기록
+            await System.IO.File.WriteAllTextAsync(filePath, json);
+            Util.Log($"[비동기 세이브 파일 기록 완료] {filePath}");
+        }
+        catch (System.Exception ex)
         {
             Util.LogError($"세이브 파일 쓰기 실패: {ex.Message}");
         }
@@ -133,12 +152,13 @@ public class SaveManager : MonoSingleton<SaveManager>
             CurrentSaveData = new SaveData();
         }
 
+        CurrentSaveData.HasCheckpoint = true;
         CurrentSaveData.LastSavedScene = currentScene;
         CurrentSaveData.LastBonfirePosition = SerializableVector3.FromVector3(bonfirePosition);
         CurrentSaveData.LastBonfireRotationY = bonfireRotationY;
         CurrentSaveData.PlayerData = new PlayerSaveData(status, currentHp);
 
-        SaveCurrentGame(slotIndex);
+        SaveCurrentGameAsync(slotIndex).Forget();
         Util.Log($"[체크포인트 갱신 완료] 위치: {bonfirePosition}, 씬: {currentScene}");
     }
 }

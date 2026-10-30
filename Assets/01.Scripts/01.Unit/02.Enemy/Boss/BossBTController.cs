@@ -162,6 +162,7 @@ public abstract class BossBTController : EnemyBTController, ISkillable
     {
         if (_skillMap.TryGetValue(skillId, out BossSkill skill))
         {
+            _isActionExecuting = true;
             _blackboard.IsActionExecuting = true;
             _movement.StopMovement();
 
@@ -184,7 +185,7 @@ public abstract class BossBTController : EnemyBTController, ISkillable
                     skill.TriggerCooldown();
                     _blackboard.ResetSkillCycle();
                 }
-
+                _isActionExecuting = false;
                 _blackboard.IsActionExecuting = false;
             }
 

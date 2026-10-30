@@ -1,4 +1,6 @@
-﻿/// <summary>
+﻿using UnityEngine;
+
+/// <summary>
 /// Player 공격을 전담하는 Player FSM 상태 클래스
 /// </summary>
 public class PlayerAttackState : PlayerActionState
@@ -22,6 +24,8 @@ public class PlayerAttackState : PlayerActionState
     private bool _hasAdvancedThisStep = false;
     private bool _isHitboxCurrentlyOpen = false;
     private float _stepTimer = 0f;
+
+    private readonly Collider[] _softLockBuffer = new Collider[8];
 
     public PlayerAttackState(PlayerController owner, PlayerStateMachine stateMachine) : base(owner, stateMachine) { }
 
@@ -47,11 +51,8 @@ public class PlayerAttackState : PlayerActionState
         _isHitboxCurrentlyOpen = false;
         _stepTimer = 0f;
 
-        // 3. 공격 방향 회전 정렬
-        if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
-        {
-            owner.transform.rotation = UnityEngine.Quaternion.LookRotation(owner.CurrentMoveDirection);
-        }
+        // 3.자동 타깃 이동 입력 방향 대신 최근접/타겟팅 적을 향해 자동 스냅
+        AlignAttackDirection();
 
         // 4. Root Motion 활성화 (클립의 전진 변위가 Rigidbody를 직접 추진하도록 권한 부여)
         _playerAnimController.SetRootMotion(true);
@@ -240,5 +241,59 @@ public class PlayerAttackState : PlayerActionState
         if (!_isHitboxCurrentlyOpen) return;
         _isHitboxCurrentlyOpen = false;
         owner.CombatModule.CloseWeaponHitbox();
+    }
+
+    /// <summary>
+    /// 공격 개시 시 락온 타깃 또는 전방 부채꼴 내 가장 가까운 적을 향해 자동 정렬
+    /// </summary>
+    private void AlignAttackDirection()
+    {
+        // 1. 이미 락온 중인 대상이 있다면 해당 대상을 정면 응시
+        if (owner.CurrentLockOnTarget != null)
+        {
+            Vector3 dirToLockOn = owner.CurrentLockOnTarget.position - owner.transform.position;
+            dirToLockOn.y = 0f;
+            if (dirToLockOn.sqrMagnitude > 0.001f)
+            {
+                owner.transform.rotation = Quaternion.LookRotation(dirToLockOn.normalized);
+                return;
+            }
+        }
+
+        // 2. 비 락온 시: 전방 120도 부채꼴, 반경 4.0m 내의 최근접 적 탐색 (GC Alloc 0)
+        int count = Physics.OverlapSphereNonAlloc(owner.transform.position, 4.0f, _softLockBuffer, LayerMask.GetMask("Enemy"));
+        Transform bestTarget = null;
+        float closestDist = float.MaxValue;
+
+        for (int i = 0; i < count; i++)
+        {
+            if (_softLockBuffer[i] == null || _softLockBuffer[i].transform.root == owner.transform.root) continue;
+
+            Vector3 toEnemy = _softLockBuffer[i].transform.position - owner.transform.position;
+            toEnemy.y = 0f;
+            float dist = toEnemy.magnitude;
+
+            // 전방 120도 부채꼴 검사 (Dot > 0.5)
+            if (Vector3.Dot(owner.transform.forward, toEnemy.normalized) > 0.5f && dist < closestDist)
+            {
+                closestDist = dist;
+                bestTarget = _softLockBuffer[i].transform;
+            }
+        }
+        System.Array.Clear(_softLockBuffer, 0, count);
+
+        if (bestTarget != null)
+        {
+            Vector3 targetDir = bestTarget.position - owner.transform.position;
+            targetDir.y = 0f;
+            owner.transform.rotation = Quaternion.LookRotation(targetDir.normalized);
+            return;
+        }
+
+        // 3. 탐색된 적이 없다면 현재 이동 입력 방향으로 회전
+        if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
+        {
+            owner.transform.rotation = Quaternion.LookRotation(owner.CurrentMoveDirection.normalized);
+        }
     }
 }

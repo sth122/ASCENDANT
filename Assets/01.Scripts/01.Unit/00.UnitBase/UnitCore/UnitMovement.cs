@@ -128,6 +128,38 @@ public abstract class UnitMovement
         _transform.rotation = Quaternion.Slerp(_transform.rotation, targetRotation, rotationSpeed * deltaTime);
     }
 
+    /// <summary>
+    /// 타깃 위치를 향해 Y축 평면 기준으로 부드럽게 선회
+    /// </summary>
+    public virtual void FaceTarget(Vector3 targetPosition, float rotationSpeed, float deltaTime)
+    {
+        if (_transform == null) return;
+
+        Vector3 direction = targetPosition - _transform.position;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude > 0.001f)
+        {
+            RotateTowards(direction.normalized, rotationSpeed, deltaTime);
+        }
+    }
+
+    /// <summary>
+    /// 타깃 방향으로 정렬 (선딜레이 종료 후 타격 개시 시점용)
+    /// </summary>
+    public virtual void SnapToTarget(Vector3 targetPosition)
+    {
+        if (_transform == null) return;
+
+        Vector3 direction = targetPosition - _transform.position;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude > 0.001f)
+        {
+            _transform.rotation = Quaternion.LookRotation(direction.normalized);
+        }
+    }
+
     public virtual void StopMovement()
     {
         // Enemy NavMesh 충돌 문제

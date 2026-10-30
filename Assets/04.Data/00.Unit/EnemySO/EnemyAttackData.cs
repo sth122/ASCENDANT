@@ -30,6 +30,9 @@ public struct EnemyAttackData
     [Tooltip("강공격 적중 시 플레이어를 밀어내는 임펄스 넉백 힘")]
     [SerializeField] private float _knockbackForce;
 
+    [System.NonSerialized]
+    private ActionTimelineStep[] _cachedStepArray;
+
     #region Properties
     public AnimStateType AttackAnimStateType => _attackAnimStateType;
     public AttackImpactType ImpactType => _impactType;
@@ -75,6 +78,9 @@ public struct EnemyAttackData
         _hitboxStartNormalized = hitboxStart;
         _hitboxEndNormalized = hitboxEnd;
         _customSteps = null;
+
+        // struct 타입 필드 할당 보장
+        _cachedStepArray = null;
     }
 
     /// <summary>
@@ -92,12 +98,15 @@ public struct EnemyAttackData
     /// </summary>
     public ActionTimelineStep[] GetTimelineSteps()
     {
+        if (_cachedStepArray != null) return _cachedStepArray;
+
         if (_customSteps != null && _customSteps.Count > 0)
         {
-            return _customSteps.ToArray();
+            _cachedStepArray = _customSteps.ToArray();
+            return _cachedStepArray;
         }
 
-        return new ActionTimelineStep[]
+        _cachedStepArray = new ActionTimelineStep[]
         {
             ActionTimelineStep.CreateSingleAttack(
                 _attackAnimStateType,
@@ -106,5 +115,6 @@ public struct EnemyAttackData
                 HitboxEndNormalized
             )
         };
+        return _cachedStepArray;
     }
 }

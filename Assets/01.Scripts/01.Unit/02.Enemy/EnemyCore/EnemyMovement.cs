@@ -107,7 +107,7 @@ public class EnemyMovement : UnitMovement
         }
     }
 
-    public void FaceTarget(UnityEngine.Vector3 targetPosition, float rotationSpeed, float deltaTime)
+    public override void FaceTarget(UnityEngine.Vector3 targetPosition, float rotationSpeed, float deltaTime)
     {
         UnityEngine.Vector3 direction = targetPosition - _transform.position;
         direction.y = 0f;

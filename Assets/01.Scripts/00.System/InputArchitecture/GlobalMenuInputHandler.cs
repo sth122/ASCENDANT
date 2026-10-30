@@ -9,44 +9,44 @@ using Util = DebugLogger<GlobalMenuInputHandler>;
 /// </summary>
 public class GlobalMenuInputHandler : MonoBehaviour
 {
+    private bool _isMenuToggling = false;
+
     private void Update()
     {
-        HandleKeyboardShortcuts();
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            HandleEscapePressed();
+        }
     }
 
-    private void HandleKeyboardShortcuts()
+    private void HandleEscapePressed()
     {
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard == null) return;
+        if (_isMenuToggling) return;
 
-        // 1. ESC 키 입력 처리: 오직 "인게임 플레이 중"이고 "열린 창이 없을 때"만 시스템 메뉴를 염
-        if (keyboard.escapeKey.wasPressedThisFrame)
+        if (GameManager.Instance != null && GameManager.Instance.IsPlaying)
         {
-            if (GameManager.Instance != null && GameManager.Instance.IsPlaying)
+            if (UIManager.Instance != null && !UIManager.Instance.HasActiveModalOrWindow())
             {
-                if (UIManager.Instance != null && !UIManager.Instance.HasActiveModalOrWindow())
-                {
-                    OpenSystemMenuAsync().Forget();
-                }
-            }
-            // 주의: 이미 창이 열려 있는 상태(Paused)에서는 UIInputReader의 Cancel 액션이 처리하므로 여기서 절대 개입하지 않음
-        }
-
-        // 2. I 키 입력 처리 (인벤토리)
-        if (keyboard.iKey.wasPressedThisFrame)
-        {
-            if (GameManager.Instance != null && GameManager.Instance.IsPlaying)
-            {
-                Util.Log("인벤토리 창 토글 요청");
+                _isMenuToggling = true;
+                OpenSystemMenuAsync().Forget();
             }
         }
     }
 
     private async UniTaskVoid OpenSystemMenuAsync()
     {
-        SystemMenuModel model = new SystemMenuModel();
-        await UIManager.Instance.OpenUIAsync<SystemMenuView, SystemMenuPresenter, SystemMenuModel>(
-            UIId.SystemMenuUI, "SystemMenuUI", model, this.destroyCancellationToken
-        );
+        try
+        {
+            SystemMenuModel model = new SystemMenuModel();
+            await UIManager.Instance.OpenUIAsync<SystemMenuView, SystemMenuPresenter, SystemMenuModel>(
+                UIId.SystemMenuUI, "SystemMenuUI", model, this.destroyCancellationToken
+            );
+        }
+        finally
+        {
+            // 동일 프레임 더블 트리거(열리자마자 닫히는 현상) 방지를 위해 1프레임 대기 후 락 해제
+            await UniTask.Yield();
+            _isMenuToggling = false;
+        }
     }
 }

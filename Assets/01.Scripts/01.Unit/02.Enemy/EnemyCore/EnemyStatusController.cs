@@ -63,12 +63,16 @@ public class EnemyStatusController : UnitStatusController
             }
             _maxPoise = _runtimeEnemyInfo.Poise;
             _currentPoise = Mathf.Min(_currentPoise, _maxPoise);
+
+            if (MotionStatus is EnemyMotionStatusModule enemyMotion)
+            {
+                enemyMotion.ChaseSpeed.BaseValue = _runtimeEnemyInfo.ChaseSpeed;
+                enemyMotion.PatrolSpeed.BaseValue = _runtimeEnemyInfo.PatrolSpeed;
+                enemyMotion.WalkSpeed.BaseValue = _runtimeEnemyInfo.WalkSpeed;
+            }
         }
 
         _dropSouls = _runtimeEnemyInfo.DropSouls;
-
-        // 이동 모듈 스탯 동기화
-        MotionStatus = new EnemyMotionStatusModule(_runtimeEnemyInfo);
 
         // 상위 컨트롤러(EnemyBTController)의 지각 센서 및 기즈모 동기화 신호 발행
         OnStatusDataChanged?.Invoke(_runtimeEnemyInfo);

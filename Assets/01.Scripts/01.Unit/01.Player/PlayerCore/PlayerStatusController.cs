@@ -129,24 +129,30 @@ public class PlayerStatusController : UnitStatusController
     /// </summary>
     private async UniTaskVoid StaminaRegenLoopAsync(System.Threading.CancellationToken token)
     {
+        float lastPublishedStamina = _currentStamina;
+
         while (!token.IsCancellationRequested)
         {
-            bool isCanceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+            bool isCanceled = await UniTask.Delay(100, cancellationToken: token).SuppressCancellationThrow();
             if (isCanceled) return;
 
             if (_staminaRecoveryTimer > 0f)
             {
-                _staminaRecoveryTimer -= UnityEngine.Time.deltaTime;
+                _staminaRecoveryTimer -= 0.1f;
                 continue;
             }
 
             if (_currentStamina < _maxStamina)
             {
                 float finalRate = _staminaRegenRate * StaminaRegenMultiplier;
-                _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + finalRate * UnityEngine.Time.deltaTime);
+                _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + finalRate * 0.1f);
 
-                OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-                EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+                if (UnityEngine.Mathf.Abs(_currentStamina - lastPublishedStamina) >= 1.0f || _currentStamina >= _maxStamina)
+                {
+                    lastPublishedStamina = _currentStamina;
+                    OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
+                    EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+                }
             }
         }
     }

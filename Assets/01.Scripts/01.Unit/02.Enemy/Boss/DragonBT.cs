@@ -104,7 +104,6 @@ public class DragonBT : BossBTController
         CloseAllHitboxes();
 
         Util.LogWithTag("BossDragon", "[Phase 2] 무적화 및 공중 체공 연출 진입");
-        float durationTime;
         try
         {
             // 1. Dragon_Takeoff_InPlace : 제자리 도약

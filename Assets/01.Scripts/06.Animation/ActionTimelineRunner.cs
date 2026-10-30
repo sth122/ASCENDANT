@@ -21,7 +21,8 @@ public static class ActionTimelineRunner
         public Action OnCloseAllHitboxes;
 
         // 특수 기믹 실행 대리자
-        public Func<UniTask> OnCustomEventTrigger;
+        public Func<BossBTController, UniTask> OnCustomEventTrigger;
+        public BossBTController BossOwner;
 
         // 공격 대미지 파라미터
         public float BaseDamage;
@@ -62,7 +63,7 @@ public static class ActionTimelineRunner
         // 1. 타깃 선회
         if (step.FaceTargetOnEnter && ctx.Target != null && ctx.Movement != null)
         {
-            //ctx.Movement.FaceTarget(ctx.Target.position, 12f, Time.deltaTime);
+            ctx.Movement.SnapToTarget(ctx.Target.position);
         }
 
         // 2. 모션 재생
@@ -90,10 +91,23 @@ public static class ActionTimelineRunner
         float activeDuration = totalDuration * Mathf.Clamp01(step.HitboxEndNormalized - step.HitboxStartNormalized);
         float recoveryTime = totalDuration * Mathf.Clamp01(1.0f - step.HitboxEndNormalized);
 
+        float eventTriggerTime = step.HasCustomEvent ? totalDuration * Mathf.Clamp01(step.EventTriggerNormalized) : -1f;
+        bool isEventTriggered = false;
+
         // [선딜레이 대기]
         if (startupTime > 0f)
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(startupTime), cancellationToken: ct);
+            if (eventTriggerTime >= 0f && eventTriggerTime <= startupTime)
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(eventTriggerTime), cancellationToken: ct);
+                ctx.OnCustomEventTrigger?.Invoke(ctx.BossOwner).Forget();
+                isEventTriggered = true;
+                await UniTask.Delay(TimeSpan.FromSeconds(startupTime - eventTriggerTime), cancellationToken: ct);
+            }
+            else
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(startupTime), cancellationToken: ct);
+            }
         }
 
         try
@@ -105,13 +119,11 @@ public static class ActionTimelineRunner
                     ctx.IsParryable, ctx.ImpactType, ctx.KnockbackForce);
             }
 
-            // [특수 이벤트 격발 처리 (메테오 소환 등)]
-            if (step.HasCustomEvent && ctx.OnCustomEventTrigger != null)
+            if (step.HasCustomEvent && !isEventTriggered)
             {
-                ctx.OnCustomEventTrigger.Invoke().Forget();
+                ctx.OnCustomEventTrigger?.Invoke(ctx.BossOwner).Forget();
             }
 
-            // [타격 액티브 지속 대기]
             if (activeDuration > 0f)
             {
                 await UniTask.Delay(TimeSpan.FromSeconds(activeDuration), cancellationToken: ct);
