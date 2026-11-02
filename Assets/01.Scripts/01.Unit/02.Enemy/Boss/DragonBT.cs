@@ -23,7 +23,7 @@ public class DragonBT : BossBTController
         // 1. 사망 판정 노드
         var deathSeq = new SequenceNode();
         deathSeq.Add(new PredicateNode<DragonBT>(this, static (boss) => boss._enemyStatus != null && boss._enemyStatus.CurrentHp <= 0f));
-        deathSeq.Add(new AsyncActionNode(ExecuteDeathAsync, GetActionToken));
+        deathSeq.Add(new ActionNode(ExecuteDeath));
         root.Add(deathSeq);
 
         // 2. 2페이즈 전환 브랜치
@@ -130,19 +130,6 @@ public class DragonBT : BossBTController
         }
 
         Util.LogWithTag("BossDragon", "[Phase 2 완료] 드래곤 광폭화 개시");
-        return true;
-    }
-
-    private async UniTask<bool> ExecuteDeathAsync(CancellationToken ct)
-    {
-        SetControllerActive(false);
-        _movement.StopMovement();
-        CloseAllHitboxes();
-
-        _enemyAnim.PlayState(AnimStateType.Death);
-        EventBusSystem.Publish(new UnitDiedEvent(gameObject, _unitId));
-
-        await UniTask.Delay(TimeSpan.FromSeconds(5.0f), cancellationToken: ct);
         return true;
     }
     #endregion
