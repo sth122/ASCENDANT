@@ -106,3 +106,25 @@ public readonly struct GameStateChangedEvent : IEventType
         NewState = newState;
     }
 }
+
+/// <summary>
+/// 씬 부트스트래퍼의 모든 시스템, 데이터, 플레이어 스폰 완료를 전역 신호
+/// 씬에 정적으로 배치된 에너미와 시스템 액터들은 이 이벤트를 수신한 후 로직을 기동
+/// </summary>
+public readonly struct GameSceneReadyEvent : IEventType
+{
+    public readonly SceneId Scene;
+    public GameSceneReadyEvent(SceneId scene) => Scene = scene;
+}
+
+public readonly struct InteractionPromptEvent : IEventType
+{
+    public readonly bool Show;
+    public readonly string PromptText;
+
+    public InteractionPromptEvent(bool show, string promptText)
+    {
+        Show = show;
+        PromptText = promptText;
+    }
+}

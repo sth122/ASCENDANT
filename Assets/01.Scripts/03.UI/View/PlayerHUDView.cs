@@ -20,6 +20,10 @@ public class PlayerHUDView : UIBase
     [UnityEngine.SerializeField] private float _ghostDelayDuration = 0.45f;
     [UnityEngine.SerializeField] private float _ghostDrainSpeed = 0.6f;
 
+    [UnityEngine.Header("Interaction Prompt")]
+    [UnityEngine.SerializeField] private UnityEngine.GameObject _promptRoot;
+    [UnityEngine.SerializeField] private TMPro.TextMeshProUGUI _promptText;
+
     private float _hpGhostTimer = 0f;
     private float _staminaGhostTimer = 0f;
     private float _previousHpRatio = 1.0f;
@@ -130,6 +134,19 @@ public class PlayerHUDView : UIBase
                 _staminaSlider.value,
                 _ghostDrainSpeed * UnityEngine.Time.unscaledDeltaTime
             );
+        }
+    }
+
+    public void SetInteractionPrompt(bool isVisible, string message)
+    {
+        if (_promptRoot != null)
+        {
+            _promptRoot.SetActive(isVisible);
+        }
+
+        if (_promptText != null && isVisible)
+        {
+            _promptText.text = message;
         }
     }
 }

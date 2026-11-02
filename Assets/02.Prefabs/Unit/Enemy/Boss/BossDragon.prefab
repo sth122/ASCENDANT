@@ -178,7 +178,7 @@ Transform:
   m_GameObject: {fileID: 303604568398480592}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.52, z: 0}
+  m_LocalPosition: {x: -1.5, y: -0.52, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2300,7 +2300,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 672313308855506311}
-  - component: {fileID: 6749002320017917061}
   m_Layer: 9
   m_Name: Bone006
   m_TagString: Untagged
@@ -2325,29 +2324,6 @@ Transform:
   - {fileID: 6588020649219786128}
   m_Father: {fileID: 5552604217870334320}
   m_LocalEulerAnglesHint: {x: -2.185016, y: 1.3290982, z: -9.838829}
---- !u!136 &6749002320017917061
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3699644132665405702}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 2.5
-  m_Height: 18
-  m_Direction: 0
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3747577157686112825
 GameObject:
   m_ObjectHideFlags: 0
@@ -2470,7 +2446,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8108817577706923371}
-  - component: {fileID: 360247135329651663}
   m_Layer: 9
   m_Name: Bone001
   m_TagString: Untagged
@@ -2494,29 +2469,6 @@ Transform:
   - {fileID: 2162771006735525817}
   m_Father: {fileID: 6376922398599941934}
   m_LocalEulerAnglesHint: {x: -0.92427003, y: 170.85504, z: -9.486395}
---- !u!136 &360247135329651663
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3853472779486465023}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 4.25
-  m_Height: 24.13
-  m_Direction: 0
-  m_Center: {x: -4.5, y: 0, z: 0}
 --- !u!1 &3903491559530670568
 GameObject:
   m_ObjectHideFlags: 0
@@ -5292,7 +5244,14 @@ MonoBehaviour:
   _maxHp: 0
   _currentPoise: 0
   _maxPoise: 0
+  _runtimeEnemyInfo:
+    rid: -2
   _dropSouls: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
 --- !u!54 &1683899034421266224
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -5316,7 +5275,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
@@ -5339,6 +5298,11 @@ MonoBehaviour:
   _targetLayer:
     serializedVersion: 2
     m_Bits: 64
+  _groundCheckConfig:
+    SphereRadius: 0.35
+    CastOriginOffsetY: 0.4
+    CastDistance: 0.15
+    MaxSlopeAngle: 45
   _hitboxMappings:
   - Slot: 1
     Hitbox: {fileID: 4303220454407671157}
@@ -5349,6 +5313,8 @@ MonoBehaviour:
   - Slot: 2
     Hitbox: {fileID: 3039683149146458612}
   _groggyRecoveryDuration: 8
+  _spawnWaitDuration: 3
+  _riposteSocket: {fileID: 0}
   _blackboard:
     SkillCycleInterval: 15
     Phase2HpRatio: 0.3

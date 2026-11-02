@@ -33,5 +33,5 @@ MonoBehaviour:
       <Phase2ThresholdRatio>k__BackingField: 0.3
       <Phase2HealRatio>k__BackingField: 0.1
       <Phase2StatBuffMultiplier>k__BackingField: 1.3
-      <SkillCycleInterval>k__BackingField: 15
+      <SkillCycleInterval>k__BackingField: 5
       <SkillCooldownResetChance>k__BackingField: 0.3

@@ -55,6 +55,19 @@ public class PlayerParryState : PlayerActionState
         {
             float guardSpeed = owner.StatusController.MotionStatus.WalkSpeed.Value * GuardMoveSpeedFactor;
             owner.MoveAPI(owner.CurrentMoveDirection, guardSpeed);
+
+            float rotSpeed = (_playerStatusController != null && _playerStatusController.PlayerInfoSource != null)
+                ? _playerStatusController.PlayerInfoSource.RotationSpeed : 16f;
+
+            if (owner.CurrentLockOnTarget != null)
+            {
+                UnityEngine.Vector3 targetDir = owner.CurrentLockOnTarget.position - owner.transform.position;
+                targetDir.y = 0f;
+                if (targetDir.sqrMagnitude > 0.001f)
+                {
+                    owner.RotateTowardsAPI(targetDir.normalized, rotSpeed, UnityEngine.Time.fixedDeltaTime);
+                }
+            }
         }
         else
         {
@@ -78,81 +91,86 @@ public class PlayerParryState : PlayerActionState
     }
 
     /// <summary>
-    /// 공격 수신 시 가드 또는 패링 분기 연산
-    /// 수평면 투영(Dot Product)을 통해 높낮이 지형에 의한 판정 뚫림 완벽 차단
+    /// 공격 수신 시 패링 성공, 가드 유지 임팩트, 넉백, 가드파쇄 분기 처리
     /// </summary>
-    public bool TryProcessBlockOrParry(in DamageContext context, out bool parrySuccess)
+    public BlockResultType ProcessIncomingAttack(in DamageContext context)
     {
-        parrySuccess = false;
-
-        // 1. 방어 각도 검사
+        // 1. 방어 각도 검사 (전방 120도)
         if (context.Attacker != null)
         {
-            UnityEngine.Vector3 dirToAttacker = context.Attacker.transform.position - owner.transform.position;
-            dirToAttacker.y = 0f; // 수평 투영
+            Vector3 dirToAttacker = context.Attacker.transform.position - owner.transform.position;
+            dirToAttacker.y = 0f;
 
             if (dirToAttacker.sqrMagnitude > 0.001f)
             {
-                float dot = UnityEngine.Vector3.Dot(owner.transform.forward, dirToAttacker.normalized);
-                float minDot = UnityEngine.Mathf.Cos((GuardBlockAngle * 0.5f) * UnityEngine.Mathf.Deg2Rad);
-                if (dot < minDot) return false; // 측후면 가드 불가
+                float dot = Vector3.Dot(owner.transform.forward, dirToAttacker.normalized);
+                float minDot = Mathf.Cos((GuardBlockAngle * 0.5f) * Mathf.Deg2Rad);
+                if (dot < minDot) return BlockResultType.Failed; // 등 뒤 피격은 방어 불가
             }
         }
 
-        // 2. 패링 불가 공격은 가드 및 패링 관통 -> 넉다운 처리
+        // 2. 패링 불가 공격을 패링/가드하려 한 경우 -> Knockback(넉다운) 강제 전이
         if (!context.IsParryable)
         {
-            _playerStateMachine.ChangeState(UnitState.Stun, true);
-            return false;
+            owner.StateMachineInstance.ChangeState(UnitState.Knockback, forceReenter: true);
+            return BlockResultType.Knockback;
         }
 
-        // 3. 패링 윈도우 적중 시 분기
+        // 3. 패링 유효 윈도우 중 피격
         if (IsParryWindow)
         {
             IsParryWindow = false;
 
-            // [강공격 패링]: 캐릭터가 밀려나는 역임펄스 Stagger 발생
+            // 보스 강공격(Heavy) 패링 시: 적은 그로기에 걸리지 않고 플레이어가 역임펄스로 밀려남
             if (context.ImpactType == AttackImpactType.Heavy)
             {
                 _playerAnimController.SetTrigger(AnimParamType.GetHit);
                 if (owner.Rigidbody != null)
                 {
-                    owner.Rigidbody.AddForce(-owner.transform.forward * 5.0f, ForceMode.Impulse);
+                    owner.Rigidbody.AddForce(-owner.transform.forward * 4.5f, ForceMode.Impulse);
                 }
-                return true;
+                return BlockResultType.HeavyParryPushback;
             }
 
-            // [약공격 패링]: 일반 패링 성공 및 상대 그로기 유발
-            parrySuccess = true;
+            // 일반 약공격(Light) 패링 성공: 적 그로기 및 카운터 모션 실행
             TriggerParrySuccess(context.Attacker);
-            return true;
+            return BlockResultType.ParrySuccess;
         }
 
-        // 4. 일반 가드 처리: 스태미나 차감 및 가드 브레이크 연산
+        // 4. 패링 타이밍이 빗나갔으나 가드를 유지하고 있는 상태 (일반 방어 판정)
         if (_playerStatusController != null)
         {
             float staminaCost = context.Damage * (1.0f - ShieldStability);
             float currentStamina = _playerStatusController.CurrentStamina;
 
-            // 스태미나가 부족하면 가드 파쇄 발생
+            // 스태미나 고갈 시 -> 가드 브레이크(Stun)
             if (currentStamina < staminaCost)
             {
                 float chipRatio = (staminaCost - currentStamina) / Mathf.Max(1.0f, staminaCost);
                 _playerStatusController.ConsumeStamina(currentStamina);
                 _playerStatusController.TakeDamage(context.Damage * chipRatio, context.PoiseDamage);
 
-                // 가드 파쇄 스턴 강제 전이
-                _playerStateMachine.ChangeState(UnitState.Stun, true);
-                return true;
+                owner.StateMachineInstance.ChangeState(UnitState.Stun, forceReenter: true);
+                return BlockResultType.GuardBreak;
             }
 
+            // 방어 성공: 스태미나 감산 후 방패 충격(Impact) 모션 재생
             _playerStatusController.ConsumeStamina(staminaCost);
+            _playerAnimController.SetTrigger(AnimParamType.GuardImpact);
+
+            // 미세 넉백 반동
+            if (owner.Rigidbody != null)
+            {
+                owner.Rigidbody.AddForce(-owner.transform.forward * 1.5f, ForceMode.Impulse);
+            }
+
+            return BlockResultType.GuardImpact;
         }
 
-        return true;
+        return BlockResultType.Failed;
     }
 
-    private void TriggerParrySuccess(GameObject attacker)
+    private void TriggerParrySuccess(UnityEngine.GameObject attacker)
     {
         _playerAnimController.SetTrigger(AnimParamType.ParrySuccess);
 
@@ -219,4 +237,3 @@ public class PlayerParryState : PlayerActionState
     }
     #endregion
 }
-

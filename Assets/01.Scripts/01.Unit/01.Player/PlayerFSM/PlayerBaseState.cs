@@ -15,21 +15,5 @@ public class PlayerBaseState : BaseState<PlayerController>
         _playerStateMachine = stateMachine;
         _playerStatusController = owner.StatusController;
         _playerAnimController = owner.AnimationController;
-#if UNITY_EDITOR
-        _stateTypeName = GetType().Name;
-#endif
-    }
-
-    public override void Enter()
-    {
-#if UNITY_EDITOR
-        DebugLogger<PlayerController>.Log($"[{_stateTypeName}] 진입");
-#endif
-    }
-    public override void Exit()
-    {
-#if UNITY_EDITOR
-        DebugLogger<PlayerController>.Log($"[{_stateTypeName}] 퇴장");
-#endif
     }
 }

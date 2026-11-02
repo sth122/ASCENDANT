@@ -12,7 +12,6 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     public UnityEngine.Vector2 MoveInput { get; private set; }
     public bool IsSprinting { get; private set; }
     public bool IsGuarding { get; private set; }
-    public bool HasInteractInput { get; private set; }
     #endregion
 
     #region Input Action Events
@@ -167,7 +166,6 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     {
         if (context.performed)
         {
-            HasInteractInput = true;
             OnInteractEvent?.Invoke();
         }
     }

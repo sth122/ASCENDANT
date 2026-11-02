@@ -116,7 +116,7 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""id"": ""971c92af-eb0e-4d4f-a1b7-42580967ea8e"",
                     ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": ""Hold"",
+                    ""interactions"": """",
                     ""initialStateCheck"": false
                 },
                 {
@@ -235,7 +235,7 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""d426c5bd-6b78-4856-8178-33e3f29d5c90"",
-                    ""path"": ""<Keyboard>/e"",
+                    ""path"": ""<Keyboard>/f"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard&Mouse"",

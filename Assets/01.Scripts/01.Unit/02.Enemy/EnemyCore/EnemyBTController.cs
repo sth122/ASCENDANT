@@ -57,7 +57,6 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     public Vector3 SpawnPoint => _spawnPoint;
     public bool IsDead => _enemyStatus != null && _enemyStatus.IsDead;
     public bool CanBeRiposted { get; protected set; } = false;
-
     #endregion
 
     #region 변수
@@ -96,7 +95,6 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         _perceptionModule = new EnemyPerceptionModule(transform, _targetLayer, _groundLayer);
         _perceptionModule.OnTargetSpotted += HandleTargetSpotted;
         _perceptionModule.OnNoiseHeard += HandleNoiseHeard;
-        _perceptionModule.StartSensorLoop();
 
         // 다중 히트박스 소켓 레지스트리 구축
         BuildHitboxRegistry();
@@ -106,21 +104,26 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
             _enemyStatus.OnStatusDataChanged -= HandleStatusDataChanged;
             _enemyStatus.OnStatusDataChanged += HandleStatusDataChanged;
         }
-    }
 
-    protected override void Start()
-    {
-        // 씬에 정적으로 배치된 경우 즉시 자가 기동
-        if (!_isSpawnedFromPool)
-        {
-            base.Start();
-        }
+        // Scene 사전 배치 몬스터 -> 전역 씬 준비 완료 이벤트 구독
+        EventBusSystem.Subscribe<GameSceneReadyEvent>(HandleGameSceneReady);
     }
 
     public override void Init()
     {
         base.Init();
         EnsureDataAndInitializeAsync(this.destroyCancellationToken).Forget();
+    }
+
+    /// <summary>
+    /// GameSceneBootstrapper의 셋업이 완전히 끝났을 때만 BT와 센서 루프를 안전 기동
+    /// </summary>
+    private void HandleGameSceneReady(GameSceneReadyEvent evt)
+    {
+        if (_isSpawnedFromPool) return;
+
+        Init();
+        _perceptionModule?.StartSensorLoop();
     }
 
     #region SO 데이터 주입 파이프라인
@@ -287,6 +290,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         _rootNode.Evaluate();
     }
 
+    #region BT Build
     /// <summary>
     /// 표준 에너미 Behavior Tree 조립
     /// </summary>
@@ -346,6 +350,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
         return selector;
     }
+    #endregion
 
     #region AI 실행 서브 루틴
     protected bool HasAnyReadyAttack()
@@ -390,7 +395,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         if (_validAttackCandidates.Count == 0) return false;
 
         // 2. 무작위 패턴 1종 선정
-        EnemyAttackData chosenData = _validAttackCandidates[UnityEngine.Random.Range(0, _validAttackCandidates.Count)];
+        EnemyAttackData chosenData = _validAttackCandidates[Random.Range(0, _validAttackCandidates.Count)];
 
         _isActionExecuting = true;
         _movement.StopMovement();
@@ -911,8 +916,11 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         UnityEditor.EditorUtility.SetDirty(this);
 #endif
     }
+
     protected virtual void OnDestroy()
     {
+        EventBusSystem.Unsubscribe<GameSceneReadyEvent>(HandleGameSceneReady);
+
         if (_enemyStatus != null)
         {
             _enemyStatus.OnStatusDataChanged -= HandleStatusDataChanged;

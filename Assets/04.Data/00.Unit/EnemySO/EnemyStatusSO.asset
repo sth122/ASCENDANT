@@ -22,7 +22,7 @@ MonoBehaviour:
       <DropSouls>k__BackingField: 100
       <AttackPower>k__BackingField: 50
       <BasePoiseDamage>k__BackingField: 20
-      <AttackRange>k__BackingField: 2
+      <AttackRange>k__BackingField: 3
       <AttackCooldown>k__BackingField: 4
       <ChaseSpeed>k__BackingField: 4.5
       <PatrolSpeed>k__BackingField: 3

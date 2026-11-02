@@ -561,43 +561,43 @@ AnimatorStateMachine:
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: 110223516}
-    m_Position: {x: 440, y: -10, z: 0}
+    m_Position: {x: 330, y: -240, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110281324}
-    m_Position: {x: 440, y: -70, z: 0}
+    m_Position: {x: 330, y: -300, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110220676}
-    m_Position: {x: 440, y: 50, z: 0}
+    m_Position: {x: 330, y: -180, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110208012}
-    m_Position: {x: 440, y: 110, z: 0}
+    m_Position: {x: 330, y: -120, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110278520}
-    m_Position: {x: 440, y: 170, z: 0}
+    m_Position: {x: 330, y: -60, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110235594}
-    m_Position: {x: -410, y: -250, z: 0}
+    m_Position: {x: -410, y: -270, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110270480}
-    m_Position: {x: -410, y: -200, z: 0}
+    m_Position: {x: -410, y: -220, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110270178}
-    m_Position: {x: -410, y: -140, z: 0}
+    m_Position: {x: -410, y: -130, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110289144}
     m_Position: {x: -410, y: -80, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110240576}
-    m_Position: {x: 0, y: -140, z: 0}
+    m_Position: {x: -20, y: -130, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110264944}
-    m_Position: {x: 0, y: -90, z: 0}
+    m_Position: {x: -20, y: -80, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110298160}
-    m_Position: {x: 0, y: -200, z: 0}
+    m_Position: {x: -20, y: -220, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110235944}
-    m_Position: {x: 0, y: -250, z: 0}
+    m_Position: {x: -20, y: -270, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110214020}
     m_Position: {x: -100, y: 30, z: 0}
@@ -609,7 +609,7 @@ AnimatorStateMachine:
     m_Position: {x: -100, y: 150, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 8072739532725619427}
-    m_Position: {x: -410, y: -310, z: 0}
+    m_Position: {x: -410, y: -340, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []

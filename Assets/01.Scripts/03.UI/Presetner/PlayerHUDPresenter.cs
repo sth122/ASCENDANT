@@ -10,6 +10,9 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
         EventBusSystem.Subscribe<UnitHpChangedEvent>(HandleHpChanged);
         EventBusSystem.Subscribe<PlayerStaminaChangedEvent>(HandleStaminaChanged);
         EventBusSystem.Subscribe<UnitPoiseChangedEvent>(HandlePoiseChanged);
+        EventBusSystem.Subscribe<InteractionPromptEvent>(HandleInteractionPrompt);
+        EventBusSystem.Subscribe<GameSceneReadyEvent>(HandleGameSceneReady);
+        SynchronizeInitialStats();
 
         DebugLogger.LogWithTag("PlayerHUDPresetner", "[Presenter 바인딩 및 이벤트 구독 완료]");
     }
@@ -19,9 +22,14 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
         EventBusSystem.Unsubscribe<UnitHpChangedEvent>(HandleHpChanged);
         EventBusSystem.Unsubscribe<PlayerStaminaChangedEvent>(HandleStaminaChanged);
         EventBusSystem.Unsubscribe<UnitPoiseChangedEvent>(HandlePoiseChanged);
+        EventBusSystem.Unsubscribe<InteractionPromptEvent>(HandleInteractionPrompt);
+        EventBusSystem.Unsubscribe<GameSceneReadyEvent>(HandleGameSceneReady);
 
         DebugLogger.LogWithTag("PlayerHUDPresetner", "[Presenter 해제 및 이벤트 구독 취소]");
     }
+
+    #region Handle
+    private void HandleGameSceneReady(GameSceneReadyEvent eventData) => SynchronizeInitialStats();
 
     private void HandleHpChanged(UnitHpChangedEvent eventData)
     {
@@ -64,6 +72,54 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
                 Model.MaxPoise = eventData.MaxPoise;
             }
             View.UpdatePoiseBar(eventData.CurrentPoise, eventData.MaxPoise);
+        }
+    }
+    private void HandleInteractionPrompt(InteractionPromptEvent eventData)
+    {
+        if (View != null)
+        {
+            View.SetInteractionPrompt(eventData.Show, eventData.PromptText);
+        }
+    }
+
+    #endregion
+
+    private void SynchronizeInitialStats()
+    {
+        if (ServiceLocator.TryGet<IPlayerProvider>(out var provider) && provider.IsPlayerSpawned && provider.Player != null)
+        {
+            PlayerController player = provider.Player;
+            UnitStatusController stat = player.StatusController;
+
+            if (stat != null && View != null)
+            {
+                float curHp = stat.CurrentHp;
+                float maxHp = stat.MaxHp;
+                float curPoise = stat.CurrentPoise;
+                float maxPoise = stat.MaxPoise;
+
+                float curStamina = 100f;
+                float maxStamina = 100f;
+                if (stat is PlayerStatusController playerStat)
+                {
+                    curStamina = playerStat.CurrentStamina;
+                    maxStamina = playerStat.MaxStamina;
+                }
+
+                if (Model != null)
+                {
+                    Model.CurrentHp = curHp;
+                    Model.MaxHp = maxHp;
+                    Model.CurrentStamina = curStamina;
+                    Model.MaxStamina = maxStamina;
+                    Model.CurrentPoise = curPoise;
+                    Model.MaxPoise = maxPoise;
+                }
+
+                View.UpdateHpBar(curHp, maxHp);
+                View.UpdateStaminaBar(curStamina, maxStamina);
+                View.UpdatePoiseBar(curPoise, maxPoise);
+            }
         }
     }
 }

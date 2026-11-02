@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
 using UnityEngine;
 using Util = DebugLogger<SaveManager>;
 /// <summary>
@@ -55,14 +56,18 @@ public class SaveManager : MonoSingleton<SaveManager>
         CurrentSaveData = new SaveData
         {
             SaveSlotIndex = slotIndex,
-            SaveTimestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            SaveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
             LastSavedScene = SceneId.GameScene,
+            HasCheckpoint = false,
             LastBonfirePosition = new SerializableVector3(0f, 0.1f, 0f),
             LastBonfireRotationY = 0f,
             PlayerData = new PlayerSaveData()
         };
 
-        SaveCurrentGame(slotIndex);
+        // 세션 데이터 동시 초기화
+        SessionDataManager.Instance.LoadSessionFromSave(CurrentSaveData.PlayerData);
+
+        SaveCurrentGameAsync(slotIndex).Forget();
         Util.Log($"[새 게임 세이브 생성 완료] 슬롯: {slotIndex}");
         return CurrentSaveData;
     }
@@ -85,6 +90,12 @@ public class SaveManager : MonoSingleton<SaveManager>
         {
             string json = System.IO.File.ReadAllText(filePath);
             CurrentSaveData = JsonUtility.FromJson<SaveData>(json);
+
+            // 로드된 데이터를 인메모리 세션에 즉시 안착
+            if (CurrentSaveData != null && CurrentSaveData.PlayerData != null)
+            {
+                SessionDataManager.Instance.LoadSessionFromSave(CurrentSaveData.PlayerData);
+            }
             Util.Log($"[세이브 로드 성공] 슬롯: {slotIndex}, 타임스탬프: {CurrentSaveData.SaveTimestamp}");
             return true;
         }
@@ -97,9 +108,9 @@ public class SaveManager : MonoSingleton<SaveManager>
     }
 
     /// <summary>
-    /// 현재 캐싱된 SaveData를 파일에 기록
+    /// 임시 파일에 먼저 기록 후 교체하여 파일 손상 방지
     /// </summary>
-    public void SaveCurrentGame(int slotIndex = 0)
+    public async UniTask SaveCurrentGameAsync(int slotIndex = 0)
     {
         if (CurrentSaveData == null)
         {
@@ -109,41 +120,33 @@ public class SaveManager : MonoSingleton<SaveManager>
 
         try
         {
-            CurrentSaveData.SaveTimestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            CurrentSaveData.SaveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             string json = JsonUtility.ToJson(CurrentSaveData, prettyPrint: true);
-            string filePath = GetSaveFilePath(slotIndex);
 
-            System.IO.File.WriteAllText(filePath, json);
-            Util.Log($"[세이브 파일 기록 완료] 경로: {filePath}");
+            string targetFilePath = GetSaveFilePath(slotIndex);
+            string tempFilePath = targetFilePath + ".tmp";
+
+            // 1. 임시 파일에 비동기 기록
+            await System.IO.File.WriteAllTextAsync(tempFilePath, json);
+
+            // 2. 기록 완료 후 원자적 교체
+            if (System.IO.File.Exists(targetFilePath))
+            {
+                System.IO.File.Delete(targetFilePath);
+            }
+            System.IO.File.Move(tempFilePath, targetFilePath);
+
+            Util.Log($"[원자적 세이브 파일 기록 완료] 경로: {targetFilePath}");
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Util.LogError($"세이브 파일 쓰기 실패: {ex.Message}");
         }
     }
 
-    public async UniTask SaveCurrentGameAsync(int slotIndex = 0)
-    {
-        if (CurrentSaveData == null) return;
-
-        try
-        {
-            CurrentSaveData.SaveTimestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string json = JsonUtility.ToJson(CurrentSaveData, prettyPrint: true);
-            string filePath = GetSaveFilePath(slotIndex);
-
-            // 메인 스레드 멈춤 없이 비동기로 디스크 기록
-            await System.IO.File.WriteAllTextAsync(filePath, json);
-            Util.Log($"[비동기 세이브 파일 기록 완료] {filePath}");
-        }
-        catch (System.Exception ex)
-        {
-            Util.LogError($"세이브 파일 쓰기 실패: {ex.Message}");
-        }
-    }
 
     /// <summary>
-    /// 화롯불(세이브 터미널)과 상호작용 시 현재 플레이어 위치 및 스탯 동기화 저장
+    /// 화톳불(세이브 터미널)과 상호작용 시 현재 플레이어 위치 및 스탯 동기화 저장
     /// </summary>
     public void UpdateCheckpoint(Vector3 bonfirePosition, float bonfireRotationY, SceneId currentScene, PlayerInfo status, float currentHp, int slotIndex = 0)
     {

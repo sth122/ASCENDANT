@@ -1,12 +1,15 @@
-﻿/// <summary>
+﻿using static ConstStrings.ConstString;
+/// <summary>
 /// 소울라이크 화톳불 상호작용 컴포넌트
 /// </summary>
-public class BonfireInteractable : UnityEngine.MonoBehaviour, IInteractable
+public class BonfireInteractable : BaseInteractable
 {
     [UnityEngine.SerializeField] private UnityEngine.Transform _respawnPoint;
-    [UnityEngine.SerializeField] private SceneId _currentScene = SceneId.GameScene;
+    [UnityEngine.SerializeField] private SceneId _currentScene;
 
-    public void OnInteract(PlayerController player)
+    private void Awake() => _interactType = InteractType.Bonfire;
+
+    public override void OnInteract(PlayerController player)
     {
         if (player == null) return;
 

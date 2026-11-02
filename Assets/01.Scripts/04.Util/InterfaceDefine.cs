@@ -133,6 +133,7 @@ public interface ISkillable
 /// </summary>
 public interface IInteractable
 {
+    string InteractionPrompt { get; }
     void OnInteract(PlayerController player);
 }
 #endregion

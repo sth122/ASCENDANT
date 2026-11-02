@@ -9,8 +9,6 @@ public class BossRoomTrigger : MonoBehaviour
     [Header("Target Boss Reference")]
     [SerializeField] private BossBTController _bossController;
 
-    [Header("Door / Fog Wall Barriers (선택 사항)")]
-    [SerializeField] private GameObject[] _fogWalls;
 
     private bool _hasTriggered = false;
 
@@ -28,9 +26,6 @@ public class BossRoomTrigger : MonoBehaviour
         {
             _hasTriggered = true;
 
-            // 안개벽/출입문 차단
-            SetFogWallsActive(true);
-
             // 보스 조우 시퀀스 격발
             if (_bossController != null)
             {
@@ -39,15 +34,6 @@ public class BossRoomTrigger : MonoBehaviour
 
             // 트리거 오브젝트 비활성화 (중복 격발 방지)
             gameObject.SetActive(false);
-        }
-    }
-
-    private void SetFogWallsActive(bool isActive)
-    {
-        if (_fogWalls == null) return;
-        for (int i = 0; i < _fogWalls.Length; i++)
-        {
-            if (_fogWalls[i] != null) _fogWalls[i].SetActive(isActive);
         }
     }
 }

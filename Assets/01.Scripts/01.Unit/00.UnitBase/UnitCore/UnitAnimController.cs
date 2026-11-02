@@ -10,9 +10,6 @@ public class UnitAnimController : MonoBehaviour
     private AnimStateType _currentStateType = (AnimStateType)(-1);
     private int _currentStateHash = 0;
 
-
-    private readonly System.Collections.Generic.Dictionary<int, float> _clipDurationMap = new System.Collections.Generic.Dictionary<int, float>();
-
     public Animator AnimatorInstance => _animator;
     public AnimationDataSO AnimData => _animData;
     public AnimStateType CurrentStateType => _currentStateType;
@@ -30,7 +27,6 @@ public class UnitAnimController : MonoBehaviour
         }
         // 일반 로코모션 상태에서는 스크립트 물리 이동을 기본으로 사용
         SetRootMotion(false);
-        CacheClipDurations();
     }
 
     #region Animator 공통 사용 구현부
@@ -123,50 +119,17 @@ public class UnitAnimController : MonoBehaviour
     }
 
     /// <summary>
-    /// RuntimeAnimatorController에 바인딩된 모든 애니메이션 클립의 길이를 사전 캐싱
-    /// </summary>
-    private void CacheClipDurations()
-    {
-        if (_animator == null || _animator.runtimeAnimatorController == null) return;
-
-        _clipDurationMap.Clear();
-        AnimationClip[] clips = _animator.runtimeAnimatorController.animationClips;
-
-        for (int i = 0; i < clips.Length; i++)
-        {
-            AnimationClip clip = clips[i];
-            if (clip != null)
-            {
-                int clipHash = Animator.StringToHash(clip.name);
-                _clipDurationMap[clipHash] = clip.length;
-            }
-        }
-    }
-
-    /// <summary>
     /// 지정된 애니메이션 상태(State)의 실제 재생 길이(초 단위)를 반환
     /// 상태명과 일치하는 클립 길이를 우선 조회하며, 없을 경우 기본 1.0초를 안전 반환합니다.
     /// </summary>
     public float GetStateDuration(AnimStateType stateType)
     {
-        int stateHash = Animator.StringToHash(stateType.ToString());
-
-        if (_clipDurationMap.TryGetValue(stateHash, out float duration))
+        if (_animData != null)
         {
-            return duration;
+            return _animData.GetClipDuration(stateType);
         }
 
-        // AnimatorStateInfo 기반 런타임 폴백 조회
-        if (_animator != null)
-        {
-            AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-            if (stateInfo.shortNameHash == stateHash && stateInfo.length > 0f)
-            {
-                return stateInfo.length;
-            }
-        }
-
-        return 1.0f; // 기본 안전값
+        return 1.0f; // SO 부재 시 기본 안전값
     }
     #endregion
 }

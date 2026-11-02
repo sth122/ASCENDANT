@@ -39,7 +39,7 @@ public class GlobalMenuInputHandler : MonoBehaviour
         {
             SystemMenuModel model = new SystemMenuModel();
             await UIManager.Instance.OpenUIAsync<SystemMenuView, SystemMenuPresenter, SystemMenuModel>(
-                UIId.SystemMenuUI, "SystemMenuUI", model, this.destroyCancellationToken
+                UIId.SystemMenuUI, model, this.destroyCancellationToken
             );
         }
         finally

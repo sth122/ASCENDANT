@@ -71,7 +71,7 @@ public class SystemMenuPresenter : UIPresenterBase<SystemMenuView, SystemMenuMod
     }
 
     /// <summary>
-    /// 타이틀 씬 복귀 : 가장 최근 화롯불 상태를 유지한 채 복귀
+    /// 타이틀 씬 복귀 : 가장 최근 화톳불 상태를 유지한 채 복귀
     /// </summary>
     private void HandleTitleClicked()
     {

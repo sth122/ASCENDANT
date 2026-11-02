@@ -4,7 +4,7 @@ using Util = DebugLogger<EnemySpawner>;
 /// <summary>
 /// 소울라이크 레벨 디자인 배치 앵커 컴포넌트
 /// PoolType과 UnitId 설정을 통해 모든 종류의 Enemy를 범용적으로 스폰·초기화하며,
-/// 화롯불(세이브 터미널) 상호작용 시 사망한 개체를 자동으로 리셋 및 부활시킵니다.
+/// 화톳불(세이브 터미널) 상호작용 시 사망한 개체를 자동으로 리셋 및 부활시킵니다.
 /// </summary>
 public class EnemySpawner : MonoBehaviour
 {
@@ -63,7 +63,7 @@ public class EnemySpawner : MonoBehaviour
         // 3. 다형성 초기화 메서드 호출 (위치 및 스탯 확정 바인딩)
         //_spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
 
-        // 4. 사망 이벤트 리스너 바인딩 (화롯불 리셋 추적용)
+        // 4. 사망 이벤트 리스너 바인딩 (화톳불 리셋 추적용)
         _spawnedEnemy.StatusController.OnDieEvent -= HandleEnemyDied;
         _spawnedEnemy.StatusController.OnDieEvent += HandleEnemyDied;
 
@@ -81,7 +81,8 @@ public class EnemySpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// 화롯불(세이브 터미널)과 상호작용하여 월드가 리셋될 때 호출
+    /// 화톳불
+    /// (세이브 터미널)과 상호작용하여 월드가 리셋될 때 호출
     /// </summary>
     public void ResetSpawnerOnBonfire()
     {

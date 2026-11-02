@@ -77,6 +77,7 @@ public enum UnitState
     Parry,
     ParryStagger,
     Stun,
+    Knockback,
     Roll,
     Riposte,
     GetHit,
@@ -147,6 +148,10 @@ public enum AnimParamType
     IsGuarding,     // Bool: 가드 유지
     Parry,          // Trigger: 패링 쳐내기
     ParrySuccess,   // Trigger: 패링 성공 반격
+    GuardImpact,    // Trigger: 방패로 적의 공격을 가드(방어)했을 때 밀려나는 모션
+    Knockback,      // Trigger: 강공격/패링불가 공격에 맞아 바닥으로 날아가는 넉다운 모션
+    WakeUp,         // Trigger: 넘어진 바닥에서 일어나는 기상 모션
+    GuardBreak,     // Trigger: 스태미나 고갈로 방패가 젖혀지는 가드 파쇄 모션
     GetHit,         // Trigger: 피격
     Die,            // Trigger: 사망
     Jump,           // Trigger: 점프
@@ -159,6 +164,10 @@ public enum AnimStateType
     Idle,
     Move,
     Stun,
+    GuardImpact,
+    Knockback,
+    WakeUp,
+
 
     // Enemy Locomtion 공통
     BattleIdle,
@@ -283,5 +292,31 @@ public enum SkillId
     Dragon_TailSweep = 3003,
     Dragon_LinearBreath = 3004,
     Dragon_AerialCombo = 3005
+}
+#endregion
+
+public enum BlockResultType
+{
+    Failed,
+    ParrySuccess,
+    HeavyParryPushback,
+    GuardImpact,
+    GuardBreak,
+    Knockback
+}
+
+#region Interaction
+/// <summary>
+/// 인게임 상호작용 객체 식별자
+/// </summary>
+public enum InteractType
+{
+    None = 0,
+    Bonfire,      // 화톳불 휴식 및 저장
+    BossDoor,     // 보스방 진입
+    ItemDrop,     // 필드 드랍 아이템 획득
+    NpcTalk,      // NPC 대화
+    Chest,        // 보물상자 열기
+    Lever         // 기믹 레버 조작
 }
 #endregion

@@ -106,8 +106,17 @@ public class UIBase : MonoBehaviour, IPoolable
     protected System.Threading.CancellationToken CreateActionToken(System.Threading.CancellationToken ct = default)
     {
         CancelFadeToken();
-        _fadeCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct, this.destroyCancellationToken);
-        return _fadeCts.Token;
+        if (this == null || gameObject == null) return ct;
+        try
+        {
+            _fadeCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct, this.destroyCancellationToken);
+            return _fadeCts.Token;
+        }
+        catch (MissingReferenceException)
+        {
+            // MonoBehaviour가 이미 파괴되어 destroyCancellationToken에 접근할 수 없을 때 기본 토큰 반환
+            return ct;
+        }
     }
 
     #region IPoolable 구현부

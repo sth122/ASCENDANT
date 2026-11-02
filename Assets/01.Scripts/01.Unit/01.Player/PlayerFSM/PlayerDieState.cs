@@ -33,7 +33,7 @@ public class PlayerDieState : PlayerBaseState
         {
             GameOverModel model = new GameOverModel();
             await UIManager.Instance.OpenUIAsync<GameOverView, GameOverPresenter, GameOverModel>(
-                UIId.GameOverUI, "GameOverUI", model, owner.destroyCancellationToken
+                UIId.GameOverUI, model, owner.destroyCancellationToken
             );
         }
     }

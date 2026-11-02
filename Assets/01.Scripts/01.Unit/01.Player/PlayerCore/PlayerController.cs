@@ -152,7 +152,7 @@ public class PlayerController : UnitController, IDamageable
         if (_stateMachine.CurrentState is PlayerRollState rollState && rollState.IsInvincible) return;
 
         // 3. 기상 무적 판정
-        if (_stateMachine.CurrentState is PlayerKnockdownState knockdownState && knockdownState.IsInvincibleDuringWakeUp) return;
+        if (_stateMachine.CurrentState is PlayerKnockbackState knockdownState && knockdownState.IsInvincible) return;
 
         // 4. 처형 액션 중 무적
         if (_stateMachine.CurrentState is PlayerRiposteState) return;
@@ -160,8 +160,8 @@ public class PlayerController : UnitController, IDamageable
         // 5. 가드 및 패링 판정 분기
         if (_stateMachine.CurrentState is PlayerParryState parryState)
         {
-            bool isBlocked = parryState.TryProcessBlockOrParry(in context, out bool parrySuccess);
-            if (isBlocked) return;
+            BlockResultType blockResult = parryState.ProcessIncomingAttack(in context);
+            if (blockResult != BlockResultType.Failed) return;
         }
 
         // 6. 장판 도트 대미지 (DoT)
@@ -179,26 +179,17 @@ public class PlayerController : UnitController, IDamageable
         if (context.ImpactType == AttackImpactType.Heavy)
         {
             ApplyKnockbackImpulse(context.HitNormal, context.KnockbackForce);
-            _stateMachine.ChangeState(UnitState.Stun, true);
+            _stateMachine.ChangeState(UnitState.Knockback, true);
             return;
         }
 
-        // 9. 패링 불가 공격 적중 시 경직
-        if (!context.IsParryable)
-        {
-            _stateMachine.ChangeState(UnitState.GetHit, true);
-            return;
-        }
-
-        // 10. 공격 중 슈퍼아머 버티기 판정
+        // 9. 공격 중 슈퍼아머 버티기 판정
         if (_stateMachine.CurrentState is PlayerAttackState)
         {
             if (!_statusController.IsPoiseBroken && !_statusController.IsPoiseDepleted) return;
-            _stateMachine.ChangeState(UnitState.GetHit, true);
-            return;
         }
 
-        // 11. 비공격 상태 일반 피격 경직
+        // 10. 비공격 상태 일반 피격 경직
         _stateMachine.ChangeState(UnitState.GetHit, true);
     }
 

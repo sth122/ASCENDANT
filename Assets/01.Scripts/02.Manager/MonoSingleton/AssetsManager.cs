@@ -17,6 +17,9 @@ public class AssetsManager : MonoSingleton<AssetsManager>, ILoadable
     // 1회성 인스턴스화 오브젝트 캐시
     private readonly Dictionary<UnityEngine.GameObject, AsyncOperationHandle> _instanceHandles = new Dictionary<UnityEngine.GameObject, AsyncOperationHandle>();
 
+    // 씬 전환 시 함께 해제되어야 할 씬 종속 인스턴스 추적용 해시셋
+    private readonly HashSet<UnityEngine.GameObject> _sceneInstances = new HashSet<UnityEngine.GameObject>();
+
     protected override void Awake()
     {
         _isDDOL = true;
@@ -86,20 +89,38 @@ public class AssetsManager : MonoSingleton<AssetsManager>, ILoadable
     /// <summary>
     /// 풀링하지 않는 1회성 프리팹 비동기 인스턴스화
     /// </summary>
-    public async UniTask<UnityEngine.GameObject> InstantiateAsync(string addressableKey, UnityEngine.Transform parent = null, System.Threading.CancellationToken ct = default)
+    public async UniTask<UnityEngine.GameObject> InstantiateAsync(string addressableKey, UnityEngine.Transform parent = null,
+        bool inWorldSpace = false, 
+        bool isSceneAsset = true, // 씬 종속 에셋 여부 (전역 에셋은 false)
+        System.Threading.CancellationToken ct = default)
     {
-        AsyncOperationHandle<UnityEngine.GameObject> handle = Addressables.InstantiateAsync(addressableKey, parent);
-        UnityEngine.GameObject instance = await handle.ToUniTask(cancellationToken: ct);
-
-        if(handle.Status == AsyncOperationStatus.Succeeded)
+        try
         {
+            AsyncOperationHandle<UnityEngine.GameObject> handle = Addressables.InstantiateAsync(addressableKey, parent, inWorldSpace);
+            UnityEngine.GameObject instance = await handle.WithCancellation(ct);
+
+            if (instance == null)
+            {
+                Util.LogError($"인스턴스 생성 실패 (NULL 반환): {addressableKey}");
+                return null;
+            }
+
+            // 모든 인스턴스는 매핑에 등록
             _instanceHandles[instance] = handle;
-            Util.Log($"[인스턴스 비동기 생성] Key: {addressableKey}");
+
+            // 씬 로컬 에셋일 때만 등록하여 씬 전환 시 일괄 해제 추적 해시셋에 등록
+            if (isSceneAsset)
+            {
+                _sceneInstances.Add(instance);
+            }
+
             return instance;
         }
-
-        Util.LogError($"[인스턴스 생성 실패] Key: {addressableKey}");
-        return null;
+        catch (System.Exception ex)
+        {
+            Util.LogError($"InstantiateAsync 실패 [{addressableKey}]: {ex.Message}");
+            return null;
+        }
     }
     #endregion
 
@@ -162,6 +183,7 @@ public class AssetsManager : MonoSingleton<AssetsManager>, ILoadable
         {
             Addressables.ReleaseInstance(instance);
             _instanceHandles.Remove(instance);
+            _sceneInstances.Remove(instance);
             Util.Log($"[인스턴스 해제] {instance.name}");
         }
         else
@@ -175,15 +197,19 @@ public class AssetsManager : MonoSingleton<AssetsManager>, ILoadable
     /// </summary>
     public void ReleaseSceneAssets()
     {
+        int releasedInstanceCount = 0;
+
         // 1. 씬 종속 인스턴스 해제
-        foreach(KeyValuePair<UnityEngine.GameObject, AsyncOperationHandle> pair in _instanceHandles)
+        foreach (UnityEngine.GameObject instance in _sceneInstances)
         {
-            if(pair.Key != null)
+            if (instance != null)
             {
-                Addressables.Release(pair.Value);
+                Addressables.ReleaseInstance(instance);
+                _instanceHandles.Remove(instance);
+                releasedInstanceCount++;
             }
         }
-        _instanceHandles.Clear();
+        _sceneInstances.Clear();
 
         // 2. 씬 종속 에셋 핸들 해제
         int releasedCount = _sceneAssetHandles.Count;
@@ -201,8 +227,20 @@ public class AssetsManager : MonoSingleton<AssetsManager>, ILoadable
     /// </summary>
     public void ReleaseAll()
     {
+        // 씬 종속 에셋 정리
         ReleaseSceneAssets();
 
+        // 전역 인스턴스 정리
+        foreach (KeyValuePair<UnityEngine.GameObject, AsyncOperationHandle> pair in _instanceHandles)
+        {
+            if (pair.Key != null)
+            {
+                Addressables.ReleaseInstance(pair.Key);
+            }
+        }
+        _instanceHandles.Clear();
+
+        // 전역 에셋 핸들 정리
         foreach (AsyncOperationHandle handle in _globalAssetHandles.Values)
         {
             Addressables.Release(handle);

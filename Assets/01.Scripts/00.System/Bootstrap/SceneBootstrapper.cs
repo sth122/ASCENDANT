@@ -9,12 +9,17 @@ public abstract class SceneBootstrapper : MonoBehaviour, ISceneBootstrap
 
     private bool _isInitialized = false;
 
+    protected virtual void Awake()
+    {
+        if (SceneLoadManager.Instance != null)
+        {
+            SceneLoadManager.Instance.RegisterBootstrapper(this);
+        }
+    }
+
     private async void Start()
     {
-        if (SceneLoadManager.Instance != null && SceneLoadManager.Instance.IsLoading)
-        {
-            return;
-        }
+        if (SceneLoadManager.Instance != null && SceneLoadManager.Instance.IsLoading) return;
 
         // 유니티 에디터에서 해당 씬을 열고 바로 재생 버튼을 눌렀을 때만 자체 기동
         if (!_isInitialized)
@@ -65,6 +70,11 @@ public abstract class SceneBootstrapper : MonoBehaviour, ISceneBootstrap
 
     protected virtual void OnDestroy()
     {
+        if (SceneLoadManager.Instance != null)
+        {
+            SceneLoadManager.Instance.UnregisterBootstrapper(this);
+        }
+
         ServiceLocator.ClearSceneLocalServices();
         _isInitialized = false;
     }

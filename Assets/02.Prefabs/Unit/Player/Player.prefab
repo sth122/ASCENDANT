@@ -174,6 +174,7 @@ GameObject:
   - component: {fileID: 1367710400141555128}
   - component: {fileID: 4129515568794556493}
   - component: {fileID: 1029992816194024196}
+  - component: {fileID: 119011312187779533}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -220,7 +221,14 @@ Animator:
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
-  m_WarningMessage: 
+  m_WarningMessage: "\nBinding warning: Some generic clip(s) animate transforms that
+    are already bound by a Humanoid avatar. These transforms can only be changed
+    by Humanoid clips.\n\tTransform 'mixamorig:Hips'\n\tTransform 'mixamorig:LeftFoot'\n\tTransform
+    'mixamorig:LeftHandThumb2'\n\tTransform 'mixamorig:LeftHandIndex1'\n\tTransform
+    'mixamorig:LeftHandPinky2'\n\tTransform 'mixamorig:RightHandRing2'\n\tTransform
+    'mixamorig:Spine1'\n\tTransform 'mixamorig:LeftToeBase'\n\tTransform 'mixamorig:LeftHandThumb3'\n\tTransform
+    'mixamorig:RightArm'\n\tand more ...\n\tFrom animation clip 'Knockback'\n\tFrom
+    animation clip 'WakeUp'\n\tFrom animation clip 'Stun'"
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -346,7 +354,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 631387832666468143}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 22f42bbff19546e4f9e990d3f550f580, type: 3}
   m_Name: 
@@ -354,6 +362,22 @@ MonoBehaviour:
   _spineBoneType: 8
   _rotationOffset: {x: 0, y: 0, z: 0}
   _alignSlerpSpeed: 12
+--- !u!114 &119011312187779533
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 631387832666468143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de085e6e0b926404981f7a1938458a72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInteractionHandler
+  _detectRadius: 1.2
+  _interactableLayer:
+    serializedVersion: 2
+    m_Bits: 2048
 --- !u!1 &751015693098662667
 GameObject:
   m_ObjectHideFlags: 0
