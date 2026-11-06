@@ -9,8 +9,13 @@ public class PlayerActionState : PlayerBaseState
 
     private System.Threading.CancellationTokenSource _actionCts;
 
+    protected PlayerCombatConfigSO _playerCombatConfigSO;
+
     public PlayerActionState(PlayerController owner, PlayerStateMachine stateMachine)
-        : base(owner, stateMachine) { }
+        : base(owner, stateMachine) 
+    {
+        _playerCombatConfigSO = owner.CombatConfig;
+    }
 
     public override void Enter()
     {
@@ -55,7 +60,7 @@ public class PlayerActionState : PlayerBaseState
             switch (nextCommand)
             {
                 case InputCommandType.Roll:
-                    if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(PlayerRollState.RollStaminaCost))
+                    if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(_playerCombatConfigSO.RollStaminaCost))
                     {
                         _playerStateMachine.ChangeState(UnitState.Roll, true);
                         return;
@@ -66,7 +71,7 @@ public class PlayerActionState : PlayerBaseState
                 case InputCommandType.Attack:
                     if (owner.TryTriggerRiposte()) return;
 
-                    if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(PlayerAttackState.AttackStaminaCost))
+                    if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(_playerCombatConfigSO.AttackStaminaCost))
                     {
                         _playerStateMachine.ChangeState(UnitState.Attack, true);
                         return;
@@ -74,12 +79,12 @@ public class PlayerActionState : PlayerBaseState
                     owner.InputReader.ClearCommand(InputCommandType.Attack);
                     break;
 
-                case InputCommandType.Parry:
-                    _playerStateMachine.ChangeState(UnitState.Parry, true);
+                case InputCommandType.Guard:
+                    _playerStateMachine.ChangeState(UnitState.Guard, true);
                     return;
 
                 case InputCommandType.Jump:
-                    if (owner.Movement.IsGrounded && _playerStatusController != null && _playerStatusController.HasEnoughStamina(PlayerJumpState.JumpStaminaCost))
+                    if (owner.Movement.IsGrounded && _playerStatusController != null && _playerStatusController.HasEnoughStamina(_playerCombatConfigSO.JumpStaminaCost))
                     {
                         _playerStateMachine.ChangeState(UnitState.Jump);
                         return;

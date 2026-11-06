@@ -64,7 +64,7 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
         if (View == null) return;
 
         // 플레이어 본체 강인도 변동일 때만 반영
-        if (eventData.TargetUnit != null && eventData.TargetUnit.CompareTag("Player"))
+        if (eventData.TargetUnit.GetComponent<PlayerController>() != null)
         {
             if (Model != null)
             {

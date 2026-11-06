@@ -94,13 +94,13 @@ public class WeaponSweepHitbox : MonoBehaviour
             {
                 // 이전 프레임 위치에서 현재 위치 방향으로 박스 스윕 검출
                 int hitCount = Physics.BoxCastNonAlloc(prevPos, _boxHalfExtents, delta.normalized, _hitBuffer,
-                    currentRot, distance, _targetLayer, QueryTriggerInteraction.Ignore);
+                    currentRot, distance, _targetLayer, QueryTriggerInteraction.Collide);
 
                 for (int h = 0; h < hitCount; h++)
                 {
                     Collider hitCol = _hitBuffer[h].collider;
 
-                    // [자해 방지] 피격 개체의 최상위 부모가 공격자 루트와 일치하면 무시
+                    // 피격 개체의 최상위 부모가 공격자 루트와 일치하면 무시
                     if (hitCol.transform.root.gameObject == _attackerRoot) continue;
 
                     IDamageable damageable = hitCol.GetComponentInParent<IDamageable>();
@@ -127,7 +127,7 @@ public class WeaponSweepHitbox : MonoBehaviour
             if (_hitPoints[i] == null) continue;
 
             int overlapCount = Physics.OverlapBoxNonAlloc(_hitPoints[i].position, _boxHalfExtents, _overlapBuffer,
-                _hitPoints[i].rotation, _targetLayer, QueryTriggerInteraction.Ignore);
+                _hitPoints[i].rotation, _targetLayer, QueryTriggerInteraction.Collide);
 
             for (int o = 0; o < overlapCount; o++)
             {

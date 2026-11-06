@@ -170,38 +170,5 @@ public abstract class UnitMovement
     }
 
     public virtual void UpdateGroundConfig(GroundCheckConfig newConfig) => _groundConfig = newConfig;
-
-    public virtual void DrawGizmos()
-    {
-        if (_transform == null) return;
-
-        Vector3 origin = _transform.position + Vector3.up * _groundConfig.CastOriginOffsetY;
-        Vector3 end = origin + Vector3.down * _groundConfig.CastDistance;
-
-        // 접지: 녹색, 공중: 적색, 급경사: 주황색
-        if (IsOnSteepSlope)
-        {
-            Gizmos.color = new Color(1f, 0.5f, 0f, 0.7f);
-        }
-        else
-        {
-            Gizmos.color = IsGrounded ? new Color(0f, 1f, 0.2f, 0.7f) : new Color(1f, 0.15f, 0.15f, 0.7f);
-        }
-
-        Gizmos.DrawWireSphere(origin, _groundConfig.SphereRadius);
-        Gizmos.DrawWireSphere(end, _groundConfig.SphereRadius);
-
-        Gizmos.DrawLine(origin + Vector3.left * _groundConfig.SphereRadius, end + Vector3.left * _groundConfig.SphereRadius);
-        Gizmos.DrawLine(origin + Vector3.right * _groundConfig.SphereRadius, end + Vector3.right * _groundConfig.SphereRadius);
-        Gizmos.DrawLine(origin + Vector3.forward * _groundConfig.SphereRadius, end + Vector3.forward * _groundConfig.SphereRadius);
-        Gizmos.DrawLine(origin + Vector3.back * _groundConfig.SphereRadius, end + Vector3.back * _groundConfig.SphereRadius);
-
-        // 경사면 표면 법선(Normal) 레이 렌더링
-        if (IsGrounded && IsOnSlope)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawRay(_transform.position, GroundNormal * 1.5f);
-        }
-    }
 }
 

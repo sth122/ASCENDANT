@@ -20,6 +20,7 @@
         public const string PlayerHUD = "PlayerHUD";
         public const string EnemyFloatingHUD = "EnemyFloatingHUD";
         public const string BossHUD = "BossHUD";
+        public const string QuickSlotHUD = "QuickSlotHUD";
         public const string TitleMenuUI = "TitleMenuUI";
         public const string SystemMenuUI = "SystemMenuUI";
         public const string InventoryUI = "InventoryUI";

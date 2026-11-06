@@ -57,7 +57,7 @@ public class EnemyMovement : UnitMovement
 
         if (!_navAgent.isOnNavMesh)
         {
-            if (NavMesh.SamplePosition(_transform.position, out NavMeshHit hit, 2.0f, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(_transform.position, out NavMeshHit hit, 3.0f, NavMesh.AllAreas))
             {
                 _navAgent.Warp(hit.position);
             }
@@ -97,6 +97,41 @@ public class EnemyMovement : UnitMovement
         }
     }
 
+    /// <summary>
+    /// 루트 모션 기반 이동을 위한 NavMeshAgent 일시 분리
+    /// </summary>
+    public void BeginRootMotionMovement()
+    {
+        if (_navAgent != null && _navAgent.isOnNavMesh)
+        {
+            _navAgent.isStopped = true;
+            _navAgent.updatePosition = false;
+            _navAgent.updateRotation = false;
+        }
+    }
+
+    /// <summary>
+    /// 루트 모션 종료 후 NavMeshAgent 위치 동기화 및 복구
+    /// </summary>
+    public void EndRootMotionMovement()
+    {
+        if (_navAgent == null) return;
+
+        UnityEngine.Vector3 currentPos = _transform.position;
+        if (NavMesh.SamplePosition(currentPos, out NavMeshHit hit, 5.0f, NavMesh.AllAreas))
+        {
+            _navAgent.Warp(hit.position);
+        }
+        else
+        {
+            _navAgent.Warp(currentPos);
+        }
+
+        _navAgent.updatePosition = true;
+        _navAgent.updateRotation = false;
+        _navAgent.isStopped = true;
+    }
+
     public override void StopMovement()
     {
         base.StopMovement();
@@ -106,34 +141,16 @@ public class EnemyMovement : UnitMovement
             _navAgent.velocity = UnityEngine.Vector3.zero;
         }
     }
-
-    public override void FaceTarget(UnityEngine.Vector3 targetPosition, float rotationSpeed, float deltaTime)
+    public void ApplyRootMotionDelta(UnityEngine.Vector3 deltaPosition, UnityEngine.Quaternion deltaRotation, bool isAirborne)
     {
-        UnityEngine.Vector3 direction = targetPosition - _transform.position;
-        direction.y = 0f;
+        if (_transform == null) return;
 
-        if (direction.sqrMagnitude > 0.001f)
+        if (!isAirborne)
         {
-            RotateTowards(direction.normalized, rotationSpeed, deltaTime);
+            deltaPosition.y = 0f; // 지면 모션인 경우 Y축 튐 방지
         }
-    }
 
-    /// <summary>
-    /// 베이스 지면 기즈모 + NavMeshAgent의 경로(Path Corner) 렌더링
-    /// </summary>
-    public override void DrawGizmos()
-    {
-        base.DrawGizmos();
-
-        if (_navAgent != null && _navAgent.hasPath)
-        {
-            UnityEngine.Gizmos.color = UnityEngine.Color.magenta;
-            UnityEngine.Vector3[] corners = _navAgent.path.corners;
-            for (int i = 0; i < corners.Length - 1; i++)
-            {
-                UnityEngine.Gizmos.DrawLine(corners[i], corners[i + 1]);
-                UnityEngine.Gizmos.DrawSphere(corners[i], 0.15f);
-            }
-        }
+        _transform.position += deltaPosition;
+        _transform.rotation *= deltaRotation;
     }
 }

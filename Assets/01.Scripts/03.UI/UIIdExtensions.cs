@@ -13,6 +13,7 @@ public static class UIIdExtensions
         { UIId.PlayerHUD, ConstString.PlayerHUD },
         { UIId.EnemyFloatingHUD, ConstString.EnemyFloatingHUD },
         { UIId.BossHUD, ConstString.BossHUD },
+        { UIId.QuickSlotHUD, ConstString.QuickSlotHUD },
         { UIId.TitleMenuUI, ConstString.TitleMenuUI },
         { UIId.SystemMenuUI, ConstString.SystemMenuUI },
         { UIId.InventoryUI, ConstString.InventoryUI },

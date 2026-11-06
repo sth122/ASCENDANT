@@ -16,33 +16,36 @@ MonoBehaviour:
   - Id: 11
     Value:
       BasicAttacks:
-      - AnimState: 11
+      - AnimState: 50
         AttackData:
-          _attackAnimStateType: 11
+          _attackAnimStateType: 50
           _impactType: 0
-          _attackRange: 4
+          _windupDelay: 1
+          _attackRange: 2
           _attackCooldown: 2.5
           _hitboxStartNormalized: 0.25
           _hitboxEndNormalized: 0.6
           _customSteps: []
           _isParryable: 1
           _knockbackForce: 0
-      - AnimState: 12
+      - AnimState: 51
         AttackData:
-          _attackAnimStateType: 12
+          _attackAnimStateType: 51
           _impactType: 0
-          _attackRange: 4
+          _windupDelay: 1
+          _attackRange: 2
           _attackCooldown: 4
           _hitboxStartNormalized: 0.25
           _hitboxEndNormalized: 0.6
           _customSteps: []
           _isParryable: 1
           _knockbackForce: 0
-      - AnimState: 13
+      - AnimState: 52
         AttackData:
-          _attackAnimStateType: 13
+          _attackAnimStateType: 52
           _impactType: 0
-          _attackRange: 4
+          _windupDelay: 1
+          _attackRange: 2
           _attackCooldown: 4
           _hitboxStartNormalized: 0.25
           _hitboxEndNormalized: 0.6
@@ -53,10 +56,11 @@ MonoBehaviour:
   - Id: 101
     Value:
       BasicAttacks:
-      - AnimState: 11
+      - AnimState: 50
         AttackData:
-          _attackAnimStateType: 11
+          _attackAnimStateType: 50
           _impactType: 0
+          _windupDelay: 1
           _attackRange: 5
           _attackCooldown: 2
           _hitboxStartNormalized: 0.25
@@ -64,10 +68,11 @@ MonoBehaviour:
           _customSteps: []
           _isParryable: 1
           _knockbackForce: 12
-      - AnimState: 12
+      - AnimState: 51
         AttackData:
-          _attackAnimStateType: 12
+          _attackAnimStateType: 51
           _impactType: 0
+          _windupDelay: 1
           _attackRange: 5
           _attackCooldown: 2
           _hitboxStartNormalized: 0.25

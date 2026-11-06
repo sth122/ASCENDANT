@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2651fcb77308774bbbcfefc3cb545a0, type: 3}
+  m_Name: Weapon_BroadSword
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponItemData
+  _id: 101
+  _itemName: Weapon_BroadSword
+  _icon: {fileID: 21300000, guid: f5bf039d56f4b604ea36f39798fed5a4, type: 3}
+  _description: 
+  _weight: 4
+  _category: 1
+  _maxStorageCount: 99
+  _equipSlot: 0
+  _requiredStrength: 10
+  _requiredDexterity: 10
+  _baseDamage: 110
+  _basePoiseDamage: 35
+  _strScaling: 0.8
+  _dexScaling: 0.4
+  _lightAttack1_MV: 100
+  _lightAttack2_MV: 125
+  _lightAttack3_MV: 150
+  _riposte_MV: 320
+  _attackStaminaCost: 18
+  _comboTimings:
+  - HitboxStartNormalized: 0.35
+    HitboxEndNormalized: 0.55
+    EmergencyCancelNormalized: 0.3
+    ComboAdvanceNormalized: 0.65
+    MovementCancelNormalized: 0.8
+  - HitboxStartNormalized: 0.3
+    HitboxEndNormalized: 0.5
+    EmergencyCancelNormalized: 0.25
+    ComboAdvanceNormalized: 0.6
+    MovementCancelNormalized: 0.78
+  - HitboxStartNormalized: 0.45
+    HitboxEndNormalized: 0.7
+    EmergencyCancelNormalized: 0.4
+    ComboAdvanceNormalized: 0.75
+    MovementCancelNormalized: 0.9

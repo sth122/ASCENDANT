@@ -1,4 +1,6 @@
-﻿/// <summary>
+﻿using UnityEngine;
+
+/// <summary>
 /// 플레이어의 영속적 스탯 및 진행 상태를 저장하는 직렬화 데이터 클래스
 /// </summary>
 [System.Serializable]
@@ -15,7 +17,19 @@ public class PlayerSaveData
     public int Dexterity = 10;
 
     [UnityEngine.Header("Runtime Status")]
-    public float CurrentHp = 650f; // Vigor 10 기준 기본 최대 HP
+    public float CurrentHp = 650f;
+
+    [UnityEngine.Header("Loadout Flags")]
+    [UnityEngine.Tooltip("초기 장비 지급 완료 여부 (새 게임 검증용 영속 플래그)")]
+    public bool HasReceivedInitialEquipment = false;
+
+    [UnityEngine.Header("Equipped Item IDs")]
+    public int EquippedWeaponId = 0;
+    public int EquippedShieldId = 0;
+    public int EquippedHelmetId = 0;
+    public int EquippedChestArmorId = 0;
+    public int EquippedLeggingsId = 0;
+    public int EquippedBootsId = 0;
 
     public PlayerSaveData() { }
 

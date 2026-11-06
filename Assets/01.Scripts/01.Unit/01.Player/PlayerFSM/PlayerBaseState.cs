@@ -5,10 +5,7 @@ public class PlayerBaseState : BaseState<PlayerController>
 {
     protected readonly PlayerStateMachine _playerStateMachine;
     protected readonly PlayerStatusController _playerStatusController;
-    protected readonly PlayerAnimController _playerAnimController;
-#if UNITY_EDITOR
-    private readonly string _stateTypeName;
-#endif
+    protected readonly PlayerAnimController _playerAnimController; 
     public PlayerBaseState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine)
     {

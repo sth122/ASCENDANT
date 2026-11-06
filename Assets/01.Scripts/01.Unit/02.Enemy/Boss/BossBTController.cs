@@ -63,22 +63,28 @@ public abstract class BossBTController : EnemyBTController, ISkillable
             _blackboard.SkillCooldownResetChance = runtimeBossInfo.SkillCooldownResetChance;
 
             _blackboard.ResetSkillCycle();
-            Util.LogWithTag(name, $"[{_unitId}] BossInfo SO 데이터 바인딩 및 블랙보드 수치 동기화 완료");
         }
     }
 
     private async UniTaskVoid EnsureDatabaseAndSkillsAsync(CancellationToken ct)
     {
-        if (DataManager.Instance != null && !DataManager.Instance.IsDataLoaded)
+        try
         {
-            await DataManager.Instance.EnsureDataLoadedAsync(ct);
+            if (DataManager.Instance != null && !DataManager.Instance.IsDataLoaded)
+            {
+                await DataManager.Instance.EnsureDataLoadedAsync(ct);
+            }
+
+            BindStatusData();
+            BindCombatDatabase();
+            RegisterSkillsFromDatabase();
+            _blackboard.ResetSkillCycle();
         }
-
-        BindStatusData();
-        BindCombatDatabase();
-        RegisterSkillsFromDatabase();
-
-        _blackboard.ResetSkillCycle();
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Util.LogErrorWithTag(name, $"보스 DB 및 스킬 바인딩 실패: {ex.Message}");
+        }
     }
 
     public void RegisterSkillsFromDatabase()
@@ -98,7 +104,6 @@ public abstract class BossBTController : EnemyBTController, ISkillable
                         _skillMap[dataSO.Info.Id] = skill;
                     }
                 }
-                Util.LogWithTag(name, $"[{_unitId}] BossSkill {skillDataList.Count}종 바인딩 완료");
             }
         }
     }
@@ -131,13 +136,15 @@ public abstract class BossBTController : EnemyBTController, ISkillable
 
         transform.position = _spawnPoint;
         _movement.StopMovement();
-        _enemyAnim.PlayState(AnimStateType.Roar);
 
         SetTarget(playerTransform);
 
+        // BossHUD 이벤트 발행
+        SetBossEncounterEvent();
+
         try
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(3.0f), cancellationToken: token);
+            await PlayStateAndWaitAsync(AnimStateType.Roar, token, force: true);
         }
         catch (OperationCanceledException) { }
         finally
@@ -153,6 +160,17 @@ public abstract class BossBTController : EnemyBTController, ISkillable
             _blackboard.ResetSkillCycle();
             Util.LogWithTag(name, "[보스전 개시] BT 평가 가동");
         }
+    }
+
+    protected void SetBossEncounterEvent()
+    {
+        string bossName = _unitId.ToString();
+        float curHp = _enemyStatus != null ? _enemyStatus.CurrentHp : 1000f;
+        float maxHp = _enemyStatus != null ? _enemyStatus.MaxHp : 1000f;
+        float curPoise = _enemyStatus != null ? _enemyStatus.CurrentPoise : 200f;
+        float maxPoise = _enemyStatus != null ? _enemyStatus.MaxPoise : 200f;
+
+        EventBusSystem.Publish(new BossEncounterEvent(bossName, gameObject, curHp, maxHp, curPoise, maxPoise));
     }
 
     #region ISkillable 구현부
@@ -198,6 +216,7 @@ public abstract class BossBTController : EnemyBTController, ISkillable
     {
         CloseAllHitboxes();
         _blackboard.IsActionExecuting = false;
+        _isActionExecuting = false;
         AsyncUtil.CancelAndDispose(ref _actionCts);
     }
     #endregion
@@ -273,4 +292,12 @@ public abstract class BossBTController : EnemyBTController, ISkillable
         }
     }
     #endregion
+    
+    // 보스 사망 시 BossHUD 종료 이벤트 발행
+    protected override INode.ENodeState ExecuteDeath()
+    {
+        EventBusSystem.Publish(new BossDefeatedEvent(gameObject));
+
+        return base.ExecuteDeath();
+    }
 }

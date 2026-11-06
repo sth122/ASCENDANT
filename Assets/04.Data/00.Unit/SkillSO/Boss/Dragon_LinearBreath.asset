@@ -30,7 +30,9 @@ MonoBehaviour:
   _timelineSteps:
   - StateType: 1001
     SpeedMultiplier: 1
-    FaceTargetOnEnter: 0
+    FaceTargetOnEnter: 1
+    UseRootMotion: 1
+    IsAirborne: 0
     HasHitbox: 1
     TargetHitboxSlot: 2
     HitboxStartNormalized: 0.25

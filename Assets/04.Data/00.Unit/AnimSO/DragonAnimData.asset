@@ -18,11 +18,11 @@ MonoBehaviour:
     Clip: {fileID: 2730551832294769963, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
-  - StateType: 7
+  - StateType: 13
     Clip: {fileID: -889264731830517786, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
-  - StateType: 2
+  - StateType: 8
     Clip: {fileID: 7531551409715563450, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
@@ -30,11 +30,11 @@ MonoBehaviour:
     Clip: {fileID: 4086041140739928925, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
-  - StateType: 11
+  - StateType: 50
     Clip: {fileID: 6614646293377695111, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
-  - StateType: 12
+  - StateType: 51
     Clip: {fileID: -2811045609781711205, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
@@ -86,7 +86,7 @@ MonoBehaviour:
     Clip: {fileID: 6826597370919330143, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
-  - StateType: 18
+  - StateType: 72
     Clip: {fileID: 6826597370919330143, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15

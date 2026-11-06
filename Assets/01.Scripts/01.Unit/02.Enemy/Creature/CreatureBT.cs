@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using UnityEditor;
 using UnityEngine;
 
 /// <summary>
@@ -39,7 +38,7 @@ public class CreatureBT : EnemyBTController
         var groggySeq = new SequenceNode();
         groggySeq.Add(new PredicateNode<CreatureBT>(this, static (c) =>
             c._enemyStatus != null && c._enemyStatus.IsPoiseBroken && !c._isGroggy));
-        groggySeq.Add(new AsyncActionNode(ExecuteGroggyAsync, GetActionToken));
+        groggySeq.Add(new ActionNode(TriggerGroggyAction));
         root.Add(groggySeq);
 
         // 3. 비동기 액션 진행 중 락
@@ -113,7 +112,7 @@ public class CreatureBT : EnemyBTController
             await PlayStateAndWaitAsync(AnimStateType.CrawlToState, ct, force: true);
 
             // 서서 수색 대기
-            await PlayStateAndWaitAsync(AnimStateType.BattleIdle, ct, force: true);
+            await PlayStateAndWaitAsync(AnimStateType.Idle, ct, force: true);
 
             // 서기 -> 포복 복귀
             await PlayStateAndWaitAsync(AnimStateType.StateToCrawl, ct, force: true);
@@ -232,23 +231,4 @@ public class CreatureBT : EnemyBTController
         _hasSpottedAndRoared = false;
         _isAlerted = false;
     }
-
-    #region 크리처 전용 기즈모
-    protected override void OnDrawGizmosSelected()
-    {
-        // 1. 공통 에너미 기즈모(접지, 시야각, 청각 반경, 순찰/리쉬 반경, 타깃선) 렌더링
-        base.OnDrawGizmosSelected();
-
-        // 2. 동료 호출(Call Allies Radius) 영역 렌더링 (보라색 와이어 구체 및 반투명 디스크)
-        Gizmos.color = new Color(0.7f, 0.2f, 1.0f, 0.4f);
-        Gizmos.DrawWireSphere(transform.position, _callAlliesRadius);
-
-#if UNITY_EDITOR
-        Handles.color = new Color(0.7f, 0.2f, 1.0f, 0.15f);
-        Handles.DrawSolidDisc(transform.position, Vector3.up, _callAlliesRadius);
-        Handles.color = new Color(0.7f, 0.2f, 1.0f, 0.6f);
-        Handles.DrawWireDisc(transform.position, Vector3.up, _callAlliesRadius);
-#endif
-    }
-    #endregion
 }

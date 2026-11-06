@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 /// <summary>
 /// 모든 Unit이 상속받는 애니메이션 제어 공통 베이스 컴포넌트
@@ -14,6 +15,9 @@ public class UnitAnimController : MonoBehaviour
     public AnimationDataSO AnimData => _animData;
     public AnimStateType CurrentStateType => _currentStateType;
     public int CurrentStateHash => _currentStateHash;
+
+    // 루트 모션 이동 대리자
+    private Action<Vector3, Quaternion> _rootMotionConsumer;
 
     protected virtual void Awake()
     {
@@ -34,12 +38,13 @@ public class UnitAnimController : MonoBehaviour
     /// 애니메이터의 Root Motion 활성화/비활성화 전환
     /// 애니메이션 궤적을 물리 엔진에 적용
     /// </summary>
-    public void SetRootMotion(bool isEnabled)
+    public void SetRootMotion(bool isEnabled, Action<Vector3, Quaternion> rootMotionConsumer = null)
     {
         if(_animator != null)
         {
             _animator.applyRootMotion = isEnabled;
         }
+        _rootMotionConsumer = rootMotionConsumer;
     }
     /// <summary>
     /// 현재 재생 중인 애니메이션의 normalizedTime 반환
@@ -47,9 +52,7 @@ public class UnitAnimController : MonoBehaviour
     public float GetCurrentNormalizedTime(int layerIndex = 0)
     {
         if (_animator == null) return 0f;
-
-        AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(layerIndex);
-        return stateInfo.normalizedTime;
+        return _animator.GetCurrentAnimatorStateInfo(layerIndex).normalizedTime;
     }
 
     public void SetTrigger(AnimParamType paramType)
@@ -124,12 +127,22 @@ public class UnitAnimController : MonoBehaviour
     /// </summary>
     public float GetStateDuration(AnimStateType stateType)
     {
-        if (_animData != null)
-        {
-            return _animData.GetClipDuration(stateType);
-        }
-
-        return 1.0f; // SO 부재 시 기본 안전값
+        return _animData != null ? _animData.GetClipDuration(stateType) : 1.0f; // SO 부재 시 기본 안전값
     }
     #endregion
+
+    private void OnAnimatorMove()
+    {
+        if (_animator == null || !_animator.applyRootMotion) return;
+
+        if (_rootMotionConsumer != null)
+        {
+            _rootMotionConsumer.Invoke(_animator.deltaPosition, _animator.deltaRotation);
+        }
+        else
+        {
+            transform.position += _animator.deltaPosition;
+            transform.rotation *= _animator.deltaRotation;
+        }
+    }
 }

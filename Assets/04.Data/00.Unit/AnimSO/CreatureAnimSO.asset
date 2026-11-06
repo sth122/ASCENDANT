@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimationDataSO
   _parameters: []
   _states:
-  - StateType: 6
+  - StateType: 0
     Clip: {fileID: 7400006, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
-  - StateType: 7
+  - StateType: 13
     Clip: {fileID: 7400042, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
-  - StateType: 8
+  - StateType: 14
     Clip: {fileID: 7400038, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
-  - StateType: 2
+  - StateType: 8
     Clip: {fileID: 7400028, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
@@ -46,39 +46,39 @@ MonoBehaviour:
     Clip: {fileID: 7400022, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.1
-  - StateType: 9
+  - StateType: 15
     Clip: {fileID: 7400010, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.1
-  - StateType: 10
+  - StateType: 16
     Clip: {fileID: 7400014, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.1
-  - StateType: 17
+  - StateType: 71
     Clip: {fileID: 7400040, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15
-  - StateType: 16
+  - StateType: 70
     Clip: {fileID: 7400016, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.05
-  - StateType: 11
+  - StateType: 50
     Clip: {fileID: 7400000, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.05
-  - StateType: 12
+  - StateType: 51
     Clip: {fileID: 7400002, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.1
-  - StateType: 13
+  - StateType: 52
     Clip: {fileID: 7400004, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.1
-  - StateType: 14
+  - StateType: 53
     Clip: {fileID: 7400008, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.1
-  - StateType: 18
+  - StateType: 72
     Clip: {fileID: 7400036, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.15

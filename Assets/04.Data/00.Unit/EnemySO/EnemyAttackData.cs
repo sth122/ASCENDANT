@@ -5,13 +5,17 @@ using UnityEngine;
 /// 단일 타격 및 ActionTimelineStep 기반 다단 연계 시퀀스
 /// </summary>
 [System.Serializable]
-public struct EnemyAttackData
+public class EnemyAttackData
 {
     [Header("공격 식별")]
     [SerializeField] private AnimStateType _attackAnimStateType;
 
     [Header("충격 판정 속성")]
     [SerializeField] private AttackImpactType _impactType;
+
+    [Header("공격 전 선딜레이 대기 시간 (초)")]
+    [Tooltip("사거리 진입 후 타격을 시작하기 전 대기하는 시간")]
+    [SerializeField] private float _windupDelay = 2f;
 
     [Header("사거리 및 쿨타임")]
     [SerializeField] private float _attackRange;
@@ -37,12 +41,13 @@ public struct EnemyAttackData
     public AnimStateType AttackAnimStateType => _attackAnimStateType;
     public AttackImpactType ImpactType => _impactType;
     public float AttackRange => _attackRange > 0f ? _attackRange : 2.2f;
-    public float AttackCooldown => _attackCooldown >= 0f ? _attackCooldown : 2.0f;
+    public float AttackCooldown => _attackCooldown >= 0f ? _attackCooldown : 3.0f;
+    public float WindupDelay => _windupDelay >= 0f ? _windupDelay : 0.45f;
     public bool IsParryable => _isParryable;
     public float KnockbackForce => _knockbackForce;
 
-    public float HitboxStartNormalized => _hitboxStartNormalized >= 0f ? _hitboxStartNormalized : 0.25f;
-    public float HitboxEndNormalized => _hitboxEndNormalized > 0f ? _hitboxEndNormalized : 0.60f;
+    public float HitboxStartNormalized => Mathf.Clamp01(_hitboxStartNormalized);
+    public float HitboxEndNormalized => Mathf.Clamp01(_hitboxEndNormalized);
     /// <summary>
     /// AttackImpactType에 따라 자동으로 부여되는 대미지 계수
     /// </summary>
@@ -67,19 +72,18 @@ public struct EnemyAttackData
     #endregion
 
     public EnemyAttackData(AnimStateType animState, AttackImpactType impactType, float range, float cooldown,
-        bool isParryable, float knockbackForce = 0f, float hitboxStart = 0.25f, float hitboxEnd = 0.60f)
+            bool isParryable, float windupDelay = 0.45f, float knockbackForce = 0f, float hitboxStart = 0.25f, float hitboxEnd = 0.60f)
     {
         _attackAnimStateType = animState;
         _impactType = impactType;
         _attackRange = range;
         _attackCooldown = cooldown;
+        _windupDelay = windupDelay;
         _isParryable = isParryable;
         _knockbackForce = knockbackForce;
         _hitboxStartNormalized = hitboxStart;
         _hitboxEndNormalized = hitboxEnd;
-        _customSteps = null;
-
-        // struct 타입 필드 할당 보장
+        _customSteps = new List<ActionTimelineStep>();
         _cachedStepArray = null;
     }
 

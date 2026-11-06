@@ -1,31 +1,19 @@
-﻿using UnityEngine;
-
-/// <summary>
+﻿/// <summary>
 /// Player 공격을 전담하는 Player FSM 상태 클래스
 /// </summary>
 public class PlayerAttackState : PlayerActionState
 {
-    public const float AttackStaminaCost = 14.0f;           // 임시 외부 참조 허용. 소모값 SO나 Module을 따로 만들 예정
-
-    // 모션 진행도(normalizedTime) 기준 타임라인 설정
-    private const float HitboxOpenNormalized = 0.4f;       // 타격 판정 시작
-    private const float HitboxCloseNormalized = 0.60f;      // 타격 판정 종료
-    private const float EmergencyCancelNormalized = 0.35f;  // 긴급 회피/패링 허용 시작
-    private const float ComboAdvanceStartNormalized = 0.65f;// 후속 공격 입력 수집 및 승급 시작
-    private const float MovementCancelNormalized = 0.75f;   // 캔슬 걷기 윈도우
-    private const float ActionRecoveryNormalized = 0.88f;
-
-    // 타수당 단 1회 승급 보장 및 메카님 블렌딩 완료 시까지 탈출을 차단하는 핵심 잠금 플래그
-    private const float StepLockoutDuration = 0.18f; // 타수 전환 직후 잠금 시간
-    private const float SafetyTimeout = 2.5f;        // 비상 탈출 제한시간
-
     private int _comboStep = 1;
     private const int MaxComboStep = 3;
     private bool _hasAdvancedThisStep = false;
     private bool _isHitboxCurrentlyOpen = false;
     private float _stepTimer = 0f;
+    private const float StepLockoutDuration = 0.18f;
+    private const float SafetyTimeout = 2.5f;
 
-    private readonly Collider[] _softLockBuffer = new Collider[8];
+    private UnityEngine.LayerMask searchLayer = UnityEngine.LayerMask.GetMask("Enemy", "EnemyHurtbox");
+    private readonly UnityEngine.Collider[] _softLockBuffer = new UnityEngine.Collider[8];
+    private WeaponItemData.ComboTiming _currentTiming;
 
     public PlayerAttackState(PlayerController owner, PlayerStateMachine stateMachine) : base(owner, stateMachine) { }
 
@@ -40,7 +28,8 @@ public class PlayerAttackState : PlayerActionState
         owner.InputReader.ClearCommand(InputCommandType.Attack);
 
         // 2. 스태미나 검증 (부족 시 즉시 복귀)
-        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(AttackStaminaCost))
+        float staminaCost = GetAttackStaminaCost();
+        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(staminaCost))
         {
             CompleteActionAndEvaluateTransition();
             return;
@@ -91,30 +80,24 @@ public class PlayerAttackState : PlayerActionState
             return;
         }
 
-        if (animator.IsInTransition(0)) return;
-
         float normalizedTime = _playerAnimController.GetCurrentNormalizedTime(0);
 
         UpdateHitboxWindow(normalizedTime);
 
         // 3. 긴급 회피 및 가드 캔슬 판정
-        if (normalizedTime >= EmergencyCancelNormalized)
+        if (normalizedTime >= _currentTiming.EmergencyCancelNormalized)
         {
             if (owner.InputReader.TryConsumeCommand(InputCommandType.Roll))
             {
-                // 스태미나 검증
-                if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(PlayerRollState.RollStaminaCost))
-                {
-                    CloseHitboxInternal();
-                    _playerStateMachine.ChangeState(UnitState.Roll);
-                    return;
-                }
+                CloseHitboxInternal();
+                _playerStateMachine.ChangeState(UnitState.Roll);
+                return;
             }
 
-            if (owner.InputReader.TryConsumeCommand(InputCommandType.Parry))
+            if (owner.InputReader.TryConsumeCommand(InputCommandType.Guard))
             {
                 CloseHitboxInternal();
-                _playerStateMachine.ChangeState(UnitState.Parry);
+                _playerStateMachine.ChangeState(UnitState.Guard);
                 return;
             }
         }
@@ -122,7 +105,7 @@ public class PlayerAttackState : PlayerActionState
         // 4. 콤보 연계 판정
         if (_comboStep < MaxComboStep && !_hasAdvancedThisStep)
         {
-            if (normalizedTime >= ComboAdvanceStartNormalized && normalizedTime < ActionRecoveryNormalized)
+            if (normalizedTime >= _currentTiming.ComboAdvanceNormalized && normalizedTime < 0.95f)
             {
                 if (owner.InputReader.TryConsumeCommand(InputCommandType.Attack))
                 {
@@ -133,7 +116,7 @@ public class PlayerAttackState : PlayerActionState
         }
 
         // 5. 후딜레이 캔슬 이동 판정 (조작감 향상)
-        if (!_hasAdvancedThisStep && normalizedTime >= MovementCancelNormalized)
+        if (!_hasAdvancedThisStep && normalizedTime >= _currentTiming.MovementCancelNormalized)
         {
             if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
             {
@@ -143,7 +126,7 @@ public class PlayerAttackState : PlayerActionState
         }
 
         // 6. 모션 완료 시 복귀
-        if (!_hasAdvancedThisStep && normalizedTime >= ActionRecoveryNormalized)
+        if (!_hasAdvancedThisStep && normalizedTime >= 0.95f)
         {
             CompleteActionAndEvaluateTransition();
         }
@@ -176,8 +159,12 @@ public class PlayerAttackState : PlayerActionState
     {
         _isHitboxCurrentlyOpen = false;
 
-        // 스태미나 차감
-        _playerStatusController?.ConsumeStamina(AttackStaminaCost);
+        WeaponItemData weapon = owner.CombatModule.CurrentWeaponData;
+        _currentTiming = (weapon != null)
+            ? weapon.GetComboTiming(_comboStep) : new WeaponItemData.ComboTiming(0.35f, 0.55f, 0.30f, 0.65f, 0.80f);
+
+        float staminaCost = GetAttackStaminaCost();
+        _playerStatusController?.ConsumeStamina(staminaCost);
 
         _playerAnimController.SetInteger(AnimParamType.ComboStep, _comboStep);
         _playerAnimController.SetTrigger(AnimParamType.Attack);
@@ -188,8 +175,10 @@ public class PlayerAttackState : PlayerActionState
     /// </summary>
     private void AdvanceCombo()
     {
+        float nextCost = GetAttackStaminaCost();
+
         // 다음 타수에 필요한 스태미나가 없으면 콤보 연계를 차단하고 현재 타수의 후딜을 유지
-        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(AttackStaminaCost)) return;
+        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(nextCost)) return;
 
         CloseHitboxInternal();
         // 다음 타수가 메카님에 완전히 안착할 때까지 잠금 유지
@@ -219,11 +208,11 @@ public class PlayerAttackState : PlayerActionState
             return;
         }
 
-        if (!_isHitboxCurrentlyOpen && normalizedTime >= HitboxOpenNormalized && normalizedTime < HitboxCloseNormalized)
+        if (!_isHitboxCurrentlyOpen && normalizedTime >= _currentTiming.HitboxStartNormalized && normalizedTime < _currentTiming.HitboxEndNormalized)
         {
             OpenHitboxInternal();
         }
-        else if (_isHitboxCurrentlyOpen && normalizedTime >= HitboxCloseNormalized)
+        else if (_isHitboxCurrentlyOpen && normalizedTime >= _currentTiming.HitboxEndNormalized)
         {
             CloseHitboxInternal();
         }
@@ -243,6 +232,15 @@ public class PlayerAttackState : PlayerActionState
         owner.CombatModule.CloseWeaponHitbox();
     }
 
+    private float GetAttackStaminaCost()
+    {
+        if (owner.CombatModule != null && owner.CombatModule.CurrentWeaponData != null)
+        {
+            return owner.CombatModule.CurrentWeaponData.AttackStaminaCost;
+        }
+        return owner.CombatConfig != null ? owner.CombatConfig.AttackStaminaCost : 14.0f;
+    }
+
     /// <summary>
     /// 공격 개시 시 락온 타깃 또는 전방 부채꼴 내 가장 가까운 적을 향해 자동 정렬
     /// </summary>
@@ -251,30 +249,30 @@ public class PlayerAttackState : PlayerActionState
         // 1. 이미 락온 중인 대상이 있다면 해당 대상을 정면 응시
         if (owner.CurrentLockOnTarget != null)
         {
-            Vector3 dirToLockOn = owner.CurrentLockOnTarget.position - owner.transform.position;
+            UnityEngine.Vector3 dirToLockOn = owner.CurrentLockOnTarget.position - owner.transform.position;
             dirToLockOn.y = 0f;
             if (dirToLockOn.sqrMagnitude > 0.001f)
             {
-                owner.transform.rotation = Quaternion.LookRotation(dirToLockOn.normalized);
+                owner.transform.rotation = UnityEngine.Quaternion.LookRotation(dirToLockOn.normalized);
                 return;
             }
         }
 
-        // 2. 비 락온 시: 전방 120도 부채꼴, 반경 4.0m 내의 최근접 적 탐색 (GC Alloc 0)
-        int count = Physics.OverlapSphereNonAlloc(owner.transform.position, 4.0f, _softLockBuffer, LayerMask.GetMask("Enemy"));
-        Transform bestTarget = null;
+        // 2. 비 락온 시: 전방 120도 부채꼴, 반경 4.0m 내의 최근접 적 탐색
+        int count = UnityEngine.Physics.OverlapSphereNonAlloc(owner.transform.position, 4.0f, _softLockBuffer, searchLayer);
+        UnityEngine.Transform bestTarget = null;
         float closestDist = float.MaxValue;
 
         for (int i = 0; i < count; i++)
         {
             if (_softLockBuffer[i] == null || _softLockBuffer[i].transform.root == owner.transform.root) continue;
 
-            Vector3 toEnemy = _softLockBuffer[i].transform.position - owner.transform.position;
+            UnityEngine.Vector3 toEnemy = _softLockBuffer[i].transform.position - owner.transform.position;
             toEnemy.y = 0f;
             float dist = toEnemy.magnitude;
 
             // 전방 120도 부채꼴 검사 (Dot > 0.5)
-            if (Vector3.Dot(owner.transform.forward, toEnemy.normalized) > 0.5f && dist < closestDist)
+            if (UnityEngine.Vector3.Dot(owner.transform.forward, toEnemy.normalized) > 0.5f && dist < closestDist)
             {
                 closestDist = dist;
                 bestTarget = _softLockBuffer[i].transform;
@@ -284,16 +282,20 @@ public class PlayerAttackState : PlayerActionState
 
         if (bestTarget != null)
         {
-            Vector3 targetDir = bestTarget.position - owner.transform.position;
+            UnityEngine.Vector3 targetDir = bestTarget.position - owner.transform.position;
             targetDir.y = 0f;
-            owner.transform.rotation = Quaternion.LookRotation(targetDir.normalized);
+            if (targetDir.sqrMagnitude > 0.001f)
+            {
+                owner.transform.rotation = UnityEngine.Quaternion.LookRotation(targetDir.normalized);
+                return;
+            }
             return;
         }
 
         // 3. 탐색된 적이 없다면 현재 이동 입력 방향으로 회전
         if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
         {
-            owner.transform.rotation = Quaternion.LookRotation(owner.CurrentMoveDirection.normalized);
+            owner.transform.rotation = UnityEngine.Quaternion.LookRotation(owner.CurrentMoveDirection.normalized);
         }
     }
 }

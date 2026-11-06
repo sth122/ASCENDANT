@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 using Util = DebugLogger;
@@ -65,6 +64,10 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     protected Vector3 _patrolTarget;
     protected bool _isPatrolWaiting = false;
     protected bool _isSpawnedFromPool = false;
+    private bool _isInitializing = false;
+    protected bool _isDeathExecuted = false;
+    private bool _isInvestigatingNoise = false;
+    private Vector3 _investigateTargetPosition;
 
     // UnitCombatDatabaseSO 기반 평타 공격 캐시
     protected readonly Dictionary<AnimStateType, EnemyAttackData> _basicAttacks = new Dictionary<AnimStateType, EnemyAttackData>();
@@ -76,10 +79,14 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     #region BT 구동 및 비동기 수명주기
     protected INode _rootNode;
     protected CancellationTokenSource _actionCts;
+    protected CancellationTokenSource _groggyCts;
     protected bool _isActionExecuting = false;
     protected bool _isGroggy = false;
     protected float _globalAttackCooldownTime = 0f;
     #endregion
+
+    private Vector3 _lastDestination = Vector3.positiveInfinity;
+    private float _nextPathUpdateTime = 0f;
 
     protected override void SetupComponents()
     {
@@ -112,6 +119,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     public override void Init()
     {
         base.Init();
+        if (_isInitializing) return;
         EnsureDataAndInitializeAsync(this.destroyCancellationToken).Forget();
     }
 
@@ -132,21 +140,29 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     /// </summary>
     private async UniTaskVoid EnsureDataAndInitializeAsync(CancellationToken ct)
     {
-        if (DataManager.Instance != null && !DataManager.Instance.IsDataLoaded)
+        _isInitializing = true;
+        try
         {
-            await DataManager.Instance.EnsureDataLoadedAsync(ct);
+            if (DataManager.Instance != null && !DataManager.Instance.IsDataLoaded)
+            {
+                await DataManager.Instance.EnsureDataLoadedAsync(ct);
+            }
+
+            BindStatusData();
+            BindCombatDatabase();
+
+            if (_hudPresenter != null)
+            {
+                _hudPresenter.AllocateAndBindView();
+            }
+
+            _rootNode = BuildBehaviorTree();
+            PickNextPatrolPoint();
         }
-
-        BindStatusData();
-        BindCombatDatabase();
-
-        if (_hudPresenter != null)
+        finally
         {
-            _hudPresenter.AllocateAndBindView();
+            _isInitializing = false;
         }
-
-        _rootNode = BuildBehaviorTree();
-        PickNextPatrolPoint();
     }
 
     /// <summary>
@@ -178,8 +194,6 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
                 _perceptionModule.SightAngle = runtimeStatus.SightAngle;
                 _perceptionModule.HearingRadius = runtimeStatus.HearingRadius;
             }
-
-            Util.LogWithTag(name, $"[{_unitId}] EnemyStatusSO 주입 완료");
         }
     }
 
@@ -200,7 +214,6 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
                     _basicAttacks[kvp.Key] = kvp.Value;
                     _attackCooldowns[kvp.Key] = 0f;
                 }
-                Util.LogWithTag(name, $"[{_unitId}] 기본 평타 {attacks.Count}종 적재 완료");
             }
         }
     }
@@ -214,10 +227,15 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         _isSpawnedFromPool = true;
         _spawnPoint = transform.position;
+        _isDeathExecuted = false;
         SetControllerActive(true);
 
         if (_collider != null) _collider.enabled = true;
-        if (_agent != null && _agent.isOnNavMesh) _agent.isStopped = false;
+        if (_agent != null)
+        {
+            _agent.Warp(transform.position);
+            _agent.isStopped = false;
+        }
 
         // 스탯 및 포이즈 복원
         _enemyStatus?.RestorePoiseToMax();
@@ -235,12 +253,14 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
     public virtual void OnDespawn()
     {
+        ReleaseTokenInternal();
         _hudPresenter?.ReleaseView();
         _isSpawnedFromPool = false;
         SetControllerActive(false);
         CloseAllHitboxes();
         _perceptionModule?.StopSensorLoop();
         AsyncUtil.CancelAndDispose(ref _actionCts);
+        AsyncUtil.CancelAndDispose(ref _groggyCts);
         ClearTarget();
     }
 
@@ -251,11 +271,11 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         _isActionExecuting = true;
         _movement.StopMovement();
-        _enemyAnim.PlayState(AnimStateType.BattleIdle, force: true);
+        _enemyAnim.PlayState(AnimStateType.Idle, force: true);
 
         try
         {
-            await PlayStateAndWaitAsync(AnimStateType.BattleIdle, token, force: true, _spawnWaitDuration);
+            await PlayStateAndWaitAsync(AnimStateType.Idle, token, force: true, _spawnWaitDuration);
         }
         catch (System.OperationCanceledException) { return; }
         finally
@@ -285,7 +305,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
     protected override void TickController()
     {
-        if (IsDead || _rootNode == null) return;
+        if (_rootNode == null) return;
         _movement.CheckGrounded();
         _rootNode.Evaluate();
     }
@@ -300,33 +320,39 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
         // 1. 사망 판정 노드
         var deathSeq = new SequenceNode();
-        deathSeq.Add(new PredicateNode<EnemyBTController>(this, static (enemy) => enemy.IsDead));
+        deathSeq.Add(new PredicateNode<EnemyBTController>(this, static enemy => enemy.IsDead));
         deathSeq.Add(new ActionNode(ExecuteDeath));
         root.Add(deathSeq);
 
-        // 2. 그로기(Stun) 브랜치
+        // 2. 그로기(Groggy) 브랜치
         var groggySeq = new SequenceNode();
-        groggySeq.Add(new PredicateNode<EnemyBTController>(this, static (enemy) =>
+        groggySeq.Add(new PredicateNode<EnemyBTController>(this, static enemy =>
             enemy._enemyStatus != null && enemy._enemyStatus.IsPoiseBroken && !enemy._isGroggy));
-        groggySeq.Add(new AsyncActionNode(ExecuteGroggyAsync, GetActionToken));
+        groggySeq.Add(new ActionNode(TriggerGroggyAction));
         root.Add(groggySeq);
 
         // 3. 비동기 액션 진행 중 락
-        root.Add(new PredicateNode<EnemyBTController>(this, static (enemy) => enemy._isActionExecuting));
+        root.Add(new PredicateNode<EnemyBTController>(this, static enemy => enemy._isActionExecuting || enemy._isGroggy));
 
-        // 4. 복귀 분기 (리쉬 초과 시)
+        // 4. 소리 감지 의심/수색 브랜치 (복귀 중/평시 소리 반응)
+        var investigateSeq = new SequenceNode();
+        investigateSeq.Add(new PredicateNode<EnemyBTController>(this, static enemy => enemy._isInvestigatingNoise));
+        investigateSeq.Add(new ActionNode(TickInvestigateNoise));
+        root.Add(investigateSeq);
+
+        // 5. 복귀 분기 (리쉬 초과 시)
         var returnSeq = new SequenceNode();
-        returnSeq.Add(new PredicateNode<EnemyBTController>(this, static (enemy) => enemy.IsExceedingLeashDistance()));
+        returnSeq.Add(new PredicateNode<EnemyBTController>(this, static enemy => enemy.IsExceedingLeashDistance()));
         returnSeq.Add(new ActionNode(TickReturnToSpawn));
         root.Add(returnSeq);
 
-        // 5. 전투 브랜치 (추격 및 공격)
+        // 6. 전투 브랜치 (추격 및 공격)
         var combatBranch = new SequenceNode();
-        combatBranch.Add(new PredicateNode<EnemyBTController>(this, static (enemy) => enemy._currentTarget != null));
+        combatBranch.Add(new PredicateNode<EnemyBTController>(this, static enemy => enemy._currentTarget != null));
         combatBranch.Add(BuildCombatSelector());
         root.Add(combatBranch);
 
-        // 6. 기본 순찰 브랜치
+        // 7. 기본 순찰 브랜치
         root.Add(new ActionNode(TickPatrol));
 
         return root;
@@ -338,10 +364,16 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
         // 사정거리 이내 & 쿨타임 충족: 다중 평타 공격 추첨 실행
         var attackSeq = new SequenceNode();
-        attackSeq.Add(new PredicateNode<EnemyBTController>(this, static (enemy) =>
+        attackSeq.Add(new PredicateNode<EnemyBTController>(this, static enemy =>
             Time.time >= enemy._globalAttackCooldownTime && enemy.HasAnyReadyAttack()));
         attackSeq.Add(new AsyncActionNode(ExecuteSelectedBasicAttackAsync, GetActionToken));
         selector.Add(attackSeq);
+
+        // 사정거리 내에 있으나 쿨타임 대기 중일 때: 플레이어를 주시하며 대기 (추격하지 않고 멈춤)
+        var combatWaitSeq = new SequenceNode();
+        combatWaitSeq.Add(new PredicateNode<EnemyBTController>(this, static enemy => enemy.IsTargetWithinAnyAttackRange()));
+        combatWaitSeq.Add(new ActionNode(TickCombatWait));
+        selector.Add(combatWaitSeq);
 
         // 사정거리 밖: 타깃 추격
         var chaseSeq = new SequenceNode();
@@ -353,21 +385,32 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     #endregion
 
     #region AI 실행 서브 루틴
+    public bool IsTargetWithinAnyAttackRange()
+    {
+        if (_currentTarget == null || _basicAttacks.Count == 0) return false;
+
+        Vector3 diff = _currentTarget.position - transform.position;
+        diff.y = 0f;
+        float dist = diff.sqrMagnitude;
+
+        foreach (var kvp in _basicAttacks)
+        {
+            if (dist <= (kvp.Value.AttackRange * kvp.Value.AttackRange)) return true;
+        }
+        return false;
+    }
+
     protected bool HasAnyReadyAttack()
     {
         if (_currentTarget == null || _basicAttacks.Count == 0) return false;
 
         Vector3 diff = _currentTarget.position - transform.position;
         diff.y = 0f;
-        float centerDistance = diff.magnitude;
-
-        // 두 캐릭터 캡슐 콜라이더의 외곽선 간격 (콜라이더 반지름 합산 1.0m 차감 보정)
-        float effectiveDistance = Mathf.Max(0f, centerDistance - 1.0f);
+        float dist = diff.sqrMagnitude;
 
         foreach (var kvp in _basicAttacks)
         {
-            float maxRange = kvp.Value.AttackRange;
-            if (effectiveDistance <= maxRange && Time.time >= _attackCooldowns[kvp.Key])
+            if (dist <= (kvp.Value.AttackRange * kvp.Value.AttackRange) && Time.time >= _attackCooldowns[kvp.Key])
             {
                 return true;
             }
@@ -375,68 +418,128 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         return false;
     }
 
+    /// <summary>
+    /// 공격 사거리 내에서 쿨타임 대기 시 추격을 멈추고 대기하는 루틴
+    /// </summary>
+    protected virtual INode.ENodeState TickCombatWait()
+    {
+        if (_currentTarget == null) return INode.ENodeState.ENS_Failure;
+
+        _movement.StopMovement();
+        _movement.FaceTarget(_currentTarget.position, 6.0f, Time.deltaTime);
+        _enemyAnim.PlayState(AnimStateType.Idle);
+
+        return INode.ENodeState.ENS_Running;
+    }
+
     protected virtual async UniTask<bool> ExecuteSelectedBasicAttackAsync(CancellationToken ct)
     {
-        // 1. 유효 사거리 및 쿨타임 충족 후보 수집
+        if (_currentTarget == null || IsDead) return false;
+
+        // 1. 공격 티켓(Token) 획득 시도 (다굴 원천 방지)
+        if (ServiceLocator.TryGet<IEnemyManager>(out var enemyManager) && 
+            enemyManager is EnemyManager managerConcrete && !managerConcrete.TryAcquireAttackToken(this))
+        {
+            return false;
+        }
+
+        // 2. 유효 후보 수집
         _validAttackCandidates.Clear();
         Vector3 diff = _currentTarget.position - transform.position;
         diff.y = 0f;
-        float sqrDist = diff.sqrMagnitude;
+        float dist = diff.sqrMagnitude;
 
         foreach (var kvp in _basicAttacks)
         {
-            float range = kvp.Value.AttackRange;
-            if (sqrDist <= (range * range) && Time.time >= _attackCooldowns[kvp.Key])
+            if (dist <= (kvp.Value.AttackRange * kvp.Value.AttackRange) && Time.time >= _attackCooldowns[kvp.Key])
             {
                 _validAttackCandidates.Add(kvp.Value);
             }
         }
 
-        if (_validAttackCandidates.Count == 0) return false;
+        if (_validAttackCandidates.Count == 0)
+        {
+            ReleaseTokenInternal();
+            return false;
+        }
 
-        // 2. 무작위 패턴 1종 선정
         EnemyAttackData chosenData = _validAttackCandidates[Random.Range(0, _validAttackCandidates.Count)];
 
         _isActionExecuting = true;
+
+        // 3. 확실한 물리 및 내비메시 이동 완전 정지
         _movement.StopMovement();
-
-        // ActionTimelineStep 배열 추출
-        ActionTimelineStep[] steps = chosenData.GetTimelineSteps();
-
-        float baseAtk = _enemyStatus.EnemyInfoSource != null ? _enemyStatus.EnemyInfoSource.AttackPower : 20.0f;
-        float basePoise = _enemyStatus.EnemyInfoSource != null ? _enemyStatus.EnemyInfoSource.BasePoiseDamage : 15.0f;
-
-        ActionTimelineRunner.ExecutionContext ctx = new ActionTimelineRunner.ExecutionContext
-        {
-            AnimController = _enemyAnim,
-            Movement = _movement,
-            Target = _currentTarget,
-            GlobalSpeedMultiplier = 1.0f,
-            OnOpenHitbox = OpenHitboxSlot,
-            OnCloseHitbox = CloseHitboxSlot,
-            OnCloseAllHitboxes = CloseAllHitboxes,
-            BaseDamage = chosenData.CalculateFinalDamage(baseAtk),
-            BasePoiseDamage = chosenData.CalculateFinalPoiseDamage(basePoise),
-            IsParryable = chosenData.IsParryable,
-            ImpactType = chosenData.ImpactType,
-            KnockbackForce = chosenData.KnockbackForce
-        };
 
         try
         {
-            // 타임라인 러너 실행
+            // 4. 공격 선딜레이 와인드업 대기 (플레이어에게 회피/패링 준비 시간 부여)
+            float elapsedWindup = 0f;
+            while (elapsedWindup < chosenData.WindupDelay)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (_currentTarget != null)
+                {
+                    _movement.FaceTarget(_currentTarget.position, 12.0f, Time.deltaTime);
+                }
+                elapsedWindup += Time.deltaTime;
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
+            }
+
+            // 5. 타임라인 러너 실행
+            ActionTimelineStep[] steps = chosenData.GetTimelineSteps();
+            float baseAtk = _enemyStatus.EnemyInfoSource != null ? _enemyStatus.EnemyInfoSource.AttackPower : 20.0f;
+            float basePoise = _enemyStatus.EnemyInfoSource != null ? _enemyStatus.EnemyInfoSource.BasePoiseDamage : 15.0f;
+            
+            ActionTimelineRunner.ExecutionContext ctx = new ActionTimelineRunner.ExecutionContext
+            {
+                AnimController = _enemyAnim,
+                Movement = _movement,
+                Target = _currentTarget,
+                BossOwner = null,
+                GlobalSpeedMultiplier = 1.0f,
+                OnOpenHitbox = OpenHitboxSlot,
+                OnCloseHitbox = CloseHitboxSlot,
+                OnCloseAllHitboxes = CloseAllHitboxes,
+                BaseDamage = chosenData.CalculateFinalDamage(baseAtk),
+                BasePoiseDamage = chosenData.CalculateFinalPoiseDamage(basePoise),
+                IsParryable = chosenData.IsParryable,
+                ImpactType = chosenData.ImpactType,
+                KnockbackForce = chosenData.KnockbackForce
+            };
+
             await ActionTimelineRunner.ExecuteTimelineAsync(steps, ctx, ct);
+        }
+        catch (System.OperationCanceledException)
+        {
+            return false;
         }
         finally
         {
+            CloseAllHitboxes();
+            ReleaseTokenInternal();
             _isActionExecuting = false;
+
+
+            if (!IsDead)
+            {
+                // 공격 모션 종료 즉시 안전 복귀 (마네킹 프리징 해결)
+                _enemyAnim.PlayState(AnimStateType.Idle, force: true);
+
+                // 공격 완료 시점부터 개별 쿨타임 및 글로벌 쿨타임 기록
+                _attackCooldowns[chosenData.AttackAnimStateType] = Time.time + chosenData.AttackCooldown;
+                _globalAttackCooldownTime = Time.time + 1.2f; // 최소 1.2초간 다음 공격 금지
+            }
         }
 
-        // 모션 완전 종료 후부터 쿨타임 타임스탬프 기록
-        _attackCooldowns[chosenData.AttackAnimStateType] = Time.time + chosenData.AttackCooldown;
-        _globalAttackCooldownTime = Time.time + 0.8f;
-
         return true;
+    }
+
+    private void ReleaseTokenInternal()
+    {
+        if (ServiceLocator.TryGet<IEnemyManager>(out var enemyManager) && enemyManager is EnemyManager managerConcrete)
+        {
+            managerConcrete.ReleaseAttackToken(this);
+        }
     }
 
     protected virtual INode.ENodeState TickChaseTarget()
@@ -444,17 +547,21 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         if (_currentTarget == null) return INode.ENodeState.ENS_Failure;
 
         float attackRange = _enemyStatus.EnemyInfoSource != null ? _enemyStatus.EnemyInfoSource.AttackRange : 2.0f;
-        // NavMeshAgent 멈춤 거리를 공격 사거리의 70%로 좁혀서 확실히 타격권 안으로 진입
+        // NavMeshAgent 멈춤 거리를 공격 사거리의 90%로 좁혀서 확실히 타격권 안으로 진입
         if (_agent != null)
         {
-            _agent.stoppingDistance = Mathf.Max(0.8f, attackRange * 0.7f);
+            _agent.stoppingDistance = Mathf.Max(1.0f, attackRange * 0.9f);
         }
 
         float currentChaseSpeed = _enemyStatus.EnemyMotionStatus != null ? _enemyStatus.EnemyMotionStatus.ChaseSpeed.Value : 4.5f;
 
-        _movement.SetDestination(_currentTarget.position, currentChaseSpeed);
-        _movement.TickLocomotionRotation(Time.deltaTime, 4.5f);
-        _enemyAnim.PlayState(AnimStateType.Run);
+        // 0.15초 주기 또는 타깃 위치 유의미 이동 시에만 네비메시 갱신
+        if (Time.time >= _nextPathUpdateTime || (_currentTarget.position - _lastDestination).sqrMagnitude > 1.0f)
+        {
+            _lastDestination = _currentTarget.position;
+            _nextPathUpdateTime = Time.time + 0.15f;
+            _movement.SetDestination(_lastDestination, currentChaseSpeed);
+        }
 
         return INode.ENodeState.ENS_Running;
     }
@@ -505,7 +612,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         // NavmeshSurface 내에 좌표 3회 검사
         for (int i = 0; i < 3; i++)
         {
-            Vector2 circle = UnityEngine.Random.insideUnitCircle * safePatrolRadius;
+            Vector2 circle = Random.insideUnitCircle * safePatrolRadius;
             Vector3 randomCandidate = _spawnPoint + new Vector3(circle.x, 0f, circle.y);
 
             if (NavMesh.SamplePosition(randomCandidate, out NavMeshHit hit, 3.5f, NavMesh.AllAreas))
@@ -516,10 +623,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
             }
         }
 
-        if (!foundValidPoint)
-        {
-            finalPatrolPoint = _spawnPoint;
-        }
+        if (!foundValidPoint) finalPatrolPoint = _spawnPoint;
 
         _patrolTarget = finalPatrolPoint;
 
@@ -528,32 +632,20 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         _movement.SetDestination(_patrolTarget, patrolSpeed);
     }
 
-    protected virtual INode.ENodeState TickReturnToSpawn()
-    {
-        ClearTarget();
-
-        float walkSpeed = _enemyStatus.MotionStatus != null ? _enemyStatus.MotionStatus.WalkSpeed.Value : 3.5f;
-
-        _movement.SetDestination(_spawnPoint, walkSpeed);
-        _movement.TickLocomotionRotation(Time.deltaTime, 4.0f);
-        _enemyAnim.PlayState(AnimStateType.Walk);
-
-        Vector3 toSpawn = transform.position - _spawnPoint;
-        toSpawn.y = 0f;
-        if (toSpawn.sqrMagnitude <= (1.2f * 1.2f))
-        {
-            _movement.StopMovement();
-            return INode.ENodeState.ENS_Success;
-        }
-
-        return INode.ENodeState.ENS_Running;
-    }
-
     protected virtual INode.ENodeState ExecuteDeath()
     {
+        if (_isDeathExecuted) return INode.ENodeState.ENS_Success;
+        _isDeathExecuted = true;
+
+        ReleaseTokenInternal();
         SetControllerActive(false);
+
+        AsyncUtil.CancelAndDispose(ref _actionCts);
+        AsyncUtil.CancelAndDispose(ref _groggyCts);
+
         _movement.StopMovement();
         CloseAllHitboxes();
+        _perceptionModule?.StopSensorLoop();
 
         if (_collider != null) _collider.enabled = false;
         if (_agent != null && _agent.isOnNavMesh) _agent.isStopped = true;
@@ -561,7 +653,33 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         _enemyAnim.PlayState(AnimStateType.Death, force: true);
         EventBusSystem.Publish(new UnitDiedEvent(gameObject, _unitId));
 
+        if (this is BossBTController)
+        {
+            EventBusSystem.Publish(new BossDefeatedEvent(gameObject));
+        }
+
         return INode.ENodeState.ENS_Success;
+    }
+
+    private async UniTaskVoid ExecuteDespawnAfterDeathAsync(CancellationToken token)
+    {
+        float deathClipDuration = _enemyAnim.GetStateDuration(AnimStateType.Death);
+        float totalWait = deathClipDuration + 1.5f; // 사망 연출 후 1.5초간 시체 유지
+
+        bool isCanceled = await UniTask.Delay(System.TimeSpan.FromSeconds(totalWait), 
+            delayTiming: PlayerLoopTiming.Update, cancellationToken: token).SuppressCancellationThrow();
+
+        if (isCanceled) return;
+
+        // 풀링 소환 개체인 경우 오브젝트 풀로 회수
+        if (_isSpawnedFromPool && ObjectPoolManager.Instance != null)
+        {
+            ObjectPoolManager.Instance.Despawn(PoolType.NightmareCreature, gameObject);
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
     }
     #endregion
 
@@ -593,7 +711,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         if (_hitboxMap.TryGetValue(slot, out WeaponSweepHitbox hitbox) && hitbox != null)
         {
-            hitbox.OpenHitBox(gameObject, damage, poiseDamage, isParryable, impactType, knockbackForce);
+            hitbox?.OpenHitBox(gameObject, damage, poiseDamage, isParryable, impactType, knockbackForce);
         }
     }
 
@@ -601,7 +719,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         if (_hitboxMap.TryGetValue(slot, out WeaponSweepHitbox hitbox) && hitbox != null)
         {
-            hitbox.CloseHitBox();
+            hitbox?.CloseHitBox();
         }
     }
 
@@ -622,6 +740,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         if (IsDead) return;
 
+        ReleaseTokenInternal();
         // 진행 중인 모든 공격/비동기 태스크 즉각 인터럽트 취소
         AsyncUtil.CancelAndDispose(ref _actionCts);
         CloseAllHitboxes();
@@ -631,7 +750,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         // 포이즈 파괴 시 그로기 돌입
         if (_enemyStatus.IsPoiseBroken)
         {
-            ExecuteGroggyAsync(GetActionToken()).Forget();
+            StartGroggySequence();
         }
         else
         {
@@ -654,42 +773,78 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         catch (System.OperationCanceledException) { }
         finally
         {
+            _enemyAnim.PlayState(AnimStateType.Idle, force: true);
             _isActionExecuting = false;
         }
     }
 
-    /// <summary>
-    /// 포이즈 고갈에 따른 그로기 무력화 루틴
-    /// </summary>
-    protected virtual async UniTask<bool> ExecuteGroggyAsync(CancellationToken ct)
+    protected virtual INode.ENodeState TriggerGroggyAction()
     {
-        _isActionExecuting = true;
+        StartGroggySequence();
+        return INode.ENodeState.ENS_Running;
+    }
+
+    /// <summary>
+    /// 강인도 소진 시 그로기 상태 진입 및 회복 루틴 시작
+    /// </summary>
+    public void StartGroggySequence()
+    {
+        if (_isGroggy || IsDead) return;
+
         _isGroggy = true;
-        CanBeRiposted = true; // 앞잡 처형 허용
+        CanBeRiposted = true;
+        _isActionExecuting = false;
+
+        // 그로기 진입 즉시 진행 중이던 공격 비동기 태스크 강제 취소 (그로기 중 공격 발동 차단)
+        AsyncUtil.CancelAndDispose(ref _actionCts);
+
         _movement.StopMovement();
         CloseAllHitboxes();
+        ReleaseTokenInternal();
 
-        Util.LogWithTag(name, "[그로기 무력화 발생] 앞잡 가능 상태 진입");
+        _enemyStatus?.SetPoiseRecoveryPause(true);
+
+        AsyncUtil.CancelAndDispose(ref _groggyCts);
+        _groggyCts = CancellationTokenSource.CreateLinkedTokenSource(this.destroyCancellationToken);
+
+        ExecuteGroggyTimerAsync(_groggyCts.Token).Forget();
+    }
+
+    /// <summary>
+    /// 처형당하지 않을 경우 설정된 시간 후 스스로 기상하는 비동기 루틴
+    /// </summary>
+    private async UniTaskVoid ExecuteGroggyTimerAsync(CancellationToken token)
+    {
+        float elapsed = 0f;
+        float maxPoise = _enemyStatus.MaxPoise;
 
         try
         {
-            await PlayStateAndWaitAsync(AnimStateType.Stun, ct, force: true, customDuration: _groggyRecoveryDuration);
-        }
-        catch (System.OperationCanceledException)
-        {
-            // 플레이어 처형(Riposte)에 의해 인터럽트된 경우
-            return false;
-        }
-        finally
-        {
-            CanBeRiposted = false;
-            _isGroggy = false;
-            _isActionExecuting = false;
-            _enemyStatus.RestorePoiseToMax();
-            _enemyAnim.PlayState(AnimStateType.Idle, force: true);
-        }
+            _enemyAnim.PlayState(AnimStateType.Groggy_Loop, force: true);
 
-        return true;
+            while (elapsed < _groggyRecoveryDuration)
+            {
+                bool canceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+                if (canceled) return;
+
+                elapsed += Time.deltaTime;
+                // 점진적 Poise 충전 (UI 반영)
+                float currentPoise = Mathf.Lerp(0f, maxPoise, elapsed / _groggyRecoveryDuration);
+                // StatusController의 Poise를 점진 갱신
+            }
+        }
+        catch (System.OperationCanceledException) { return; }
+
+        RecoverFromGroggyNaturally();
+    }
+
+    private void RecoverFromGroggyNaturally()
+    {
+        CanBeRiposted = false;
+        _isGroggy = false;
+        _enemyStatus?.RestorePoiseToMax();
+        _enemyStatus?.SetPoiseRecoveryPause(false);
+        _enemyAnim.PlayState(AnimStateType.Idle, force: true);
     }
 
     /// <summary>
@@ -697,22 +852,35 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     /// </summary>
     public virtual void OnRiposted(Transform attacker)
     {
+        ReleaseTokenInternal();
         _movement.StopMovement();
         CanBeRiposted = false;
         CloseAllHitboxes();
 
         // 기존 그로기 자동 회복 타이머 취소
-        AsyncUtil.CancelAndDispose(ref _actionCts);
+        AsyncUtil.CancelAndDispose(ref _groggyCts);
 
         // 플레이어 정면으로 즉각 시선 스냅
-        Vector3 dirToAttacker = (attacker.position - transform.position);
-        dirToAttacker.y = 0f;
-        if (dirToAttacker.sqrMagnitude > 0.001f)
+        if (attacker != null)
         {
-            transform.rotation = Quaternion.LookRotation(dirToAttacker.normalized);
+            Vector3 dirToAttacker = attacker.position - transform.position;
+            dirToAttacker.y = 0f;
+            if (dirToAttacker.sqrMagnitude > 0.001f)
+            {
+                transform.rotation = Quaternion.LookRotation(dirToAttacker.normalized);
+            }
         }
 
+        // 3. 처형 피격 애니메이션 강제 재생
         _enemyAnim.PlayState(AnimStateType.Hit2, force: true);
+    }
+
+    /// <summary>
+    /// 플레이어 처형 모션이 완료된 직후 호출: 기상 모션 후 강인도 복원 및 전투 재개
+    /// </summary>
+    public virtual void OnRiposteFinished()
+    {
+        if (IsDead) return;
         ExecuteRiposteWakeUpAsync(GetActionToken()).Forget();
     }
 
@@ -722,18 +890,22 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     protected virtual async UniTaskVoid ExecuteRiposteWakeUpAsync(CancellationToken token)
     {
         _isActionExecuting = true;
+        CanBeRiposted = false;
+
         try
         {
-            // 처형 모션 및 기상 대기
-            await PlayStateAndWaitAsync(AnimStateType.Hit2, token, force: true, 3f);
+            await PlayStateAndWaitAsync(AnimStateType.Hit2, token, force: true, customDuration: 2.5f);
         }
         catch (System.OperationCanceledException) { }
         finally
         {
-            // 처형 완료 후 포이즈 재설정 및 복귀
-            _enemyStatus.RestorePoiseToMax();
+            // 기상 완료 후 Poise 완전 복원 및 전투 재개
+            _enemyStatus?.RestorePoiseToMax();
+            _enemyStatus?.SetPoiseRecoveryPause(false);
             _isActionExecuting = false;
             _isGroggy = false;
+            CanBeRiposted = false;
+            _enemyAnim.PlayState(AnimStateType.Idle, force: true);
         }
     }
     #endregion
@@ -741,6 +913,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     #region 유틸리티 및 센싱
     protected virtual void HandleTargetSpotted(Transform target)
     {
+        if (IsDead) return;
         if (_currentTarget == null)
         {
             SetTarget(target);
@@ -751,14 +924,78 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         if (_currentTarget != null || _isActionExecuting || IsDead) return;
 
-        Vector3 dirToNoise = noisePosition - transform.position;
+        _investigateTargetPosition = noisePosition;
+        _isInvestigatingNoise = true;
+    }
+
+    private INode.ENodeState TickInvestigateNoise()
+    {
+        _movement.StopMovement();
+        _movement.FaceTarget(_investigateTargetPosition, 5.0f, Time.deltaTime);
+        _enemyAnim.PlayState(AnimStateType.Idle);
+
+        Vector3 dirToNoise = _investigateTargetPosition - transform.position;
         dirToNoise.y = 0f;
 
-        if (dirToNoise.sqrMagnitude > 0.01f)
+        // 소리 방향으로 거의 정렬되었을 때 1.5초간 둘러보고 수색 종료
+        if (Vector3.Dot(transform.forward, dirToNoise.normalized) > 0.9f)
         {
-            _movement.FaceTarget(noisePosition, 6.0f, Time.deltaTime);
+            WaitAndEndInvestigateAsync(GetActionToken()).Forget();
         }
+
+        return INode.ENodeState.ENS_Running;
     }
+    private async UniTaskVoid WaitAndEndInvestigateAsync(CancellationToken token)
+    {
+        bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(1.5f), cancellationToken: token).SuppressCancellationThrow();
+        if (canceled) return;
+        _isInvestigatingNoise = false;
+    }
+    #endregion
+
+    #region 복귀 안정화 (스폰 지점 도착 시까지 보장)
+    private bool _isReturning = false;
+
+    protected bool IsReturningToSpawn()
+    {
+        if (_isReturning) return true;
+
+        float maxLeash = _enemyStatus.EnemyInfoSource != null ? _enemyStatus.EnemyInfoSource.MaxLeashDistance : 25.0f;
+        Vector3 diff = transform.position - _spawnPoint;
+        diff.y = 0f;
+
+        if (diff.sqrMagnitude > (maxLeash * maxLeash))
+        {
+            _isReturning = true;
+            ClearTarget();
+            return true;
+        }
+        return false;
+    }
+
+    protected virtual INode.ENodeState TickReturnToSpawn()
+    {
+        _isInvestigatingNoise = false;
+        ClearTarget();
+        ReleaseTokenInternal();
+
+        float walkSpeed = _enemyStatus.MotionStatus != null ? _enemyStatus.MotionStatus.WalkSpeed.Value : 3.5f;
+        _movement.SetDestination(_spawnPoint, walkSpeed);
+        _movement.TickLocomotionRotation(Time.deltaTime, 4.0f);
+        _enemyAnim.PlayState(AnimStateType.Walk);
+
+        Vector3 toSpawn = transform.position - _spawnPoint;
+        toSpawn.y = 0f;
+        if (toSpawn.sqrMagnitude <= (1.2f * 1.2f))
+        {
+            _movement.StopMovement();
+            _isReturning = false;
+            return INode.ENodeState.ENS_Success;
+        }
+
+        return INode.ENodeState.ENS_Running;
+    }
+
     public virtual void SetTarget(Transform target) => _currentTarget = target;
     public virtual void ClearTarget() => _currentTarget = null;
 
@@ -791,7 +1028,13 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         if (IsDead) return;
 
-        _enemyStatus.TakeDamage(context.Damage, context.PoiseDamage);
+        // 몬스터의 고정 방어력(FlatDefense)에 따른 실 대미지 관통 연산
+        float def = (_enemyStatus != null && _enemyStatus.EnemyInfoSource != null)
+            ? _enemyStatus.EnemyInfoSource.FlatDefense : 10.0f;
+
+        float penetratedDamage = CombatFormula.CalculatePenetratedDamage(context.Damage, def);
+
+        _enemyStatus.TakeDamage(penetratedDamage, context.PoiseDamage);
 
         if (_currentTarget == null && context.Attacker != null)
         {
@@ -807,7 +1050,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         // Poise 파괴 시 즉시 그로기 상태로 전이
         if (_enemyStatus.IsPoiseBroken && !_isGroggy)
         {
-            ExecuteGroggyAsync(GetActionToken()).Forget();
+            StartGroggySequence();
             return;
         }
 
@@ -820,6 +1063,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
     protected virtual async UniTaskVoid ExecuteGetHitAsync(CancellationToken token)
     {
+        ReleaseTokenInternal();
         _isActionExecuting = true;
         _movement.StopMovement();
         CloseAllHitboxes();
@@ -832,6 +1076,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         catch (System.OperationCanceledException) { }
         finally
         {
+            _enemyAnim.PlayState(AnimStateType.Idle, force: true);
             _isActionExecuting = false;
         }
     }
@@ -847,55 +1092,6 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         }
     }
 #endif
-    #region 기즈모 렌더링 (스폰 앵커와 지면 판정 구체 완전 분리)
-    protected virtual void OnDrawGizmosSelected()
-    {
-        // 1. 몬스터 발밑을 정확히 따라다니는 지면 판정 구체 렌더링 (접지: 녹색, 공중: 적색)
-        _movement?.DrawGizmos();
-
-        // 2. 시야각 및 청각 반경 기즈모
-        _perceptionModule?.DrawGizmos(transform);
-
-        // 3. 스폰 지점 마커 (구체가 아닌 납작한 앵커 디스크로 렌더링하여 혼동 방지)
-        Vector3 spawn = Application.isPlaying ? _spawnPoint : transform.position;
-        float maxLeash = (_enemyStatus != null && _enemyStatus.EnemyInfoSource != null)
-            ? _enemyStatus.EnemyInfoSource.MaxLeashDistance : 25.0f;
-        float safePatrolRadius = maxLeash * 0.4f;
-
-        // 스폰 지점 앵커 마크: 중심 납작 디스크
-        Gizmos.color = Color.white;
-        Gizmos.DrawWireCube(spawn + Vector3.up * 0.05f, new Vector3(0.5f, 0.1f, 0.5f));
-
-#if UNITY_EDITOR
-        // 안전 순찰 반경 (청록색)
-        Handles.color = new Color(0f, 0.9f, 0.8f, 0.2f);
-        Handles.DrawSolidDisc(spawn, Vector3.up, safePatrolRadius);
-        Handles.color = Color.cyan;
-        Handles.DrawWireDisc(spawn, Vector3.up, safePatrolRadius);
-
-        // 최대 활동 반경 Leash (녹색)
-        Handles.color = new Color(0.1f, 1.0f, 0.3f, 0.15f);
-        Handles.DrawSolidDisc(spawn, Vector3.up, maxLeash);
-        Handles.color = Color.green;
-        Handles.DrawWireDisc(spawn, Vector3.up, maxLeash);
-#endif
-
-        // 4. 현재 타깃 연결선 및 공격 가능 사거리 링
-        if (_currentTarget != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(transform.position + Vector3.up * 1.0f, _currentTarget.position + Vector3.up * 1.0f);
-
-            float combatRange = (_enemyStatus != null && _enemyStatus.EnemyInfoSource != null)
-                ? _enemyStatus.EnemyInfoSource.AttackRange : 2.2f;
-
-#if UNITY_EDITOR
-            Handles.color = new Color(1.0f, 0.1f, 0.1f, 0.5f);
-            Handles.DrawWireDisc(transform.position, Vector3.up, combatRange + 1.0f);
-#endif
-        }
-    }
-    #endregion
 
     /// <summary>
     /// 인스펙터에서 RuntimeEnemyInfo 값을 조절했을 때 지각 센서 및 기즈모 수치를 실시간 갱신
@@ -921,11 +1117,17 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         EventBusSystem.Unsubscribe<GameSceneReadyEvent>(HandleGameSceneReady);
 
+        if (ServiceLocator.TryGet<IEnemyManager>(out var enemyManager))
+        {
+            enemyManager.UnregisterEnemy(this);
+        }
+
         if (_enemyStatus != null)
         {
             _enemyStatus.OnStatusDataChanged -= HandleStatusDataChanged;
         }
         _perceptionModule?.Dispose();
         AsyncUtil.CancelAndDispose(ref _actionCts);
+        AsyncUtil.CancelAndDispose(ref _groggyCts);
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Util = DebugLogger;
@@ -22,14 +21,14 @@ public class DragonBT : BossBTController
 
         // 1. 사망 판정 노드
         var deathSeq = new SequenceNode();
-        deathSeq.Add(new PredicateNode<DragonBT>(this, static (boss) => boss._enemyStatus != null && boss._enemyStatus.CurrentHp <= 0f));
+        deathSeq.Add(new PredicateNode<DragonBT>(this, static boss => boss._enemyStatus != null && boss._enemyStatus.CurrentHp <= 0f));
         deathSeq.Add(new ActionNode(ExecuteDeath));
         root.Add(deathSeq);
 
         // 2. 2페이즈 전환 브랜치
         var phase2Seq = new SequenceNode();
-        phase2Seq.Add(new PredicateNode<DragonBT>(this, static (boss) =>
-            !boss._blackboard.HasExecutedPhase2Entry &&  boss._enemyStatus != null &&
+        phase2Seq.Add(new PredicateNode<DragonBT>(this, static boss =>
+            !boss._blackboard.HasExecutedPhase2Entry && boss._enemyStatus != null &&
             (boss._enemyStatus.CurrentHp / boss._enemyStatus.MaxHp) <= boss._blackboard.Phase2HpRatio &&
             (!boss._isActionExecuting || boss._blackboard.IsInvincible)
         ));
@@ -38,17 +37,17 @@ public class DragonBT : BossBTController
 
         // 3. 그로기 브랜치
         var groggySeq = new SequenceNode();
-        groggySeq.Add(new PredicateNode<DragonBT>(this, static (boss) =>
+        groggySeq.Add(new PredicateNode<DragonBT>(this, static boss =>
             boss._enemyStatus != null && boss._enemyStatus.IsPoiseBroken && !boss._isGroggy));
-        groggySeq.Add(new AsyncActionNode(ExecuteGroggyAsync, GetActionToken));
+        groggySeq.Add(new ActionNode(TriggerGroggyAction));
         root.Add(groggySeq);
 
         // 4. 액션 실행 잠금 노드 (비동기 패턴 실행 중 트리 평가 차단)
-        root.Add(new PredicateNode<DragonBT>(this, static (boss) => boss._blackboard.IsActionExecuting));
+        root.Add(new PredicateNode<DragonBT>(this, static boss => boss._isActionExecuting || boss._blackboard.IsActionExecuting));
 
-        // 5. 15초 주기 스킬 발동 브랜치
+        // 5. 주기적 스킬 발동 브랜치
         var skillSeq = new SequenceNode();
-        skillSeq.Add(new PredicateNode<DragonBT>(this, static (boss) =>
+        skillSeq.Add(new PredicateNode<DragonBT>(this, static boss =>
             (Time.time >= boss._blackboard.NextSkillCycleTime || boss._blackboard.IsSkillPending) &&
             boss.HasAnyReadySkill()
         ));
@@ -60,7 +59,7 @@ public class DragonBT : BossBTController
 
         // 6-1. UnitCombatDatabaseSO에 등록된 평타 중 사거리/쿨타임 충족 패턴 실행
         var basicAttackSeq = new SequenceNode();
-        basicAttackSeq.Add(new PredicateNode<DragonBT>(this, static (boss) =>
+        basicAttackSeq.Add(new PredicateNode<DragonBT>(this, static boss =>
             Time.time >= boss._globalAttackCooldownTime && boss.HasAnyReadyAttack()));
         basicAttackSeq.Add(new AsyncActionNode(ExecuteSelectedBasicAttackAsync, GetActionToken));
         combatSelector.Add(basicAttackSeq);
@@ -97,16 +96,20 @@ public class DragonBT : BossBTController
     /// </summary>
     private async UniTask<bool> ExecutePhase2TransitionAsync(CancellationToken ct)
     {
+        CloseAllHitboxes();
+
+        _isActionExecuting = true;
         _blackboard.IsActionExecuting = true;
         _blackboard.HasExecutedPhase2Entry = true;
         _blackboard.IsInvincible = true;
         _movement.StopMovement();
-        CloseAllHitboxes();
 
         Util.LogWithTag("BossDragon", "[Phase 2] 무적화 및 공중 체공 연출 진입");
         try
         {
             // 1. Dragon_Takeoff_InPlace : 제자리 도약
+            _movement.BeginRootMotionMovement();
+            _enemyAnim.SetRootMotion(true, (deltaPos, deltaRot) => _movement.ApplyRootMotionDelta(deltaPos, deltaRot, isAirborne: true));
             await PlayStateAndWaitAsync(AnimStateType.Dragon_Takeoff_InPlace, ct, force: true);
 
             // 2. Dragon_HoverLoop : 공중 체공 호버링 + 체력 10% 회복
@@ -115,21 +118,25 @@ public class DragonBT : BossBTController
 
             // 3. Dragon_Landing_InPlace : 제자리 착지
             await PlayStateAndWaitAsync(AnimStateType.Dragon_Landing_InPlace, ct, force: true);
+            _enemyAnim.SetRootMotion(false);
+            _movement.EndRootMotionMovement();
 
             // 4. 바닥 착지 후 2페이즈 광폭화 포효 연출
             await PlayStateAndWaitAsync(AnimStateType.Berserk, ct, force: true);
         }
         finally
         {
+            _enemyAnim.SetRootMotion(false);
+            _movement.EndRootMotionMovement();
+
             _enemyStatus.RestorePoiseToMax();
             _blackboard.IsPhase2 = true;
             _blackboard.IsInvincible = false;
             _blackboard.ResetSkillCycle();
             _blackboard.IsSkillPending = false;
             _blackboard.IsActionExecuting = false;
+            _isActionExecuting = false;
         }
-
-        Util.LogWithTag("BossDragon", "[Phase 2 완료] 드래곤 광폭화 개시");
         return true;
     }
     #endregion

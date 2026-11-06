@@ -128,3 +128,39 @@ public readonly struct InteractionPromptEvent : IEventType
         PromptText = promptText;
     }
 }
+
+/// <summary>
+/// 보스 조우 시점 보스 HUD를 활성화하는 이벤트
+/// </summary>
+public readonly struct BossEncounterEvent : IEventType
+{
+    public readonly string BossName;
+    public readonly UnityEngine.GameObject BossObject;
+    public readonly float InitialHp;
+    public readonly float MaxHp;
+    public readonly float InitialPoise;
+    public readonly float MaxPoise;
+
+    public BossEncounterEvent(string bossName, UnityEngine.GameObject bossObject, float initialHp, float maxHp, float initialPoise, float maxPoise)
+    {
+        BossName = bossName;
+        BossObject = bossObject;
+        InitialHp = initialHp;
+        MaxHp = maxHp;
+        InitialPoise = initialPoise;
+        MaxPoise = maxPoise;
+    }
+}
+
+/// <summary>
+/// 보스 처치 또는 전투 이탈 시 보스 HUD를 비활성화하는 이벤트
+/// </summary>
+public readonly struct BossDefeatedEvent : IEventType
+{
+    public readonly UnityEngine.GameObject BossObject;
+
+    public BossDefeatedEvent(UnityEngine.GameObject bossObject)
+    {
+        BossObject = bossObject;
+    }
+}

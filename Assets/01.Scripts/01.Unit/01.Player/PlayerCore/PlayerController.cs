@@ -1,5 +1,4 @@
-﻿using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
 using Util = DebugLogger<PlayerController>;
 
 /// <summary>
@@ -11,6 +10,9 @@ using Util = DebugLogger<PlayerController>;
 [RequireComponent(typeof(PlayerAnimController))]
 public class PlayerController : UnitController, IDamageable
 {
+    [Header("Combat Configurations")]
+    [SerializeField] private PlayerCombatConfigSO _combatConfig;
+
     [Header("Lock-On Setting")]
     [SerializeField] private float _lockOnRadius = 15f;
     [SerializeField] private float _riposteRange = 2.2f;
@@ -20,9 +22,10 @@ public class PlayerController : UnitController, IDamageable
     [SerializeField] private Transform _cameraTarget;
 
     [Header("Combat Hitbox Component")]
-    [SerializeField] private WeaponSweepHitbox _playerWeaponHitboxTest;
+    [SerializeField] private WeaponSweepHitbox _playerWeaponHitbox;
 
     private readonly Collider[] _lockOnHitBuffer = new Collider[16];
+    private IRiposteable _currentRiposteTarget;
 
     #region 도메인 컴포넌트 및 모듈
     protected PlayerMovement _movement;
@@ -43,10 +46,12 @@ public class PlayerController : UnitController, IDamageable
     public PlayerAnimController AnimationController => _animController;
     public PlayerCombatModule CombatModule => _combatModule;
     public PlayerStateMachine StateMachineInstance => _stateMachine;
+    public PlayerCombatConfigSO CombatConfig => _combatConfig;
 
     public Transform CameraTarget => _cameraTarget != null ? _cameraTarget : transform;
     public Transform CurrentLockOnTarget { get; private set; }
     public Vector3 CurrentMoveDirection { get; private set; }
+    public IRiposteable CurrentRiposteTarget => _currentRiposteTarget;
     #endregion
 
     protected override void SetupComponents()
@@ -62,11 +67,11 @@ public class PlayerController : UnitController, IDamageable
         if (_cameraTarget == null) _cameraTarget = transform;
         _movement = new PlayerMovement(_rigidbody, transform, CameraTarget, _groundLayer, _groundCheckConfig);
 
-        if (_playerWeaponHitboxTest == null)
+        if (_playerWeaponHitbox == null)
         {
-            _playerWeaponHitboxTest = GetComponentInChildren<WeaponSweepHitbox>();
+            _playerWeaponHitbox = GetComponentInChildren<WeaponSweepHitbox>();
         }
-        _combatModule = new PlayerCombatModule(this, _playerWeaponHitboxTest);
+        _combatModule = new PlayerCombatModule(this, _playerWeaponHitbox);
 
         EventBusSystem.Subscribe<GameStateChangedEvent>(HandleGameStateChanged);
     }
@@ -158,9 +163,9 @@ public class PlayerController : UnitController, IDamageable
         if (_stateMachine.CurrentState is PlayerRiposteState) return;
 
         // 5. 가드 및 패링 판정 분기
-        if (_stateMachine.CurrentState is PlayerParryState parryState)
+        if (_stateMachine.CurrentState is PlayerGuardState guardState)
         {
-            BlockResultType blockResult = parryState.ProcessIncomingAttack(in context);
+            BlockResultType blockResult = guardState.ProcessIncomingAttack(in context);
             if (blockResult != BlockResultType.Failed) return;
         }
 
@@ -171,11 +176,21 @@ public class PlayerController : UnitController, IDamageable
             return;
         }
 
-        // 7. 기본 체력 및 포이즈 차감
-        _statusController.TakeDamage(context.Damage, context.PoiseDamage);
+        // 단일 물리 방어력(DEF) 비선형 관통 연산
+        float flatDef = _statusController.PlayerInfoSource != null ? _statusController.PlayerInfoSource.FlatDefense : 10.0f;
+        flatDef += _statusController.EquippedArmorFlatDefense;
+
+        float penetratedDmg = CombatFormula.CalculatePenetratedDamage(context.Damage, flatDef);
+
+        // 방어구 4부위 합산 물리 경감률 적용
+        float absorption = _statusController.EquippedArmorAbsorption;
+        float finalDamage = penetratedDmg * (1.0f - absorption);
+
+        // 7. 기본 대미지 및 포이즈 차감
+        _statusController.TakeDamage(finalDamage, context.PoiseDamage);
         if (_statusController.CurrentHp <= 0f) return;
 
-        // 8. 보스 강공격 (Heavy Impact): 물리 넉백 + 2초 다운
+        // 8. 강공격 넉백 다운
         if (context.ImpactType == AttackImpactType.Heavy)
         {
             ApplyKnockbackImpulse(context.HitNormal, context.KnockbackForce);
@@ -227,12 +242,8 @@ public class PlayerController : UnitController, IDamageable
 
                 if (dirToEnemy.sqrMagnitude > 0.001f && Vector3.Dot(transform.forward, dirToEnemy.normalized) > 0.5f)
                 {
+                    _currentRiposteTarget = riposteTarget;
                     _stateMachine.ChangeState(UnitState.Riposte);
-
-                    if (_stateMachine.CurrentState is PlayerRiposteState riposteState)
-                    {
-                        riposteState.SetRiposteTarget(riposteTarget);
-                    }
 
                     System.Array.Clear(_lockOnHitBuffer, 0, hitCount);
                     return true;
@@ -243,6 +254,8 @@ public class PlayerController : UnitController, IDamageable
         System.Array.Clear(_lockOnHitBuffer, 0, hitCount);
         return false;
     }
+
+    public void ClearRiposteTarget() => _currentRiposteTarget = null;
     #endregion
 
     #region 락온 타겟팅
@@ -385,43 +398,6 @@ public class PlayerController : UnitController, IDamageable
         }
     }
 #endif
-
-    #region 기즈모 시각화
-    protected virtual void OnDrawGizmosSelected()
-    {
-        // 지면 판정 및 경사면 법선 기즈모 호출
-        _movement?.DrawGizmos();
-
-        Vector3 playerPos = transform.position;
-        Vector3 eyePos = playerPos + Vector3.up * 1.5f;
-
-#if UNITY_EDITOR
-        // 락온 탐색 반경 (청록색)
-        Handles.color = new Color(0f, 0.9f, 0.8f, 0.1f);
-        Handles.DrawSolidDisc(playerPos, Vector3.up, _lockOnRadius);
-        Handles.color = new Color(0f, 0.9f, 0.8f, 0.5f);
-        Handles.DrawWireDisc(playerPos, Vector3.up, _lockOnRadius);
-
-        // 앞잡(Riposte) 처형 가능 부채꼴 (주황색: 120도, 2.2m)
-        Vector3 forwardDir = transform.forward;
-        float riposteAngle = 120.0f;
-        Vector3 leftBoundary = Quaternion.AngleAxis(-riposteAngle * 0.5f, Vector3.up) * forwardDir;
-
-        Handles.color = new Color(1.0f, 0.5f, 0.0f, 0.2f);
-        Handles.DrawSolidArc(playerPos + Vector3.up * 0.1f, Vector3.up, leftBoundary, riposteAngle, _riposteRange);
-        Handles.color = new Color(1.0f, 0.5f, 0.0f, 0.8f);
-        Handles.DrawWireArc(playerPos + Vector3.up * 0.1f, Vector3.up, leftBoundary, riposteAngle, _riposteRange);
-#endif
-
-        // 락온 타깃 연결선
-        if (CurrentLockOnTarget != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(eyePos, CurrentLockOnTarget.position + Vector3.up * 1.2f);
-            Gizmos.DrawWireSphere(CurrentLockOnTarget.position + Vector3.up * 1.2f, 0.35f);
-        }
-    }
-    #endregion
 
     private void OnDestroy()
     {

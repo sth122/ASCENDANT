@@ -23,7 +23,7 @@ public class PlayerKnockbackState : PlayerActionState
         owner.InputReader.ClearAllCommands();
 
         // 2. 넉다운 애니메이션 트리거 격발
-        _playerAnimController.PlayState(AnimStateType.Knockback, force: true);
+        _playerAnimController.SetTrigger(AnimParamType.Knockback);
 
         System.Threading.CancellationToken token = CreateActionToken();
         ExecuteKnockbackSequenceAsync(token).Forget();
@@ -86,6 +86,7 @@ public class PlayerKnockbackState : PlayerActionState
 
         // 4. 기상(WakeUp) 트리거 격발
         owner.InputReader.ClearAllCommands();
+        _playerAnimController.ResetTrigger(AnimParamType.Knockback);
         _playerAnimController.SetTrigger(AnimParamType.WakeUp);
 
         // 5. AnimController로부터 WakeUp 실제 애니메이션 재생 길이 동적 쿼리

@@ -175,6 +175,7 @@ GameObject:
   - component: {fileID: 4129515568794556493}
   - component: {fileID: 1029992816194024196}
   - component: {fileID: 119011312187779533}
+  - component: {fileID: -8863776415272752070}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -307,13 +308,14 @@ MonoBehaviour:
     CastOriginOffsetY: 0.4
     CastDistance: 0.15
     MaxSlopeAngle: 45
+  _combatConfig: {fileID: 11400000, guid: eca5eafc69924ae419c503bb9dd3d948, type: 2}
   _lockOnRadius: 6.8
   _riposteRange: 2.2
   _lockOnObstacleLayer:
     serializedVersion: 2
     m_Bits: 257
   _cameraTarget: {fileID: 2071464979527174977}
-  _playerWeaponHitboxTest: {fileID: 0}
+  _playerWeaponHitbox: {fileID: 5188569304975187055}
 --- !u!114 &1367710400141555128
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -375,9 +377,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteractionHandler
   _detectRadius: 1.2
+  _viewAngleDot: 0.35
   _interactableLayer:
     serializedVersion: 2
     m_Bits: 2048
+--- !u!114 &-8863776415272752070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 631387832666468143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe9fb8439d9f4df47a57cd77f117fa3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventoryHandler
+  _initialEquipmentSO: {fileID: 11400000, guid: 6d0f5e99e99cef14882001d3363c0936, type: 2}
 --- !u!1 &751015693098662667
 GameObject:
   m_ObjectHideFlags: 0

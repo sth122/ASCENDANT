@@ -140,6 +140,11 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
         await UIManager.Instance.OpenUIAsync<PlayerHUDView, PlayerHUDPresenter, PlayerHUDModel>(
             UIId.PlayerHUD, hudModel, ct: this.destroyCancellationToken
         );
+
+        //QuickSlotModel quickSlotModel = new QuickSlotModel();
+        //await UIManager.Instance.OpenUIAsync<QuickSlotView, QuickSlotPresenter, QuickSlotModel>(
+        //    UIId.QuickSlotHUD, quickSlotModel, ct: this.destroyCancellationToken
+        //);
     }
 
     protected override void OnSceneReadyCompleted()

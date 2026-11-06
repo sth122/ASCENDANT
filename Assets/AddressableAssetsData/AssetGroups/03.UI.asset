@@ -30,6 +30,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ec1ad89e63178f4b80c92c70a355afd
+    m_Address: BossHUD
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7608bfc1babf9084a890a724e1161244
     m_Address: PlayerHUD
     m_ReadOnly: 0

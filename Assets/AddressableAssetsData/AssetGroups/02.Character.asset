@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: 02.Character
   m_GUID: 395d8daabab9cde49945fd0f3845a1ca
   m_SerializeEntries:
-  - m_GUID: 4057fdef72ac99841a28f962675c977a
-    m_Address: NightmareCreaturePrefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 833912afc7b0df84499fe4091cd5ffe3
     m_Address: PlayerPrefab
     m_ReadOnly: 0
@@ -27,6 +22,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 988e68d3092fee8469195b86bbc371da
     m_Address: BossDragon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9af30c9ce5bea6d4da9bd60b3045e469
+    m_Address: NightmareCreature
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -26,6 +26,17 @@ public class StateMachine<T> where T : class
             Util.LogError($"[StateMachine] 이미 등록된 상태 키 : {key}");
         }
     }
+
+    public virtual IState GetState(int stateKey)
+    {
+        if (stateDictionary.TryGetValue(stateKey, out IState state))
+        {
+            return state;
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// 키 (int)를 통한 상태 전이 수행
     /// forceReenter가 true면 동일 상태 ( ex: Roll -> Roll)라도 Exit 후 Enter를 재실행 가능

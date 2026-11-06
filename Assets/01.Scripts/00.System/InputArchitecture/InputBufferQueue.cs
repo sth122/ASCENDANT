@@ -14,12 +14,34 @@ public class InputBufferQueue
     }
 
     /// <summary>
-    /// 새로운 액션 커맨드를 타임 스탬프와 함께 큐에 등록
+    /// 동일 커맨드가 큐에 이미 존재하는 경우 중복 적재하지 않고 최신 타임스탬프로 갱신
     /// </summary>
     public void EnqueueCommand(InputCommandType type)
     {
         CleanExpiredHead();
-        _commandQueue.Enqueue(new BufferedCommand(type, UnityEngine.Time.time));
+
+        int count = _commandQueue.Count;
+        bool alreadyExists = false;
+
+        for (int i = 0; i < count; i++)
+        {
+            BufferedCommand cmd = _commandQueue.Dequeue();
+            if (cmd.CommandType == type && !cmd.IsExpired(_bufferDuration))
+            {
+                // 타임스탬프만 최신으로 덮어쓰기
+                _commandQueue.Enqueue(new BufferedCommand(type, UnityEngine.Time.time));
+                alreadyExists = true;
+            }
+            else if (!cmd.IsExpired(_bufferDuration))
+            {
+                _commandQueue.Enqueue(cmd);
+            }
+        }
+
+        if (!alreadyExists)
+        {
+            _commandQueue.Enqueue(new BufferedCommand(type, UnityEngine.Time.time));
+        }
     }
 
     /// <summary>
@@ -42,34 +64,14 @@ public class InputBufferQueue
             {
                 // 대상 커맨드 소비
                 found = true;
-            }else if(!cmd.IsExpired(_bufferDuration))
+            }
+            else if(!cmd.IsExpired(_bufferDuration))
             {
                 // 만료되지 않은 다른 커맨드는 다시 Enqueue
                 _commandQueue.Enqueue(cmd);
             }
         }
         return found;
-    }
-
-    /// <summary>
-    /// 현재 유효한 버퍼링 커맨드 중 선입력된 커맨드를 산출
-    /// </summary>
-    public bool TryConsumeAnyCommand(out InputCommandType consumedCommand)
-    {
-        CleanExpiredHead();
-
-        while (_commandQueue.Count > 0)
-        {
-            BufferedCommand cmd = _commandQueue.Dequeue();
-            if (!cmd.IsExpired(_bufferDuration))
-            {
-                consumedCommand = cmd.CommandType;
-                return true;
-            }
-        }
-
-        consumedCommand = InputCommandType.None;
-        return false;
     }
 
     /// <summary>
@@ -150,7 +152,19 @@ public class InputBufferQueue
             }
         }
     }
-    
+
+    /// <summary>
+    /// 만료되지 않은 유효 커맨드가 버퍼 큐에 존재하는지 여부 확인 (Dequeue 없이 상태만 검사)
+    /// </summary>
+    public bool HasValidCommand
+    {
+        get
+        {
+            CleanExpiredHead();
+            return _commandQueue.Count > 0;
+        }
+    }
+
     public void ClearAll() => _commandQueue.Clear();
     private void CleanExpiredHead()
     {
@@ -168,7 +182,7 @@ public class InputBufferQueue
         switch (command)
         {
             case InputCommandType.Roll: return 4;
-            case InputCommandType.Parry: return 3;
+            case InputCommandType.Guard: return 3;
             case InputCommandType.Attack: return 2;
             case InputCommandType.Jump: return 1;
             default: return 0;

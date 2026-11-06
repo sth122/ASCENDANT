@@ -125,21 +125,24 @@ public class UnitStatusController : MonoBehaviour
         OnHpChangedEvent?.Invoke(_currentHp, _maxHp);
         EventBusSystem.Publish(new UnitHpChangedEvent(gameObject, _currentHp, _maxHp));
 
-        _poiseRecoveryTimer = PoiseRecoveryDelay;
-        _currentPoise = Mathf.Max(0f, _currentPoise - poiseDamage);
-        OnPoiseChangedEvent?.Invoke(_currentPoise, _maxPoise);
-        EventBusSystem.Publish(new UnitPoiseChangedEvent(gameObject, _currentPoise, _maxPoise));
-
-
         if (_currentHp <= 0f)
         {
             Dead();
             return;
         }
 
-        if (_currentPoise <= 0f)
+        // 그로기 상태(강인도 고갈 상태) 중에는 추가 Poise 데미지를 받지 않음 (면역)
+        if (!_isPoiseDepleted)
         {
-            PoiseBreak();
+            _poiseRecoveryTimer = PoiseRecoveryDelay;
+            _currentPoise = Mathf.Max(0f, _currentPoise - poiseDamage);
+            OnPoiseChangedEvent?.Invoke(_currentPoise, _maxPoise);
+            EventBusSystem.Publish(new UnitPoiseChangedEvent(gameObject, _currentPoise, _maxPoise));
+
+            if (_currentPoise <= 0f)
+            {
+                PoiseBreak();
+            }
         }
     }
 

@@ -61,37 +61,36 @@ public enum InputCommandType
     Jump,
     Roll,
     Attack,
-    Parry
+    Guard
 }
 #endregion
 
 #region Unit FSM State
 public enum UnitState
 {
-    // 공통 또는 Player 상태
+    // Player 상태
+    // 플레이어 기본 로코모션
     Idle,
     Move,
     Sprint,
     Jump,
+    Fall,           // 공중 낙하 체공
+    HardLanding,    // 고낙차 착지 경직
+
+    // 전투 액션
     Attack,
-    Parry,
-    ParryStagger,
-    Stun,
-    Knockback,
+    Guard,          // 가드 유지 및 Strafe 이동
+    Parry,          // 패링 쳐내기 액션
+    Riposte,        // 처형(앞잡)
+    UseItem,        // 아이템 사용
     Roll,
-    Riposte,
+
+    // 피격 및 무력화
     GetHit,
+    GuardBreak,     // 스태미나 부족 방패 파쇄
+    Groggy,         // 강인도 완전 소진 시 무력화 대기 (처형 허용)
+    Knockback,
     Die,
-
-    // 에너미 공통 확장 상태
-    Chase,      // 플레이어 추격
-    Return,     // 활동 반경 이탈 시 스폰 지점 복귀
-
-    // 크리처 전용 특화 상태
-    Patrol,      // 포복 이동 순찰
-    Alert,      // 발소리 감지 기상 및 수색
-    Roar,        // 발견 표효 및 동료 호출
-    RoarResponse // 발견 표호 답변
 }
 #endregion
 
@@ -112,6 +111,7 @@ public enum PoolType
     // 투사체 및 인게임 드랍 (2000 ~)
     SoulOrb = 2000,
     MeteorShower = 2001,
+    FireBomb = 2002,
 
     // 풀링 UI (3000 ~)
     DamageText = 3000,
@@ -152,41 +152,54 @@ public enum AnimParamType
     Knockback,      // Trigger: 강공격/패링불가 공격에 맞아 바닥으로 날아가는 넉다운 모션
     WakeUp,         // Trigger: 넘어진 바닥에서 일어나는 기상 모션
     GuardBreak,     // Trigger: 스태미나 고갈로 방패가 젖혀지는 가드 파쇄 모션
+    Groggy,         // Trigger: 그로기 무력화 진입 모션
     GetHit,         // Trigger: 피격
     Die,            // Trigger: 사망
     Jump,           // Trigger: 점프
     Roll,           // Trigger: 전방/방향 구르기
+    Fall,           // Trigger: 공중 낙하 체공 모션
+    HardLanding,    // Trigger: 하드 랜딩 착지 경직 모션
+    UseItem         // Trigger: 소모품 사용 모션
 }
 
 public enum AnimStateType
 {
-    // 플레이어 및 공통
-    Idle,
-    Move,
-    Stun,
-    GuardImpact,
-    Knockback,
-    WakeUp,
+    // 로코모션
+    Idle = 0,
+    Move = 1,
+    FallLoop = 2,           // 체공 루프
+    HardLanding = 3,        // 하드 랜딩 착지
 
+    // 전투 및 방어
+    Guard = 4,              // 가드 유지
+    Parry = 5,              // 패링 액션
+    GuardImpact = 6,        // 가드 임팩트
+    GuardBreak = 7,         // 가드 파쇄
+    Groggy_Loop = 8,        // 그로기 대기 루프
+    Knockback = 9,          // 넉백
+    WakeUp = 10,             // 넉백 기상
 
-    // Enemy Locomtion 공통
-    BattleIdle,
-    Walk,
-    Run,
-    Patrol,
-    PatrolIdle,
+    // 소모품
+    UsePotion = 11,          // 포션 사용
+    ThrowBomb = 12,          // 투척 모션
+
+    // 에너미 로코모션 및 복귀
+    Walk = 13,
+    Run = 14,
+    Patrol = 15,
+    PatrolIdle = 16,
 
     // 공격 패턴
-    Attack1,
-    Attack2,
-    Attack3,
-    Bite,
-    PowerAttack,
+    Attack1 = 50,
+    Attack2 = 51,
+    Attack3 = 52,
+    Bite = 53,
+    PowerAttack = 54,
 
-    // 크리처 전용 특수 상태
-    CrawlToState,
-    StateToCrawl,
-    Roar,
+    // 크리처 전용
+    CrawlToState = 70,
+    StateToCrawl = 71,
+    Roar = 72,
 
     // 리액션
     Hit1 = 100,
@@ -210,6 +223,10 @@ public enum AnimStateType
     Dragon_Takeoff_dz       = 1009,     // 백스탭 도약
     Dragon_Landing_dz       = 1010,     // 백스탭 지점 착지
     Berserk                 = 1011,     // 광폭화
+
+    Boss_GroggyDown         = 1012,     // 보스 대경직 넉다운
+    Turn_Left               = 1013,     // 제자리 좌선회 90도
+    Turn_Right              = 1014      //제자리 우선회 90도
 }
 #endregion
 
@@ -230,7 +247,7 @@ public enum UIId
     PlayerHUD               = 2001,     // 플레이어 HP/스태미나/Poise 3-Bar HUD
     EnemyFloatingHUD        = 2002,     // 일반 몬스터 머리 위 플로팅 게이지
     BossHUD                 = 2003,     // 화면 하단 보스 전용 대형 체력바
-
+    QuickSlotHUD            = 2004,     // 퀵슬롯 아이템 4개 표시 HUD
 
     // 3000 ~ 3999 : Window (ESC 스택으로 제어되며 입력을 점유하는 독립 창)
     TitleMenuUI             = 3001,     // 타이틀 메뉴 버튼 창 (새 게임, 이어하기, 설정)
@@ -320,3 +337,57 @@ public enum InteractType
     Lever         // 기믹 레버 조작
 }
 #endregion
+
+#region Inventory + Item
+public enum ItemType
+{
+    Countable,   // 소모품, 재료 등 수량성 아이템
+    Equipment    // 무기, 방패, 방어구 등 장비 아이템
+}
+
+public enum PortionEffectType
+{
+    HealHp,          // HP 회복
+    ThrowFireBomb    // 투척 화염병
+}
+
+public enum EquipSlotType
+{
+    MainWeapon, // 무기
+    Shield,     // 방패
+    Helmet,     // 머리 투구
+    ChestArmor, // 상체 갑옷
+    Leggings,   // 하체 각반
+    Boots       // 발 신발
+}
+
+public enum ShieldClassification
+{
+    Small, Medium 
+}
+
+public enum ItemCategory
+{
+    Consumable, 
+    Weapon,     
+    Shield,     
+    Armor       
+}
+
+public enum StatScalingGrade
+{
+    None = 0,
+    E = 1,
+    D = 2,
+    C = 3,
+    B = 4,
+    A = 5,
+    S = 6
+}
+
+#endregion
+
+public enum RollTier
+{
+    Fast, Mid, Fat, Overburdened
+}

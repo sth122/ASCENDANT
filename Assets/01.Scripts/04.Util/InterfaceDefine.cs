@@ -40,6 +40,7 @@ public interface IRiposteable
     bool IsDead { get; }
     UnityEngine.Transform RiposteSocket { get; }
     void OnRiposted(UnityEngine.Transform attacker);
+    void OnRiposteFinished();
 }
 
 /// <summary>
@@ -72,6 +73,16 @@ public interface IUIPresenter
 {
     void Bind(UIBase view, IUIModel model);
     void Unbind();
+}
+
+/// <summary>
+/// 퀵슬롯에 등록 가능한 소모성 및 투척 아이템의 규약 인터페이스
+/// </summary>
+public interface IQuickSlotUsable
+{
+    int ItemId { get; }
+    UnityEngine.Sprite Icon { get; }
+    float CooldownDuration { get; }
 }
 #endregion
 
@@ -115,6 +126,9 @@ public interface INode
     }
 
     public INode.ENodeState Evaluate();
+
+    // 비동기 액션 종료 후 동일 액션 재진입 방지
+    public void Reset();
 }
 #endregion
 

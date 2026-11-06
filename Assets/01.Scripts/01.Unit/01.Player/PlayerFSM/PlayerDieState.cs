@@ -26,8 +26,10 @@ public class PlayerDieState : PlayerBaseState
 
     private async UniTaskVoid ShowGameOverUIAsync(PlayerController owner)
     {
-        // 실시간(unscaled) 기준 2.5초 대기
-        await UniTask.Delay((int)(GameOverUIDelay * 1000f), ignoreTimeScale: true, cancellationToken: owner.destroyCancellationToken);
+        bool isCanceled = await UniTask.Delay((int)(GameOverUIDelay * 1000f),
+            ignoreTimeScale: true, cancellationToken: owner.destroyCancellationToken).SuppressCancellationThrow();
+
+        if (isCanceled) return;
 
         if (UIManager.Instance != null)
         {

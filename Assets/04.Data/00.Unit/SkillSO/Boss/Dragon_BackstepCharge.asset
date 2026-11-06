@@ -31,6 +31,8 @@ MonoBehaviour:
   - StateType: 1000
     SpeedMultiplier: 1
     FaceTargetOnEnter: 1
+    UseRootMotion: 1
+    IsAirborne: 0
     HasHitbox: 0
     TargetHitboxSlot: 0
     HitboxStartNormalized: 0
@@ -40,6 +42,8 @@ MonoBehaviour:
   - StateType: 1003
     SpeedMultiplier: 1
     FaceTargetOnEnter: 1
+    UseRootMotion: 1
+    IsAirborne: 0
     HasHitbox: 1
     TargetHitboxSlot: 4
     HitboxStartNormalized: 0.3

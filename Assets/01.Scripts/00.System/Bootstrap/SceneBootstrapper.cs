@@ -25,7 +25,14 @@ public abstract class SceneBootstrapper : MonoBehaviour, ISceneBootstrap
         if (!_isInitialized)
         {
             Util.Log($"[에디터 단독 플레이 감지] {_sceneId} 자체 부트스트랩 시작");
-            await OnSceneReadyAsync();
+            try
+            {
+                await OnSceneReadyAsync();
+            }
+            catch (System.Exception ex)
+            {
+                Util.LogError($"[{_sceneId}] 부트스트랩 자체 기동 실패: {ex}");
+            }
         }
     }
 

@@ -32,16 +32,16 @@ MonoBehaviour:
   - ParamType: 16
   - ParamType: 17
   - ParamType: 18
+  - ParamType: 19
+  - ParamType: 20
+  - ParamType: 21
+  - ParamType: 22
   _states:
-  - StateType: 2
-    Clip: {fileID: -203655887218126122, guid: 1d6df1d94a2a0c64da50cbcade1782a9, type: 3}
-    SpeedMultiplier: 1
-    CrossFadeDuration: 0.05
-  - StateType: 4
+  - StateType: 9
     Clip: {fileID: -203655887218126122, guid: 407d26d7ac3c87f45b8e126ffd4ee95c, type: 3}
     SpeedMultiplier: 1
-    CrossFadeDuration: 0.05
-  - StateType: 5
+    CrossFadeDuration: 0.1
+  - StateType: 10
     Clip: {fileID: -203655887218126122, guid: 1a4879f5bcf334549818eb3ce6550e77, type: 3}
     SpeedMultiplier: 1
-    CrossFadeDuration: 0.05
+    CrossFadeDuration: 0.1

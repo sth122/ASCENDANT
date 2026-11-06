@@ -11,6 +11,7 @@ public abstract class UnitBaseInfo
     [field: SerializeField] public float MaxHp { get; protected set; }
     [field: SerializeField] public float Poise { get; protected set; }
     [field: SerializeField] public float WalkSpeed { get; protected set; }
+    [field: SerializeField] public float FlatDefense { get; protected set; } = 10.0f;
 
     public abstract UnitBaseInfo Clone();
 }
@@ -49,12 +50,46 @@ public class PlayerInfo : UnitBaseInfo
     [field: Tooltip("기량 (Dexterity): 무기 장착치 및 공격 속도")]
     [field: SerializeField] public int Dexterity { get; private set; }
 
-    [field: SerializeField] public float BaseMaxHp { get; private set; } = 500f;
-    [field: SerializeField] public float BaseMaxStamina { get; private set; } = 100f;
 
-    public float CalculateMaxHp() => BaseMaxHp + (Vigor * 25f);
-    public float CalculateMaxStamina() => BaseMaxStamina + (Endurance * 2f);
-    public float CalculateMaxEquipWeight() => 40f + (Endurance * 1.5f);
+    [field: Tooltip("생명력 1레벨 기준 베이스 체력")]
+    [field: SerializeField] public float BaseHealthStandard { get; private set; } = 400f;
+
+    [field: Tooltip("지구력 1레벨 기준 베이스 스태미나")]
+    [field: SerializeField] public float BaseStaminaStandard { get; private set; } = 80f;
+
+    [field: Tooltip("기본 장비 한계 중량 기준치")]
+    [field: SerializeField] public float BaseEquipLoadStandard { get; private set; } = 40.0f;
+
+    [field: Tooltip("지구력 1pt당 장비 중량 증가 계수")]
+    [field: SerializeField] public float EquipLoadPerEndurance { get; private set; } = 1.2f;
+
+
+    public float CalculateMaxHp()
+    {
+        if (Vigor <= 20) return BaseHealthStandard + (Vigor - 1) * 30f;
+        if (Vigor <= 40) return (BaseHealthStandard + 570f) + (Vigor - 20) * 20f;
+        if (Vigor <= 60) return (BaseHealthStandard + 970f) + (Vigor - 40) * 10f;
+        return (BaseHealthStandard + 1170f) + (Vigor - 60) * 2f;
+    }
+
+    public float CalculateMaxStamina()
+    {
+        if (Endurance <= 40) return BaseStaminaStandard + (Endurance - 1) * 2.05f;
+        return 160f + (Endurance - 40) * 0.2f;
+    }
+
+    public float CalculateMaxEquipWeight()
+    {
+        return BaseEquipLoadStandard + (Endurance * EquipLoadPerEndurance);
+    }
+
+    /// <summary>
+    /// 기량(Dexterity)에 따른 공격 속도 배율 산출 (명세서 2.4절: 10~60 구간 최대 +20%)
+    /// </summary>
+    public float CalculateAttackSpeedMultiplier()
+    {
+        return 1.0f + Mathf.Clamp((Dexterity - 10) / 50.0f * 0.20f, 0.0f, 0.20f);
+    }
 
     /// <summary>
     /// 적 처치 또는 소울 아이템 사용 시 소울 획득
@@ -81,26 +116,28 @@ public class PlayerInfo : UnitBaseInfo
     {
         return new PlayerInfo
         {
-            // 부모 필드 복사
-            MaxHp = this.MaxHp,
+            // 부모 필드 복제
+            MaxHp = this.CalculateMaxHp(),
             Poise = this.Poise,
             WalkSpeed = this.WalkSpeed,
+            FlatDefense = this.FlatDefense,
 
-            BaseMaxHp = this.BaseMaxHp,
-            BaseMaxStamina = this.BaseMaxStamina,
-
-            // 플레이어 고유 필드 복사
+            // 플레이어 스탯 복제
             SprintSpeed = this.SprintSpeed,
             RotationSpeed = this.RotationSpeed,
             JumpForce = this.JumpForce,
             RollForce = this.RollForce,
-            MaxStamina = this.MaxStamina,
+            MaxStamina = this.CalculateMaxStamina(),
             SoulLevel = this.SoulLevel,
             CurrentSouls = this.CurrentSouls,
             Vigor = this.Vigor,
             Endurance = this.Endurance,
             Strength = this.Strength,
-            Dexterity = this.Dexterity
+            Dexterity = this.Dexterity,
+            BaseHealthStandard = this.BaseHealthStandard,
+            BaseStaminaStandard = this.BaseStaminaStandard,
+            BaseEquipLoadStandard = this.BaseEquipLoadStandard,
+            EquipLoadPerEndurance = this.EquipLoadPerEndurance
         };
     }
 
@@ -164,6 +201,7 @@ public class BossInfo : EnemyInfo
             MaxHp = this.MaxHp,
             Poise = this.Poise,
             WalkSpeed = this.WalkSpeed,
+            FlatDefense = this.FlatDefense, // 고정 방어력 복제 보장
 
             // EnemyInfo 계승
             Tier = EnemyTier.Boss,
@@ -236,27 +274,22 @@ public class EnemyInfo : UnitBaseInfo
     {
         return new EnemyInfo
         {
-            // 1. UnitBaseStat 공통 수치 복제
+            // 부모 공통 수치 복제
             MaxHp = this.MaxHp,
             Poise = this.Poise,
             WalkSpeed = this.WalkSpeed,
+            FlatDefense = this.FlatDefense,
 
-            // 2. Enemy 등급 및 처치 보상 수치 복제
+            // 에너미 전투 및 기동 수치 복제
             Tier = this.Tier,
             DropSouls = this.DropSouls,
-
-            // 3. Enemy 전투 수치 복제
             AttackPower = this.AttackPower,
             BasePoiseDamage = this.BasePoiseDamage,
             AttackRange = this.AttackRange,
             AttackCooldown = this.AttackCooldown,
-
-            // 4. Enemy 기동 및 리쉬 수치 복제
             ChaseSpeed = this.ChaseSpeed,
             PatrolSpeed = this.PatrolSpeed,
             MaxLeashDistance = this.MaxLeashDistance,
-
-            // 5. Enemy 지각 센서 수치 복제
             SightRadius = this.SightRadius,
             SightAngle = this.SightAngle,
             HearingRadius = this.HearingRadius

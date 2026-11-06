@@ -14,6 +14,12 @@ public struct ActionTimelineStep
     [UnityEngine.Tooltip("단계 진입 시 타깃 방향으로 회전할지 여부")]
     public bool FaceTargetOnEnter;
 
+    [UnityEngine.Header("루트 모션 및 물리 이동")]
+    [UnityEngine.Tooltip("체크 시 애니메이션 키프레임 이동량을 실제 오브젝트 물리 위치에 적용")]
+    public bool UseRootMotion;
+    [UnityEngine.Tooltip("체크 시 Y축 이동 허용 ")]
+    public bool IsAirborne;
+
     [UnityEngine.Header("히트박스 타격 판정 (해당 단계에 타격이 없으면 체크 해제)")]
     public bool HasHitbox;
     public HitboxSlot TargetHitboxSlot;
@@ -31,6 +37,8 @@ public struct ActionTimelineStep
             StateType = state,
             SpeedMultiplier = 1.0f,
             FaceTargetOnEnter = true,
+            UseRootMotion = false,
+            IsAirborne = false,
             HasHitbox = true,
             TargetHitboxSlot = slot,
             HitboxStartNormalized = startNorm,

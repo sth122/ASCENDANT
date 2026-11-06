@@ -123,14 +123,21 @@ public class PlayerMovement : UnitMovement
     {
         if (_rb == null) return;
 
+        // 구르기 속도 감쇄 사인 곡선 (중반 최고속도, 후반 감속)
         float speedMultiplier = Mathf.Sin(Mathf.Clamp01(normalizedTime) * Mathf.PI);
         Vector3 finalRollDir = rollDirection;
 
         if (IsGrounded && IsOnSlope)
         {
             finalRollDir = ProjectDirectionOnSlope(rollDirection);
+            _rb.linearVelocity = finalRollDir * (maxSpeed * speedMultiplier);
         }
-
-        _rb.linearVelocity = finalRollDir * (maxSpeed * speedMultiplier);
+        else
+        {
+            // 평지 및 공중에서는 기존 Y축 중력 낙하 속도를 그대로 보존
+            Vector3 targetVelocity = finalRollDir * (maxSpeed * speedMultiplier);
+            targetVelocity.y = _rb.linearVelocity.y;
+            _rb.linearVelocity = targetVelocity;
+        }
     }
 }

@@ -47,13 +47,27 @@ public class AssetsManager : MonoSingleton<AssetsManager>, ILoadable
         }
 
         AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(addressableKey);
-        T result = await handle.ToUniTask(cancellationToken: ct);
-
-        if (handle.Status == AsyncOperationStatus.Succeeded)
+        try
         {
-            targetDict[addressableKey] = handle;
-            Util.Log($"[비동기 로드 성공] Key: {addressableKey} (Global: {isGlobal})");
-            return result;
+            T result = await handle.ToUniTask(cancellationToken: ct);
+
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                targetDict[addressableKey] = handle;
+                Util.Log($"[비동기 로드 성공] Key: {addressableKey} (Global: {isGlobal})");
+                return result;
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            Addressables.Release(handle);
+            return null;
+        }
+        catch (System.Exception ex)
+        {
+            Util.LogError($"[비동기 로드 예외 발생] Key: {addressableKey} / {ex.Message}");
+            Addressables.Release(handle);
+            return null;
         }
 
         Util.LogError($"[비동기 로드 실패] Key: {addressableKey}");
@@ -74,12 +88,27 @@ public class AssetsManager : MonoSingleton<AssetsManager>, ILoadable
         }
 
         AsyncOperationHandle<IList<T>> handle = Addressables.LoadAssetsAsync<T>(label, onSingleLoaded);
-        IList<T> result = await handle.ToUniTask( cancellationToken: ct);
+        try
+        {
+            IList<T> result = await handle.ToUniTask(cancellationToken: ct);
 
-        if(handle.Status == AsyncOperationStatus.Succeeded) {
-            targetDict[label] = handle;
-            Util.Log($"[라벨 일괄 로드 성공] Label: {label} (개수: {result.Count})");
-            return result;
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                targetDict[label] = handle;
+                Util.Log($"[라벨 일괄 로드 성공] Label: {label} (개수: {result.Count})");
+                return result;
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            Addressables.Release(handle);
+            return null;
+        }
+        catch (System.Exception ex)
+        {
+            Util.LogError($"[라벨 로드 예외 발생] Label: {label} / {ex.Message}");
+            Addressables.Release(handle);
+            return null;
         }
 
         Util.LogError($"[라벨 일괄 로드 실패] Label: {label}");

@@ -15,7 +15,6 @@ public class SessionDataManager : NonMonoSingleton<SessionDataManager>
         if (baseStat == null) return;
 
         CurrentSessionData = new PlayerSaveData(baseStat, baseStat.CalculateMaxHp());
-        Util.Log("[신규 인게임 세션 데이터 생성 완료]");
     }
 
     /// <summary>
@@ -26,7 +25,6 @@ public class SessionDataManager : NonMonoSingleton<SessionDataManager>
         if (saveData == null) return;
 
         CurrentSessionData = saveData;
-        Util.Log($"[세이브 데이터 기반 세션 복원 완료] HP: {saveData.CurrentHp}, 레벨: {saveData.SoulLevel}");
     }
 
     /// <summary>
@@ -40,12 +38,22 @@ public class SessionDataManager : NonMonoSingleton<SessionDataManager>
         float curHp = player.StatusController.CurrentHp;
 
         CurrentSessionData = new PlayerSaveData(info, curHp);
-        Util.Log($"[플레이어 -> 세션 동기화 완료] 잔여 HP: {curHp}");
+
+        if (player.TryGetComponent(out PlayerInventoryHandler handler) && handler.InventoryInstance != null)
+        {
+            var inv = handler.InventoryInstance;
+            CurrentSessionData.EquippedWeaponId = inv.GetEquippedItem(EquipSlotType.MainWeapon)?.Data.Id ?? 0;
+            CurrentSessionData.EquippedShieldId = inv.GetEquippedItem(EquipSlotType.Shield)?.Data.Id ?? 0;
+            CurrentSessionData.EquippedHelmetId = inv.GetEquippedItem(EquipSlotType.Helmet)?.Data.Id ?? 0;
+            CurrentSessionData.EquippedChestArmorId = inv.GetEquippedItem(EquipSlotType.ChestArmor)?.Data.Id ?? 0;
+            CurrentSessionData.EquippedLeggingsId = inv.GetEquippedItem(EquipSlotType.Leggings)?.Data.Id ?? 0;
+            CurrentSessionData.EquippedBootsId = inv.GetEquippedItem(EquipSlotType.Boots)?.Data.Id ?? 0;
+            CurrentSessionData.HasReceivedInitialEquipment = true;
+        }
     }
 
     public void ClearSession()
     {
         CurrentSessionData = null;
-        Util.Log("[인게임 세션 데이터 초기화]");
     }
 }

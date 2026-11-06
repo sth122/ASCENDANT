@@ -11,7 +11,7 @@ public static class ActionTimelineRunner
     public struct ExecutionContext
     {
         public UnitAnimController AnimController;
-        public UnitMovement Movement;
+        public EnemyMovement Movement;
         public Transform Target;
         public float GlobalSpeedMultiplier; // 2페이즈 광폭화 배속 등 (기본 1.0)
 
@@ -44,15 +44,14 @@ public static class ActionTimelineRunner
             for (int i = 0; i < steps.Length; i++)
             {
                 if (ct.IsCancellationRequested) return false;
-
-                ActionTimelineStep step = steps[i];
-                await ExecuteSingleStepAsync(step, ctx, ct);
+                await ExecuteSingleStepAsync(steps[i], ctx, ct);
             }
         }
         finally
         {
-            // 인터럽트나 완료 시 히트박스 강제 닫기 보장
             ctx.OnCloseAllHitboxes?.Invoke();
+            ctx.AnimController?.SetRootMotion(false);
+            ctx.Movement?.EndRootMotionMovement();
         }
 
         return true;
@@ -63,13 +62,27 @@ public static class ActionTimelineRunner
         // 1. 타깃 선회
         if (step.FaceTargetOnEnter && ctx.Target != null && ctx.Movement != null)
         {
-            ctx.Movement.SnapToTarget(ctx.Target.position);
+            ctx.Movement.FaceTarget(ctx.Target.position, 12.0f, Time.deltaTime);
         }
 
-        // 2. 모션 재생
+        // 2. 루트 모션 바인딩 (물리 콜라이더 실시간 동기화)
+        if (step.UseRootMotion && ctx.Movement != null)
+        {
+            ctx.Movement.BeginRootMotionMovement();
+            ctx.AnimController.SetRootMotion(true, (deltaPos, deltaRot) =>
+            {
+                ctx.Movement.ApplyRootMotionDelta(deltaPos, deltaRot, step.IsAirborne);
+            });
+        }
+        else
+        {
+            ctx.AnimController.SetRootMotion(false);
+        }
+
+        // 3. 모션 재생
         ctx.AnimController.PlayState(step.StateType, force: true);
 
-        // 3. 실제 애니메이션 클립 길이 및 유효 배속 연산
+        // 4. 실제 애니메이션 클립 길이 및 유효 배속 연산
         float clipDuration = ctx.AnimController.GetStateDuration(step.StateType);
         float stepSpeed = Mathf.Max(0.1f, (step.SpeedMultiplier > 0 ? step.SpeedMultiplier : 1.0f) * ctx.GlobalSpeedMultiplier);
         float actualDuration = clipDuration / stepSpeed;
@@ -92,7 +105,6 @@ public static class ActionTimelineRunner
         float recoveryTime = totalDuration * Mathf.Clamp01(1.0f - step.HitboxEndNormalized);
 
         float eventTriggerTime = step.HasCustomEvent ? totalDuration * Mathf.Clamp01(step.EventTriggerNormalized) : -1f;
-        bool isEventTriggered = false;
 
         // [선딜레이 대기]
         if (startupTime > 0f)
@@ -101,7 +113,6 @@ public static class ActionTimelineRunner
             {
                 await UniTask.Delay(TimeSpan.FromSeconds(eventTriggerTime), cancellationToken: ct);
                 ctx.OnCustomEventTrigger?.Invoke(ctx.BossOwner).Forget();
-                isEventTriggered = true;
                 await UniTask.Delay(TimeSpan.FromSeconds(startupTime - eventTriggerTime), cancellationToken: ct);
             }
             else
@@ -119,14 +130,16 @@ public static class ActionTimelineRunner
                     ctx.IsParryable, ctx.ImpactType, ctx.KnockbackForce);
             }
 
-            if (step.HasCustomEvent && !isEventTriggered)
+            if (eventTriggerTime > startupTime && eventTriggerTime <= (startupTime + activeDuration))
             {
+                float preEvent = eventTriggerTime - startupTime;
+                await UniTask.Delay(TimeSpan.FromSeconds(preEvent), cancellationToken: ct);
                 ctx.OnCustomEventTrigger?.Invoke(ctx.BossOwner).Forget();
+                await UniTask.Delay(TimeSpan.FromSeconds(activeDuration - preEvent), cancellationToken: ct);
             }
-
-            if (activeDuration > 0f)
+            else if (activeDuration > 0f)
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(activeDuration), cancellationToken: ct);
+                await UniTask.Delay(TimeSpan.FromSeconds(activeDuration), delayTiming: PlayerLoopTiming.PostLateUpdate, cancellationToken: ct);
             }
         }
         finally
