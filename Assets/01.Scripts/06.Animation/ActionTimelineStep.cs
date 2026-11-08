@@ -4,41 +4,46 @@
 [System.Serializable]
 public struct ActionTimelineStep
 {
-    [UnityEngine.Header("모션 및 재생 설정")]
-    [UnityEngine.Tooltip("재생할 애니메이션 상태")]
+    [UnityEngine.Header("모션 설정")]
     public AnimStateType StateType;
-
-    [UnityEngine.Tooltip("모션 개별 재생 배속 (기본 1.0)")]
     public float SpeedMultiplier;
-
-    [UnityEngine.Tooltip("단계 진입 시 타깃 방향으로 회전할지 여부")]
+    public float ClipDurationOverride;
     public bool FaceTargetOnEnter;
 
     [UnityEngine.Header("루트 모션 및 물리 이동")]
-    [UnityEngine.Tooltip("체크 시 애니메이션 키프레임 이동량을 실제 오브젝트 물리 위치에 적용")]
     public bool UseRootMotion;
-    [UnityEngine.Tooltip("체크 시 Y축 이동 허용 ")]
     public bool IsAirborne;
 
-    [UnityEngine.Header("히트박스 타격 판정 (해당 단계에 타격이 없으면 체크 해제)")]
+    [UnityEngine.Header("물리 돌진 (BackstepCharge 전용)")]
+    public bool EnablePhysicalDash;
+    public float DashSpeed;
+    [UnityEngine.Range(0f, 1f)] public float DashStartNormalized;
+    [UnityEngine.Range(0f, 1f)] public float DashEndNormalized;
+
+    [UnityEngine.Header("히트박스 타격 판정")]
     public bool HasHitbox;
     public HitboxSlot TargetHitboxSlot;
     [UnityEngine.Range(0f, 1f)] public float HitboxStartNormalized;
     [UnityEngine.Range(0f, 1f)] public float HitboxEndNormalized;
 
-    [UnityEngine.Header("특수 이벤트 트리거 (메테오 소환, 장판 생성, 사운드 등)")]
+    [UnityEngine.Header("특수 이벤트 (명시적 이벤트 타입)")]
     public bool HasCustomEvent;
     [UnityEngine.Range(0f, 1f)] public float EventTriggerNormalized;
 
-    public static ActionTimelineStep CreateSingleAttack(AnimStateType state, HitboxSlot slot, float startNorm, float endNorm)
+    public static ActionTimelineStep CreateSingleAttack(AnimStateType state, HitboxSlot slot, float startNorm, float endNorm, float durationOverride = 2.4f)
     {
         return new ActionTimelineStep
         {
             StateType = state,
             SpeedMultiplier = 1.0f,
+            ClipDurationOverride = durationOverride,
             FaceTargetOnEnter = true,
-            UseRootMotion = false,
+            UseRootMotion = false, // 인플레이스 공격이므로 false
             IsAirborne = false,
+            EnablePhysicalDash = false,
+            DashSpeed = 0f,
+            DashStartNormalized = 0f,
+            DashEndNormalized = 0f,
             HasHitbox = true,
             TargetHitboxSlot = slot,
             HitboxStartNormalized = startNorm,

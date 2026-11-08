@@ -71,6 +71,11 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
 
         SetupPlayerRuntimeStatus(_spawnedPlayer, save);
 
+        if (_spawnedPlayer.TryGetComponent(out PlayerInventoryHandler invHandler))
+        {
+            invHandler.InitializeInventory(DataManager.Instance);
+        }
+
         // 4. 시네마신 가상 카메라 타깃 주입
         if (CameraManager.Instance != null && _spawnedPlayer != null)
         {

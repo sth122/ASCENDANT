@@ -41,13 +41,7 @@ public class SessionDataManager : NonMonoSingleton<SessionDataManager>
 
         if (player.TryGetComponent(out PlayerInventoryHandler handler) && handler.InventoryInstance != null)
         {
-            var inv = handler.InventoryInstance;
-            CurrentSessionData.EquippedWeaponId = inv.GetEquippedItem(EquipSlotType.MainWeapon)?.Data.Id ?? 0;
-            CurrentSessionData.EquippedShieldId = inv.GetEquippedItem(EquipSlotType.Shield)?.Data.Id ?? 0;
-            CurrentSessionData.EquippedHelmetId = inv.GetEquippedItem(EquipSlotType.Helmet)?.Data.Id ?? 0;
-            CurrentSessionData.EquippedChestArmorId = inv.GetEquippedItem(EquipSlotType.ChestArmor)?.Data.Id ?? 0;
-            CurrentSessionData.EquippedLeggingsId = inv.GetEquippedItem(EquipSlotType.Leggings)?.Data.Id ?? 0;
-            CurrentSessionData.EquippedBootsId = inv.GetEquippedItem(EquipSlotType.Boots)?.Data.Id ?? 0;
+            handler.InventoryInstance.ExportToSaveData(CurrentSessionData);
             CurrentSessionData.HasReceivedInitialEquipment = true;
         }
     }

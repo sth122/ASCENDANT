@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dec537925ab722b4ebacc756ecc74032, type: 3}
+  m_Name: Dragon_MeteorShower
+  m_EditorClassIdentifier: Assembly-CSharp::DragonMeteorSkillSO
+  _info:
+    Id: 3006
+    AnimState: 72
+    TargetHitboxSlot: 0
+    ImpactType: 1
+    KnockbackForce: 18
+    RequiredPhase: 2
+    BaseDamage: 120
+    BasePoiseDamage: 70
+    Cooldown: 30
+    Range: 25
+    IsParryable: 0
+    HitboxStartNormalized: 0
+    HitboxEndNormalized: 0
+    ActionEndNormalized: 9
+  _timelineSteps:
+  - StateType: 72
+    SpeedMultiplier: 1
+    ClipDurationOverride: 0
+    FaceTargetOnEnter: 1
+    UseRootMotion: 0
+    IsAirborne: 0
+    EnablePhysicalDash: 0
+    DashSpeed: 0
+    DashStartNormalized: 0
+    DashEndNormalized: 0
+    HasHitbox: 0
+    TargetHitboxSlot: 0
+    HitboxStartNormalized: 0
+    HitboxEndNormalized: 0
+    HasCustomEvent: 1
+    EventTriggerNormalized: 0.15
+  _meteorCount: 5
+  _spawnInterval: 0.45
+  _randomSpreadRadius: 4.5

@@ -38,12 +38,15 @@ public class TimelineBossSkill : BossSkill
         {
             AnimController = Owner.AnimController,
             Movement = Owner.Movement,
+            OwnerTransform = Owner.transform,
+            Rigidbody = Owner.Rigidbody,
             Target = Owner.CurrentTarget,
             GlobalSpeedMultiplier = speedMod,
             OnOpenHitbox = Owner.OpenHitboxSlot,
             OnCloseHitbox = Owner.CloseHitboxSlot,
             OnCloseAllHitboxes = Owner.CloseAllHitboxes,
-            OnCustomEventTrigger = CustomEventCallback,
+            OnCustomEventTrigger = CustomEventCallback != null
+                ? async (token) => await CustomEventCallback.Invoke(Owner) : null,
             BaseDamage = Info.BaseDamage,
             BasePoiseDamage = Info.BasePoiseDamage,
             IsParryable = Info.IsParryable,

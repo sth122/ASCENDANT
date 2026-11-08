@@ -29,6 +29,12 @@ public class UIBase : MonoBehaviour, IPoolable
     {
         Identifier = identifier;
         Layer = layer;
+
+        // System 레이어 UI는 기본적으로 전역 유지 UI로 플래그 보장
+        if (layer == UILayer.System)
+        {
+            IsGlobalUI = true;
+        }
     }
 
     public virtual void InitializeView() { }

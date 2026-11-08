@@ -39,7 +39,7 @@ public interface IRiposteable
     bool CanBeRiposted { get; }
     bool IsDead { get; }
     UnityEngine.Transform RiposteSocket { get; }
-    void OnRiposted(UnityEngine.Transform attacker);
+    void OnRiposted();
     void OnRiposteFinished();
 }
 

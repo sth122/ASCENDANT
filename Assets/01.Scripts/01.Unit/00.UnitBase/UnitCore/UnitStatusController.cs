@@ -169,10 +169,6 @@ public class UnitStatusController : MonoBehaviour
         AsyncUtil.CancelAndDispose(ref _poiseCts);
 
         OnDieEvent?.Invoke();
-
-        UnitId id = GetComponent<UnitController>().UnitIdentifier;
-
-        EventBusSystem.Publish(new UnitDiedEvent(gameObject, id));
         Util.Log($"{gameObject.name} 사망");
     }
 

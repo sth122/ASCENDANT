@@ -1,11 +1,8 @@
-﻿using Cysharp.Threading.Tasks;
-using System;
+﻿using System;
 using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-/// <summary>
-/// EnemyBTController를 상속받아 고유 기믹(Alert 수색, Roar 및 무리 호출을 추가한 전용 컨트롤러
-/// </summary>
 public class CreatureBT : EnemyBTController
 {
     [Header("Creature Gimmick Configurations")]
@@ -30,73 +27,63 @@ public class CreatureBT : EnemyBTController
 
         // 1. 사망 판정 노드
         var deathSeq = new SequenceNode();
-        deathSeq.Add(new PredicateNode<CreatureBT>(this, static (c) => c.IsDead));
+        deathSeq.Add(new PredicateNode<CreatureBT>(this, static c => c.IsDead));
         deathSeq.Add(new ActionNode(ExecuteDeath));
         root.Add(deathSeq);
 
-        // 2. 그로기(Stun) 브랜치
+        // 2. 그로기 브랜치
         var groggySeq = new SequenceNode();
-        groggySeq.Add(new PredicateNode<CreatureBT>(this, static (c) =>
-            c._enemyStatus != null && c._enemyStatus.IsPoiseBroken && !c._isGroggy));
+        groggySeq.Add(new PredicateNode<CreatureBT>(this, static c =>
+            c._enemyStatus != null && c._enemyStatus.IsPoiseBroken && !c._groggyModule.IsGroggy));
         groggySeq.Add(new ActionNode(TriggerGroggyAction));
         root.Add(groggySeq);
 
-        // 3. 비동기 액션 진행 중 락
-        root.Add(new PredicateNode<CreatureBT>(this, static (c) => c._isActionExecuting));
-
-        // 4. 복귀 분기 (리쉬 초과 시)
-        var returnSeq = new SequenceNode();
-        returnSeq.Add(new PredicateNode<CreatureBT>(this, static (c) => c.IsExceedingLeashDistance()));
-        returnSeq.Add(new ActionNode(TickReturnToSpawn));
-        root.Add(returnSeq);
-
-        // 5. 전투 브랜치 (추격 및 공격)
-        var combatBranch = new SequenceNode();
-        combatBranch.Add(new PredicateNode<CreatureBT>(this, static (c) => c._currentTarget != null));
-        combatBranch.Add(BuildCombatSelector());
-        root.Add(combatBranch);
-
-        // 6. 발소리 감지 수색 (Alert) 브랜치
+        // 3. 발소리 감지 수색 (Alert) 브랜치
         var alertSeq = new SequenceNode();
-        alertSeq.Add(new PredicateNode<CreatureBT>(this, static (c) => c._isAlerted));
+        alertSeq.Add(new PredicateNode<CreatureBT>(this, static c => !c.IsActionExecuting && c._isAlerted));
         alertSeq.Add(new AsyncActionNode(ExecuteAlertSequenceAsync, GetActionToken));
         root.Add(alertSeq);
 
-        // 7. 순찰 브랜치
+        // 4. 복귀 분기
+        var returnSeq = new SequenceNode();
+        returnSeq.Add(new PredicateNode<CreatureBT>(this, static c =>
+            !c.IsActionExecuting && c._patrolModule.CheckShouldReturn(c._enemyStatus.EnemyInfoSource != null ? c._enemyStatus.EnemyInfoSource.MaxLeashDistance : 25f)));
+        returnSeq.Add(new ActionNode(TickReturnToSpawn));
+        root.Add(returnSeq);
+
+        // 5. 전투 브랜치
+        var combatBranch = new SequenceNode();
+        combatBranch.Add(new PredicateNode<CreatureBT>(this, static c => c._currentTarget != null));
+        combatBranch.Add(BuildCombatSelector());
+        root.Add(combatBranch);
+
+        // 6. 순찰 브랜치
         root.Add(new ActionNode(TickPatrol));
 
         return root;
     }
 
-    #region 풀링 소환 전용 시퀀스
-    /// <summary>
-    /// 풀에서 소환될 때: 동료 부르기 없이 단독 Roar 연출 2초 재생 후 타깃 포착 및 전투 개시
-    /// </summary>
     protected override async UniTaskVoid ExecuteSpawnSequenceAsync(CancellationToken token)
     {
-        _isActionExecuting = true;
+        SetActionState(EnemyActionState.Spawning);
         _movement.StopMovement();
 
         try
         {
-            // 동료 브로드캐스트 없이 단독 표효 모션만 재생
             await PlayStateAndWaitAsync(AnimStateType.Roar, token, force: true);
         }
         catch (OperationCanceledException) { return; }
         finally
         {
-            _isActionExecuting = false;
+            SetActionState(EnemyActionState.None);
         }
 
-        // 표효 완료 후 즉시 타깃 탐색 및 전투 돌입
         AcquireNearestTarget();
     }
-    #endregion
 
-    #region 크리처 전용 AI 액션
     private async UniTask<bool> ExecuteAlertSequenceAsync(CancellationToken ct)
     {
-        _isActionExecuting = true;
+        SetActionState(EnemyActionState.Alerting);
         _movement.StopMovement();
 
         try
@@ -108,26 +95,19 @@ public class CreatureBT : EnemyBTController
                 transform.rotation = Quaternion.LookRotation(toNoise.normalized);
             }
 
-            // 포복 -> 서기 전환
             await PlayStateAndWaitAsync(AnimStateType.CrawlToState, ct, force: true);
-
-            // 서서 수색 대기
             await PlayStateAndWaitAsync(AnimStateType.Idle, ct, force: true);
-
-            // 서기 -> 포복 복귀
             await PlayStateAndWaitAsync(AnimStateType.StateToCrawl, ct, force: true);
         }
         finally
         {
             _isAlerted = false;
-            _isActionExecuting = false;
+            SetActionState(EnemyActionState.None);
         }
 
         return true;
     }
-    #endregion
 
-    #region 센서 반응 및 무리 호출
     protected override void HandleTargetSpotted(Transform target)
     {
         if (_currentTarget == null)
@@ -145,31 +125,27 @@ public class CreatureBT : EnemyBTController
     protected override void HandleNoiseHeard(Vector3 noisePosition)
     {
         base.HandleNoiseHeard(noisePosition);
-        if (_currentTarget == null && !_isAlerted && !_isActionExecuting)
+        if (_currentTarget == null && !_isAlerted && !IsActionExecuting)
         {
             _isAlerted = true;
             _heardNoisePosition = noisePosition;
         }
     }
 
-    /// <summary>
-    /// 주변 동료들에게 신호를 전파하는 비동기 루틴
-    /// </summary>
     private async UniTaskVoid ExecuteRoarAndCallAlliesAsync(CancellationToken token)
     {
-        _isActionExecuting = true;
+        SetActionState(EnemyActionState.Alerting);
         _movement.StopMovement();
 
         try
         {
-            // 주변 아군 크리처에게 타깃 브로드캐스트
             BroadcastTargetToNearbyAllies();
             await PlayStateAndWaitAsync(AnimStateType.Roar, token, force: true);
         }
         catch (OperationCanceledException) { }
         finally
         {
-            _isActionExecuting = false;
+            SetActionState(EnemyActionState.None);
         }
     }
 
@@ -189,22 +165,18 @@ public class CreatureBT : EnemyBTController
         Array.Clear(_allyBuffer, 0, count);
     }
 
-    /// <summary>
-    /// 동료의 Roar 신호를 수신했을 때 호출:
-    /// 신호를 재전파하지 않고 함께 Roar 모션을 수행한 뒤 넘겨받은 타깃으로 전투 진입
-    /// </summary>
     public void ReceiveAlertSignal(Transform sharedTarget)
     {
-        if (_currentTarget != null || IsDead) return;
+        if (_currentTarget != null || IsDead || IsActionExecuting) return;
 
         SetTarget(sharedTarget);
-        _hasSpottedAndRoared = true; // 재전파 방지 플래그 On
-
+        _hasSpottedAndRoared = true;
         ExecuteRoarResponseAsync(GetActionToken()).Forget();
     }
+
     private async UniTaskVoid ExecuteRoarResponseAsync(CancellationToken token)
     {
-        _isActionExecuting = true;
+        SetActionState(EnemyActionState.Alerting);
         _movement.StopMovement();
 
         try
@@ -214,16 +186,14 @@ public class CreatureBT : EnemyBTController
                 _movement.FaceTarget(_currentTarget.position, 10.0f, Time.deltaTime);
             }
 
-            // 재전파 없이 단독 응답 표효 모션 재생 (1.6초)
             await PlayStateAndWaitAsync(AnimStateType.Roar, token, force: true);
         }
         catch (OperationCanceledException) { }
         finally
         {
-            _isActionExecuting = false;
+            SetActionState(EnemyActionState.None);
         }
     }
-    #endregion
 
     public override void ClearTarget()
     {

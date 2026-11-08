@@ -1,30 +1,24 @@
-﻿using Cysharp.Threading.Tasks;
-using System;
+﻿using System;
 using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
-
-/// <summary>
-/// 단일 및 복합 액션 타임라인을 파싱하여 비동기로 순차 실행하는 엔진
-/// </summary>
 public static class ActionTimelineRunner
 {
     public struct ExecutionContext
     {
         public UnitAnimController AnimController;
         public EnemyMovement Movement;
+        public Rigidbody Rigidbody;
+        public Transform OwnerTransform;
         public Transform Target;
-        public float GlobalSpeedMultiplier; // 2페이즈 광폭화 배속 등 (기본 1.0)
+        public float GlobalSpeedMultiplier;
 
-        // 히트박스 제어 대리자
         public Action<HitboxSlot, float, float, bool, AttackImpactType, float> OnOpenHitbox;
         public Action<HitboxSlot> OnCloseHitbox;
         public Action OnCloseAllHitboxes;
 
-        // 특수 기믹 실행 대리자
-        public Func<BossBTController, UniTask> OnCustomEventTrigger;
-        public BossBTController BossOwner;
+        public Func<CancellationToken, UniTask> OnCustomEventTrigger;
 
-        // 공격 대미지 파라미터
         public float BaseDamage;
         public float BasePoiseDamage;
         public bool IsParryable;
@@ -32,18 +26,17 @@ public static class ActionTimelineRunner
         public float KnockbackForce;
     }
 
-    /// <summary>
-    /// N개의 Step으로 이루어진 타임라인 시퀀스를 완전 비동기 실행
-    /// </summary>
     public static async UniTask<bool> ExecuteTimelineAsync(ActionTimelineStep[] steps, ExecutionContext ctx, CancellationToken ct)
     {
         if (steps == null || steps.Length == 0) return false;
 
+        bool wasAirborne = false;
         try
         {
             for (int i = 0; i < steps.Length; i++)
             {
                 if (ct.IsCancellationRequested) return false;
+                wasAirborne = steps[i].IsAirborne;
                 await ExecuteSingleStepAsync(steps[i], ctx, ct);
             }
         }
@@ -52,6 +45,27 @@ public static class ActionTimelineRunner
             ctx.OnCloseAllHitboxes?.Invoke();
             ctx.AnimController?.SetRootMotion(false);
             ctx.Movement?.EndRootMotionMovement();
+
+            // 1. 물리 돌진 속도 완전 리셋 (미끄러짐 버그 원천 차단)
+            if (ctx.Rigidbody != null && !ctx.Rigidbody.isKinematic)
+            {
+                ctx.Rigidbody.linearVelocity = Vector3.zero;
+                ctx.Rigidbody.angularVelocity = Vector3.zero;
+            }
+
+            // 2. 공중 상태에서 캔슬된 경우 지면 레이캐스트 안전 착지
+            if (wasAirborne && ctx.OwnerTransform != null)
+            {
+                Vector3 currentPos = ctx.OwnerTransform.position;
+                if (Physics.Raycast(currentPos + Vector3.up * 2f, Vector3.down, out RaycastHit hit, 50f, LayerMask.GetMask("Ground", "Default")))
+                {
+                    ctx.OwnerTransform.position = hit.point;
+                    if (ctx.Movement != null && ctx.Movement.Agent != null && ctx.Movement.Agent.isOnNavMesh)
+                    {
+                        ctx.Movement.Agent.Warp(hit.point);
+                    }
+                }
+            }
         }
 
         return true;
@@ -59,13 +73,11 @@ public static class ActionTimelineRunner
 
     private static async UniTask ExecuteSingleStepAsync(ActionTimelineStep step, ExecutionContext ctx, CancellationToken ct)
     {
-        // 1. 타깃 선회
         if (step.FaceTargetOnEnter && ctx.Target != null && ctx.Movement != null)
         {
             ctx.Movement.FaceTarget(ctx.Target.position, 12.0f, Time.deltaTime);
         }
 
-        // 2. 루트 모션 바인딩 (물리 콜라이더 실시간 동기화)
         if (step.UseRootMotion && ctx.Movement != null)
         {
             ctx.Movement.BeginRootMotionMovement();
@@ -79,82 +91,86 @@ public static class ActionTimelineRunner
             ctx.AnimController.SetRootMotion(false);
         }
 
-        // 3. 모션 재생
         ctx.AnimController.PlayState(step.StateType, force: true);
 
-        // 4. 실제 애니메이션 클립 길이 및 유효 배속 연산
         float clipDuration = ctx.AnimController.GetStateDuration(step.StateType);
+
         float stepSpeed = Mathf.Max(0.1f, (step.SpeedMultiplier > 0 ? step.SpeedMultiplier : 1.0f) * ctx.GlobalSpeedMultiplier);
-        float actualDuration = clipDuration / stepSpeed;
+        float totalDuration = clipDuration / stepSpeed;
 
-        // 4-A. 타격 및 특수 이벤트가 없는 단순 전환/이동 단계인 경우 전체 시간 대기
-        if (!step.HasHitbox && !step.HasCustomEvent)
+        float elapsed = 0f;
+        bool hitboxOpened = false;
+        bool eventFired = false;
+        bool dashActive = false;
+        Vector3 dashDirection = ctx.OwnerTransform != null ? ctx.OwnerTransform.forward : Vector3.forward;
+
+        while (elapsed < totalDuration)
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(actualDuration), cancellationToken: ct);
-            return;
-        }
+            ct.ThrowIfCancellationRequested();
 
-        // 4-B. 타격 또는 특수 이벤트가 포함된 정밀 타임라인 실행
-        await ExecutePreciseStepTimelineAsync(step, actualDuration, ctx, ct);
-    }
+            float norm = Mathf.Clamp01(elapsed / totalDuration);
 
-    private static async UniTask ExecutePreciseStepTimelineAsync(ActionTimelineStep step, float totalDuration, ExecutionContext ctx, CancellationToken ct)
-    {
-        float startupTime = totalDuration * Mathf.Clamp01(step.HitboxStartNormalized);
-        float activeDuration = totalDuration * Mathf.Clamp01(step.HitboxEndNormalized - step.HitboxStartNormalized);
-        float recoveryTime = totalDuration * Mathf.Clamp01(1.0f - step.HitboxEndNormalized);
-
-        float eventTriggerTime = step.HasCustomEvent ? totalDuration * Mathf.Clamp01(step.EventTriggerNormalized) : -1f;
-
-        // [선딜레이 대기]
-        if (startupTime > 0f)
-        {
-            if (eventTriggerTime >= 0f && eventTriggerTime <= startupTime)
+            // 특수 비동기 이벤트 발동
+            if (step.HasCustomEvent && !eventFired && norm >= step.EventTriggerNormalized)
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(eventTriggerTime), cancellationToken: ct);
-                ctx.OnCustomEventTrigger?.Invoke(ctx.BossOwner).Forget();
-                await UniTask.Delay(TimeSpan.FromSeconds(startupTime - eventTriggerTime), cancellationToken: ct);
+                eventFired = true;
+                if (ctx.OnCustomEventTrigger != null)
+                {
+                    ctx.OnCustomEventTrigger.Invoke(ct).Forget();
+                }
             }
-            else
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(startupTime), cancellationToken: ct);
-            }
-        }
 
-        try
-        {
-            // [히트박스 오픈]
+            // 히트박스 오픈 / 클로즈
             if (step.HasHitbox)
             {
-                ctx.OnOpenHitbox?.Invoke(step.TargetHitboxSlot, ctx.BaseDamage, ctx.BasePoiseDamage,
-                    ctx.IsParryable, ctx.ImpactType, ctx.KnockbackForce);
+                if (!hitboxOpened && norm >= step.HitboxStartNormalized && norm < step.HitboxEndNormalized)
+                {
+                    hitboxOpened = true;
+                    ctx.OnOpenHitbox?.Invoke(step.TargetHitboxSlot, ctx.BaseDamage, ctx.BasePoiseDamage,
+                        ctx.IsParryable, ctx.ImpactType, ctx.KnockbackForce);
+                }
+                else if (hitboxOpened && norm >= step.HitboxEndNormalized)
+                {
+                    hitboxOpened = false;
+                    ctx.OnCloseAllHitboxes?.Invoke();
+                }
             }
 
-            if (eventTriggerTime > startupTime && eventTriggerTime <= (startupTime + activeDuration))
+            // 물리 돌진
+            if (step.EnablePhysicalDash)
             {
-                float preEvent = eventTriggerTime - startupTime;
-                await UniTask.Delay(TimeSpan.FromSeconds(preEvent), cancellationToken: ct);
-                ctx.OnCustomEventTrigger?.Invoke(ctx.BossOwner).Forget();
-                await UniTask.Delay(TimeSpan.FromSeconds(activeDuration - preEvent), cancellationToken: ct);
+                if (!dashActive && norm >= step.DashStartNormalized && norm < step.DashEndNormalized)
+                {
+                    dashActive = true;
+                    if (ctx.Target != null && ctx.OwnerTransform != null)
+                    {
+                        dashDirection = (ctx.Target.position - ctx.OwnerTransform.position).normalized;
+                        dashDirection.y = 0f;
+                        ctx.OwnerTransform.rotation = Quaternion.LookRotation(dashDirection);
+                    }
+                }
+                else if (dashActive && norm >= step.DashEndNormalized)
+                {
+                    dashActive = false;
+                    if (ctx.Rigidbody != null && !ctx.Rigidbody.isKinematic)
+                    {
+                        ctx.Rigidbody.linearVelocity = Vector3.zero;
+                    }
+                }
+
+                if (dashActive && ctx.Rigidbody != null && !ctx.Rigidbody.isKinematic)
+                {
+                    ctx.Rigidbody.linearVelocity = dashDirection * step.DashSpeed;
+                }
             }
-            else if (activeDuration > 0f)
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(activeDuration), delayTiming: PlayerLoopTiming.PostLateUpdate, cancellationToken: ct);
-            }
-        }
-        finally
-        {
-            // 타격 구간 종료 시 즉시 히트박스 닫기
-            if (step.HasHitbox)
-            {
-                ctx.OnCloseHitbox?.Invoke(step.TargetHitboxSlot);
-            }
+
+            elapsed += Time.deltaTime;
+            await UniTask.Yield(PlayerLoopTiming.Update, ct);
         }
 
-        // [후딜레이 대기]
-        if (recoveryTime > 0f)
+        if (hitboxOpened)
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(recoveryTime), cancellationToken: ct);
+            ctx.OnCloseAllHitboxes?.Invoke();
         }
     }
 }

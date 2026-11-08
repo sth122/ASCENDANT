@@ -52,23 +52,29 @@ public class BossHUDPresenter : UIPresenterBase<BossHUDView, BossHUDModel>
 
         if (View != null)
         {
-            View.SetBossIdentity(evt.BossName, evt.InitialHp, evt.MaxHp, evt.InitialPoise, evt.MaxPoise);
-            View.ShowAsync(0.5f).Forget();
+            // 모델 데이터 주입
+            View.SetBossIdentity(evt.BossName, null, evt.InitialHp, evt.MaxHp, evt.InitialPoise, evt.MaxPoise);
+
+            // [핵심] 보스 HUD 페이드인 출력 (사망 전까지 계속 노출 유지)
+            View.ShowAsync(0.6f).Forget();
         }
     }
 
     private void HandleBossDefeated(BossDefeatedEvent evt)
     {
-        if (ReferenceEquals(_boundBossObject, evt.BossObject))
+        // 자신이 바인딩된 보스가 처치되었을 때만 HUD 페이드아웃 종료
+        if (ReferenceEquals(_boundBossObject, evt.BossObject) || _boundBossObject == null)
         {
             if (View != null)
             {
-                View.HideAsync(1.0f).Forget();
+                View.HideAsync(1.5f).Forget();
             }
+
             if (Model != null)
             {
                 Model.IsActive = false;
             }
+
             _boundBossObject = null;
         }
     }

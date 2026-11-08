@@ -1,75 +1,93 @@
-﻿using Cysharp.Threading.Tasks;
-using System.Threading;
+﻿using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-/// <summary>
-/// 타격 파티클 및 환경 이펙트 전용 풀링 컴포넌트
-/// UniTask 비동기 타이머를 통해 파티클 재생 완료 시 자동으로 풀에 반환
-/// </summary>
+[DisallowMultipleComponent]
 public class VFXPoolable : MonoBehaviour, IPoolable
 {
-    [Header("Pool Identifier")]
     [SerializeField] private PoolType _poolType;
+    [SerializeField] private float _fallbackDuration = 2.0f;
+    [SerializeField] private bool _autoDespawnByDuration = false;
 
-    [Header("Particle Settings")]
-    [SerializeField] private ParticleSystem _particleSystem;
-    [SerializeField] private float _fallbackDuration = 1.5f;
-
+    private ParticleSystem[] _allParticleSystems;
     private CancellationTokenSource _vfxCts;
 
     private void Awake()
     {
-        if (_particleSystem == null)
-        {
-            _particleSystem = GetComponent<ParticleSystem>();
-        }
+        _allParticleSystems = GetComponentsInChildren<ParticleSystem>(true);
     }
 
     public void OnSpawn()
     {
-        ResetVfxToken();
+        AsyncUtil.CancelAndDispose(ref _vfxCts);
         _vfxCts = CancellationTokenSource.CreateLinkedTokenSource(this.destroyCancellationToken);
 
-        if (_particleSystem != null)
+        if (_allParticleSystems != null)
         {
-            _particleSystem.Clear();
-            _particleSystem.Play();
+            for (int i = 0; i < _allParticleSystems.Length; i++)
+            {
+                if (_allParticleSystems[i] == null) continue;
+                _allParticleSystems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                _allParticleSystems[i].Clear(true);
+                _allParticleSystems[i].time = 0f;
+                _allParticleSystems[i].Play(true);
+            }
         }
 
-        float duration = _particleSystem != null ? _particleSystem.main.duration : _fallbackDuration;
-        WaitForDespawnAsync(duration, _vfxCts.Token).Forget();
+        if (_autoDespawnByDuration)
+        {
+            float duration = CalculateTotalDuration();
+            WaitForDespawnAsync(duration, _vfxCts.Token).Forget();
+        }
     }
 
     public void OnDespawn()
     {
-        ResetVfxToken();
-
-        if (_particleSystem != null)
+        AsyncUtil.CancelAndDispose(ref _vfxCts);
+        if (_allParticleSystems != null)
         {
-            _particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            for (int i = 0; i < _allParticleSystems.Length; i++)
+            {
+                if (_allParticleSystems[i] == null) continue;
+                _allParticleSystems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
         }
+    }
+
+    private float CalculateTotalDuration()
+    {
+        if (_allParticleSystems == null || _allParticleSystems.Length == 0) return _fallbackDuration;
+        float maxDuration = 0f;
+
+        for (int i = 0; i < _allParticleSystems.Length; i++)
+        {
+            var ps = _allParticleSystems[i];
+            if (ps == null) continue;
+
+            var main = ps.main;
+            float life = main.startLifetime.mode switch
+            {
+                ParticleSystemCurveMode.Constant => main.startLifetime.constant,
+                ParticleSystemCurveMode.TwoConstants => main.startLifetime.constantMax,
+                _ => 1.5f
+            };
+            float total = main.duration + life;
+            if (total > maxDuration) maxDuration = total;
+        }
+
+        return maxDuration > 0.1f ? maxDuration : _fallbackDuration;
     }
 
     private async UniTaskVoid WaitForDespawnAsync(float delay, CancellationToken token)
     {
-        bool isCanceled = await UniTask.Delay((int)(delay * 1000f), cancellationToken: token).SuppressCancellationThrow();
+        bool isCanceled = await UniTask.Delay(System.TimeSpan.FromSeconds(delay), cancellationToken: token).SuppressCancellationThrow();
         if (isCanceled) return;
 
-        ObjectPoolManager.Instance.Despawn(_poolType, gameObject);
-    }
-
-    private void ResetVfxToken()
-    {
-        if (_vfxCts != null)
+        if (ObjectPoolManager.Instance != null)
         {
-            _vfxCts.Cancel();
-            _vfxCts.Dispose();
-            _vfxCts = null;
+            ObjectPoolManager.Instance.Despawn(_poolType, gameObject);
         }
     }
 
-    private void OnDestroy()
-    {
-        ResetVfxToken();
-    }
+    private void OnDestroy() => AsyncUtil.CancelAndDispose(ref _vfxCts);
 }

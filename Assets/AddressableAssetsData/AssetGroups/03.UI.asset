@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: 03.UI
   m_GUID: 34322189bbc1b104dbcb524459a6b6b4
   m_SerializeEntries:
+  - m_GUID: 1410ed52fbfd361438e2e2bb3b63ea39
+    m_Address: BossHUD
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 208dd0bf6c76f8b48b504976b899387a
     m_Address: TitleMenuUI
     m_ReadOnly: 0
@@ -30,8 +35,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4ec1ad89e63178f4b80c92c70a355afd
-    m_Address: BossHUD
+  - m_GUID: 47b43e9bba8d1e944830c5a9aeaaddd5
+    m_Address: LoadingScreenUI
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
 
 /// <summary>
 /// 플레이어의 영속적 스탯 및 진행 상태를 저장하는 직렬화 데이터 클래스
@@ -24,12 +24,9 @@ public class PlayerSaveData
     public bool HasReceivedInitialEquipment = false;
 
     [UnityEngine.Header("Equipped Item IDs")]
-    public int EquippedWeaponId = 0;
-    public int EquippedShieldId = 0;
-    public int EquippedHelmetId = 0;
-    public int EquippedChestArmorId = 0;
-    public int EquippedLeggingsId = 0;
-    public int EquippedBootsId = 0;
+    public List<ItemSlotSaveData> InventorySlots = new List<ItemSlotSaveData>();
+    public List<EquipSlotSaveData> EquippedSlots = new List<EquipSlotSaveData>();
+    public List<ItemSlotSaveData> QuickSlots = new List<ItemSlotSaveData>();
 
     public PlayerSaveData() { }
 
@@ -44,5 +41,33 @@ public class PlayerSaveData
         Strength = status.Strength;
         Dexterity = status.Dexterity;
         CurrentHp = currentHp;
+    }
+}
+
+[System.Serializable]
+public struct ItemSlotSaveData
+{
+    public int SlotIndex;
+    public int ItemId;
+    public int Amount;
+
+    public ItemSlotSaveData(int slotIndex, int itemId, int amount)
+    {
+        SlotIndex = slotIndex;
+        ItemId = itemId;
+        Amount = amount;
+    }
+}
+
+[System.Serializable]
+public struct EquipSlotSaveData
+{
+    public EquipSlotType SlotType;
+    public int ItemId;
+
+    public EquipSlotSaveData(EquipSlotType slotType, int itemId)
+    {
+        SlotType = slotType;
+        ItemId = itemId;
     }
 }

@@ -34,7 +34,10 @@ public sealed class SelectorNode : INode
                     return INode.ENodeState.ENS_Running;
 
                 case INode.ENodeState.ENS_Success:
-                    ResetChildrenExcept(i);
+                    if (_runningChildIndex != -1 && _runningChildIndex != i)
+                    {
+                        _children[_runningChildIndex].Reset();
+                    }
                     _runningChildIndex = -1;
                     return INode.ENodeState.ENS_Success;
             }
@@ -52,14 +55,6 @@ public sealed class SelectorNode : INode
             _children[i].Reset();
         }
         _runningChildIndex = -1;
-    }
-
-    private void ResetChildrenExcept(int keepIndex)
-    {
-        for (int i = 0; i < _children.Count; i++)
-        {
-            if (i != keepIndex) _children[i].Reset();
-        }
     }
 }
 
@@ -129,15 +124,16 @@ public sealed class PredicateNode<TContext> : INode
 public class AsyncActionNode : INode
 {
     private readonly Func<CancellationToken, UniTask<bool>> _taskFactory;
-    private readonly Func<CancellationToken> _tokenProvider;
+    private readonly Func<CancellationToken> _parentTokenProvider;
+    private CancellationTokenSource _nodeCts;
     private INode.ENodeState _currentState = INode.ENodeState.ENS_Failure;
     private bool _isRunning = false;
     private bool _isCompleted = false;
 
-    public AsyncActionNode(Func<CancellationToken, UniTask<bool>> taskFactory, Func<CancellationToken> tokenProvider)
+    public AsyncActionNode(Func<CancellationToken, UniTask<bool>> taskFactory, Func<CancellationToken> parentTokenProvider = null)
     {
         _taskFactory = taskFactory ?? throw new ArgumentNullException(nameof(taskFactory));
-        _tokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
+        _parentTokenProvider = parentTokenProvider;
     }
 
     public INode.ENodeState Evaluate()
@@ -145,7 +141,7 @@ public class AsyncActionNode : INode
         if (_isCompleted)
         {
             INode.ENodeState finalResult = _currentState;
-            Reset(); // 상위 노드가 소비했으므로 리셋
+            Reset();
             return finalResult;
         }
 
@@ -154,7 +150,18 @@ public class AsyncActionNode : INode
             _isRunning = true;
             _isCompleted = false;
             _currentState = INode.ENodeState.ENS_Running;
-            ExecuteAsync(_tokenProvider()).Forget();
+
+            AsyncUtil.CancelAndDispose(ref _nodeCts);
+            if (_parentTokenProvider != null)
+            {
+                _nodeCts = CancellationTokenSource.CreateLinkedTokenSource(_parentTokenProvider());
+            }
+            else
+            {
+                _nodeCts = new CancellationTokenSource();
+            }
+
+            ExecuteAsync(_nodeCts.Token).Forget();
             return INode.ENodeState.ENS_Running;
         }
 
@@ -186,6 +193,7 @@ public class AsyncActionNode : INode
 
     public void Reset()
     {
+        AsyncUtil.CancelAndDispose(ref _nodeCts);
         _isRunning = false;
         _isCompleted = false;
         _currentState = INode.ENodeState.ENS_Failure;

@@ -56,7 +56,7 @@ public class BossMeteorShower : MonoBehaviour, IPoolable
             // 오브젝트 풀에 안전하게 반환
             if (ObjectPoolManager.Instance != null)
             {
-                ObjectPoolManager.Instance.Despawn(PoolType.MeteorShower, gameObject);
+                ObjectPoolManager.Instance.Despawn(PoolType.MeteorProjectile, gameObject);
             }
         }
     }

@@ -270,4 +270,105 @@ public class Inventory
             }
         }
     }
+
+    #region MyRegion
+    /// <summary>
+    /// 현재 인벤토리의 가방, 장착 장비, 퀵슬롯 상태를 SaveData 객체로 직렬화
+    /// </summary>
+    public void ExportToSaveData(PlayerSaveData targetData)
+    {
+        if (targetData == null) return;
+
+        targetData.InventorySlots.Clear();
+        targetData.EquippedSlots.Clear();
+        targetData.QuickSlots.Clear();
+
+        // 1. 인벤토리 가방 슬롯
+        for (int i = 0; i < DefaultCapacity; i++)
+        {
+            if (_slots[i] != null && _slots[i].Data != null)
+            {
+                int amount = (_slots[i] is CountableItem countable) ? countable.CurrentAmount : 1;
+                targetData.InventorySlots.Add(new ItemSlotSaveData(i, _slots[i].Data.Id, amount));
+            }
+        }
+
+        // 2. 착용 장비 슬롯
+        foreach (var pair in _equipmentSlots)
+        {
+            if (pair.Value != null && pair.Value.Data != null)
+            {
+                targetData.EquippedSlots.Add(new EquipSlotSaveData(pair.Key, pair.Value.Data.Id));
+            }
+        }
+
+        // 3. 퀵슬롯
+        for (int q = 0; q < QuickSlotSystem.MaxQuickSlots; q++)
+        {
+            var item = QuickSlots.GetItem(q);
+            if (item != null && item.Data != null)
+            {
+                int amount = (item is CountableItem countable) ? countable.CurrentAmount : 1;
+                targetData.QuickSlots.Add(new ItemSlotSaveData(q, item.Data.Id, amount));
+            }
+        }
+    }
+
+    /// <summary>
+    /// 세션이나 세이브 파일 데이터로부터 인벤토리, 장비, 퀵슬롯을 완전 복원
+    /// </summary>
+    public void RestoreFromSaveData(PlayerSaveData sourceData, PlayerController player, DataManager dataManager)
+    {
+        if (sourceData == null || player == null || dataManager == null) return;
+
+        for (int i = 0; i < DefaultCapacity; i++) _slots[i] = null;
+        _equipmentSlots.Clear();
+
+        // 1. 가방 슬롯 복원
+        for (int i = 0; i < sourceData.InventorySlots.Count; i++)
+        {
+            var entry = sourceData.InventorySlots[i];
+            if (dataManager.TryGetItemDataById(entry.ItemId, out ItemData itemData))
+            {
+                Item restoredItem = itemData.CreateItem();
+                if (restoredItem is CountableItem countable)
+                {
+                    countable.SetAmount(entry.Amount);
+                }
+                _slots[entry.SlotIndex] = restoredItem;
+                OnSlotUpdated?.Invoke(entry.SlotIndex, restoredItem);
+            }
+        }
+
+        // 2. 착용 슬롯 복원 (CS0165 방지: 명시적 중첩 검증)
+        for (int i = 0; i < sourceData.EquippedSlots.Count; i++)
+        {
+            var entry = sourceData.EquippedSlots[i];
+            if (dataManager.TryGetItemDataById(entry.ItemId, out ItemData itemData))
+            {
+                EquipmentItemData equipData = itemData as EquipmentItemData;
+                if (equipData != null)
+                {
+                    EquipDirect(equipData, player);
+                }
+            }
+        }
+
+        // 3. 퀵슬롯 복원
+        for (int q = 0; q < sourceData.QuickSlots.Count; q++)
+        {
+            var entry = sourceData.QuickSlots[q];
+            for (int s = 0; s < DefaultCapacity; s++)
+            {
+                if (_slots[s] is PortionItem portion && portion.Data.Id == entry.ItemId)
+                {
+                    QuickSlots.RegisterItem(entry.SlotIndex, portion);
+                    break;
+                }
+            }
+        }
+
+        RecalculateEquipStats(player);
+    }
+    #endregion
 }

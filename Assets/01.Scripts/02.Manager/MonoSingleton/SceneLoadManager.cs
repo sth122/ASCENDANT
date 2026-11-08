@@ -62,18 +62,13 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
 
     public async UniTask LoadSceneFlowAsync(SceneId nextScene)
     {
-        if (_isLoading)
-        {
-            Util.LogWarning("이미 씬 전환이 진행 중입니다.");
-            return;
-        }
+        if (_isLoading) return;
         _isLoading = true;
+        FadeCurtainView fadeCurtain = null;
 
         try
         {
-            Util.Log($"[{_currentScene}] -> [{nextScene}] 씬 전환 파이프라인 개시");
-
-            FadeCurtainView fadeCurtain = null;
+            // 1. 암막 호출 및 화면 Fade Out
             if (UIManager.Instance != null)
             {
                 fadeCurtain = await UIManager.Instance.OpenUIAsync<FadeCurtainView, FadeCurtainPresenter, FadeCurtainModel>(
@@ -86,43 +81,64 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
                 }
             }
 
-            // 1. 이전 씬 정리 (역순 실행)
-            NotifySceneDestroyToLoadables(_currentScene);
+            // 2. 화면이 완전히 암전된 상태에서 로딩 화면
+            if (UIManager.Instance != null)
+            {
+                await UIManager.Instance.OpenUIAsync<LoadingScreenView, LoadingScreenPresenter, LoadingScreenModel>(
+                    UIId.LoadingScreenUI, ct: this.destroyCancellationToken
+                );
+            }
 
-            // 2. 로컬 서비스 및 이전 씬 에셋 정리
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.1f, "이전 씬 데이터를 정리하는 중..."));
+
+            // 3. 로컬 UI 및 이전 씬 리소스 정리
+            NotifySceneDestroyToLoadables(_currentScene);
             ServiceLocator.ClearSceneLocalServices();
             AssetsManager.Instance.ReleaseSceneAssets();
-            await UnityEngine.Resources.UnloadUnusedAssets().ToUniTask(cancellationToken: this.destroyCancellationToken);
-            System.GC.Collect();
 
-            // 3. 이전 어드레서블 씬 언로드 
+            // 4. 이전 씬 언로드
             if (_hasActiveSceneHandle)
             {
                 await Addressables.UnloadSceneAsync(_currentSceneHandle).ToUniTask(cancellationToken: this.destroyCancellationToken);
                 _hasActiveSceneHandle = false;
             }
 
-            // 4. Addressables 씬 비동기 로드 및 핸들 캐싱
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.35f, "신규 씬을 불러오는 중..."));
+
+            // 5. 신규 씬 비동기 로드
             AsyncOperationHandle<SceneInstance> sceneHandle = Addressables.LoadSceneAsync(nextScene.ToString());
-            SceneInstance sceneInstance = await sceneHandle.ToUniTask(cancellationToken: this.destroyCancellationToken);
+            await sceneHandle.ToUniTask(cancellationToken: this.destroyCancellationToken);
             _currentSceneHandle = sceneHandle;
             _hasActiveSceneHandle = true;
-
-            // 현재 씬 ID 갱신
             _currentScene = nextScene;
 
-            // 5. ILoadable 시스템 순차 초기화 (LoadOrder 오름차순)
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.7f, "시스템 및 오브젝트 풀을 적재하는 중..."));
+
+            // 6. 시스템 순차 초기화 (ObjectPoolManager 씬 종속 풀 로드 등)
             await InitializeLoadablesAsync(nextScene);
 
-            // 6. 등록된 씬 부트스트래퍼 실행 (IoC 기반 즉각 실행)
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.9f, "월드 액터를 준비하는 중..."));
+
+            // 7. 씬 부트스트랩 실행 (플레이어 스폰, 카메라 타깃 바인딩)
             await ExecuteSceneBootstrapAsync(nextScene);
 
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(1.0f, "로딩 완료"));
+
+            // 액터 위치 및 카메라 블렌드 완벽 안착을 위한 1프레임 대기
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellationToken: this.destroyCancellationToken);
+            await UniTask.Delay(System.TimeSpan.FromSeconds(0.2f), cancellationToken: this.destroyCancellationToken);
+
+            // 8. 씬 준비가 완전히 끝났으므로 로딩 화면 제거
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.CloseUI(UIId.LoadingScreenUI);
+            }
+
+            // 9. 암막을 걷어내며 화면 페이드 인 (Fade In)
             if (fadeCurtain != null)
             {
                 await fadeCurtain.FadeInAsync(0.5f, this.destroyCancellationToken);
             }
-
-            Util.Log($"[{nextScene}] 씬 전환 완료");
         }
         finally
         {

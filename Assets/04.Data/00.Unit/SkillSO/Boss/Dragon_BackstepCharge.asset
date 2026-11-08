@@ -15,7 +15,7 @@ MonoBehaviour:
   _info:
     Id: 3002
     AnimState: 1003
-    TargetHitboxSlot: 4
+    TargetHitboxSlot: 6
     ImpactType: 1
     KnockbackForce: 18
     RequiredPhase: 1
@@ -30,9 +30,14 @@ MonoBehaviour:
   _timelineSteps:
   - StateType: 1000
     SpeedMultiplier: 1
+    ClipDurationOverride: 0
     FaceTargetOnEnter: 1
     UseRootMotion: 1
     IsAirborne: 0
+    EnablePhysicalDash: 0
+    DashSpeed: 0
+    DashStartNormalized: 0
+    DashEndNormalized: 0
     HasHitbox: 0
     TargetHitboxSlot: 0
     HitboxStartNormalized: 0
@@ -41,11 +46,16 @@ MonoBehaviour:
     EventTriggerNormalized: 0
   - StateType: 1003
     SpeedMultiplier: 1
+    ClipDurationOverride: 0
     FaceTargetOnEnter: 1
-    UseRootMotion: 1
+    UseRootMotion: 0
     IsAirborne: 0
+    EnablePhysicalDash: 1
+    DashSpeed: 18
+    DashStartNormalized: 0.3
+    DashEndNormalized: 0.75
     HasHitbox: 1
-    TargetHitboxSlot: 4
+    TargetHitboxSlot: 6
     HitboxStartNormalized: 0.3
     HitboxEndNormalized: 0.75
     HasCustomEvent: 0

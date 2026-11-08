@@ -164,3 +164,18 @@ public readonly struct BossDefeatedEvent : IEventType
         BossObject = bossObject;
     }
 }
+
+/// <summary>
+/// 씬 로딩 진행도 및 안내 문구 갱신 이벤트
+/// </summary>
+public readonly struct SceneLoadingProgressEvent : IEventType
+{
+    public readonly float Progress; // 0.0f ~ 1.0f
+    public readonly string Description;
+
+    public SceneLoadingProgressEvent(float progress, string description = "")
+    {
+        Progress = UnityEngine.Mathf.Clamp01(progress);
+        Description = description;
+    }
+}

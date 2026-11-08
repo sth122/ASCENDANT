@@ -108,9 +108,13 @@ public enum PoolType
     HitVFX_Parry = 1002,
     BloodSplatter = 1003,
 
+    VFX_Breath_Fire = 1501,       // FlameThrower
+    VFX_EarthShatter = 1502,      // EarthShatter
+    VFX_MeteorExplosion = 1503,   // 메테오 착탄 폭발
+
     // 투사체 및 인게임 드랍 (2000 ~)
     SoulOrb = 2000,
-    MeteorShower = 2001,
+    MeteorProjectile = 2001,
     FireBomb = 2002,
 
     // 풀링 UI (3000 ~)
@@ -286,10 +290,13 @@ public enum UILayer
 public enum HitboxSlot
 {
     None = 0,
-    MainWeapon,
-    Mouth,
-    Tail,
-    WholeBody,
+    MainWeapon,        // 무기
+    RightHand = 1,     // 오른손
+    LeftHand = 2,      // 왼손
+    BothHands = 3,     // 양손 공격
+    Mouth = 4,         // 머리/입
+    Tail = 5,          // 꼬리
+    WholeBody = 6      // 돌진 전신 판정
 }
 
 public enum AttackImpactType
@@ -308,7 +315,8 @@ public enum SkillId
     Dragon_BackstepCharge = 3002,
     Dragon_TailSweep = 3003,
     Dragon_LinearBreath = 3004,
-    Dragon_AerialCombo = 3005
+    Dragon_AerialCombo = 3005,
+    Dragon_MeteorShower = 3006,
 }
 #endregion
 

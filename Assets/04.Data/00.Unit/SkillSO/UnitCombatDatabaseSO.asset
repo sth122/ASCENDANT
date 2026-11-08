@@ -20,36 +20,84 @@ MonoBehaviour:
         AttackData:
           _attackAnimStateType: 50
           _impactType: 0
-          _windupDelay: 1
-          _attackRange: 2
+          _windupDelay: 0.5
+          _attackRange: 2.2
           _attackCooldown: 2.5
           _hitboxStartNormalized: 0.25
-          _hitboxEndNormalized: 0.6
-          _customSteps: []
+          _hitboxEndNormalized: 0.55
+          _customSteps:
+          - StateType: 50
+            SpeedMultiplier: 1
+            ClipDurationOverride: 0
+            FaceTargetOnEnter: 0
+            UseRootMotion: 0
+            IsAirborne: 0
+            EnablePhysicalDash: 0
+            DashSpeed: 0
+            DashStartNormalized: 0
+            DashEndNormalized: 0
+            HasHitbox: 1
+            TargetHitboxSlot: 1
+            HitboxStartNormalized: 0.3
+            HitboxEndNormalized: 0.55
+            HasCustomEvent: 0
+            EventTriggerNormalized: 0
           _isParryable: 1
           _knockbackForce: 0
       - AnimState: 51
         AttackData:
           _attackAnimStateType: 51
           _impactType: 0
-          _windupDelay: 1
-          _attackRange: 2
-          _attackCooldown: 4
+          _windupDelay: 0.5
+          _attackRange: 2.2
+          _attackCooldown: 2.5
           _hitboxStartNormalized: 0.25
-          _hitboxEndNormalized: 0.6
-          _customSteps: []
+          _hitboxEndNormalized: 0.55
+          _customSteps:
+          - StateType: 51
+            SpeedMultiplier: 1
+            ClipDurationOverride: 0
+            FaceTargetOnEnter: 0
+            UseRootMotion: 0
+            IsAirborne: 0
+            EnablePhysicalDash: 0
+            DashSpeed: 0
+            DashStartNormalized: 0
+            DashEndNormalized: 0
+            HasHitbox: 1
+            TargetHitboxSlot: 2
+            HitboxStartNormalized: 0.3
+            HitboxEndNormalized: 0.55
+            HasCustomEvent: 0
+            EventTriggerNormalized: 0
           _isParryable: 1
           _knockbackForce: 0
       - AnimState: 52
         AttackData:
           _attackAnimStateType: 52
           _impactType: 0
-          _windupDelay: 1
-          _attackRange: 2
+          _windupDelay: 0.5
+          _attackRange: 2.2
           _attackCooldown: 4
-          _hitboxStartNormalized: 0.25
+          _hitboxStartNormalized: 0.3
           _hitboxEndNormalized: 0.6
-          _customSteps: []
+          _customSteps:
+          - StateType: 52
+            SpeedMultiplier: 1
+            ClipDurationOverride: 0
+            FaceTargetOnEnter: 0
+            UseRootMotion: 0
+            IsAirborne: 0
+            EnablePhysicalDash: 0
+            DashSpeed: 0
+            DashStartNormalized: 0
+            DashEndNormalized: 0
+            HasHitbox: 1
+            TargetHitboxSlot: 3
+            HitboxStartNormalized: 0.3
+            HitboxEndNormalized: 0.6
+            HasCustomEvent: 0
+            EventTriggerNormalized: 0
           _isParryable: 1
           _knockbackForce: 0
       Skills: []
@@ -60,29 +108,60 @@ MonoBehaviour:
         AttackData:
           _attackAnimStateType: 50
           _impactType: 0
-          _windupDelay: 1
-          _attackRange: 5
-          _attackCooldown: 2
+          _windupDelay: 0.1
+          _attackRange: 4.5
+          _attackCooldown: 3
           _hitboxStartNormalized: 0.25
           _hitboxEndNormalized: 0.6
-          _customSteps: []
+          _customSteps:
+          - StateType: 50
+            SpeedMultiplier: 1
+            ClipDurationOverride: 2.4
+            FaceTargetOnEnter: 1
+            UseRootMotion: 0
+            IsAirborne: 0
+            EnablePhysicalDash: 0
+            DashSpeed: 0
+            DashStartNormalized: 0
+            DashEndNormalized: 0
+            HasHitbox: 1
+            TargetHitboxSlot: 1
+            HitboxStartNormalized: 0.38
+            HitboxEndNormalized: 0.65
+            HasCustomEvent: 0
+            EventTriggerNormalized: 0
           _isParryable: 1
           _knockbackForce: 12
       - AnimState: 51
         AttackData:
           _attackAnimStateType: 51
           _impactType: 0
-          _windupDelay: 1
-          _attackRange: 5
-          _attackCooldown: 2
-          _hitboxStartNormalized: 0.25
+          _windupDelay: 0.1
+          _attackRange: 4.5
+          _attackCooldown: 4
+          _hitboxStartNormalized: 0.4
           _hitboxEndNormalized: 0.6
-          _customSteps: []
+          _customSteps:
+          - StateType: 51
+            SpeedMultiplier: 1
+            ClipDurationOverride: 2.2
+            FaceTargetOnEnter: 0
+            UseRootMotion: 0
+            IsAirborne: 0
+            EnablePhysicalDash: 0
+            DashSpeed: 0
+            DashStartNormalized: 0
+            DashEndNormalized: 0
+            HasHitbox: 1
+            TargetHitboxSlot: 1
+            HitboxStartNormalized: 0.4
+            HitboxEndNormalized: 0.6
+            HasCustomEvent: 1
+            EventTriggerNormalized: 0.45
           _isParryable: 1
           _knockbackForce: 12
       Skills:
-      - {fileID: 11400000, guid: e633a645aed5b084fad94968ac2a74d9, type: 2}
-      - {fileID: 11400000, guid: 9f558a1382b2f2d4db9d64c61c5c9268, type: 2}
-      - {fileID: 11400000, guid: 5846536d6aaa35a4aa536274e839236a, type: 2}
-      - {fileID: 11400000, guid: 3d250e364dc43b6479e3f351f469672e, type: 2}
       - {fileID: 11400000, guid: a4c4cb62295c18d45a9ce33381912733, type: 2}
+      - {fileID: 11400000, guid: c24c60344c4e9864e986372773206b62, type: 2}
+      - {fileID: 11400000, guid: d6d55afdc5a828847866b9d3cdafcec7, type: 2}
+      - {fileID: 11400000, guid: 3d250e364dc43b6479e3f351f469672e, type: 2}

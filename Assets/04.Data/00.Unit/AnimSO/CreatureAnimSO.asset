@@ -74,10 +74,6 @@ MonoBehaviour:
     Clip: {fileID: 7400004, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.1
-  - StateType: 53
-    Clip: {fileID: 7400008, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
-    SpeedMultiplier: 1
-    CrossFadeDuration: 0.1
   - StateType: 72
     Clip: {fileID: 7400036, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
     SpeedMultiplier: 1

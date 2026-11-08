@@ -77,6 +77,14 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
             RectTransform rect = containerGo.GetComponent<RectTransform>();
             SetFullStretch(rect);
 
+            Canvas layerCanvas = containerGo.GetComponent<Canvas>();
+            if (layerCanvas == null) layerCanvas = containerGo.AddComponent<Canvas>();
+            layerCanvas.overrideSorting = true;
+            layerCanvas.sortingOrder = (int)layer; // UILayer의 우선순위 정수 반영
+
+            GraphicRaycaster raycaster = containerGo.GetComponent<GraphicRaycaster>();
+            if (raycaster == null) containerGo.AddComponent<GraphicRaycaster>();
+
             _layerContainers[layer] = rect;
         }
     }
@@ -128,6 +136,7 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         {
             // 2. 신규 생성 파이프라인
             RectTransform targetContainer = GetLayerContainer(targetLayer);
+            bool isGlobalLayer = (targetLayer == UILayer.System);
             GameObject viewGo = await AssetsManager.Instance.InstantiateAsync(id.GetAddressableKey(), parent: targetContainer, ct: ct);
 
             view = viewGo.GetComponent<TView>();
@@ -140,10 +149,18 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
 
             RectTransform viewRect = view.GetComponent<RectTransform>();
             viewRect.SetParent(targetContainer, false);
-            SetFullStretch(viewRect);
+            if (targetLayer != UILayer.HUD && targetLayer != UILayer.Popup)
+            {
+                SetFullStretch(viewRect);
+            }
 
             view.SetIdentity(id, targetLayer);
             view.InitializeView();
+
+            if (view.IsGlobalUI || isGlobalLayer)
+            {
+                AssetsManager.Instance.MarkInstanceAsGlobal(viewGo);
+            }
 
             TPresenter presenter = new TPresenter();
             presenter.Bind(view, model);

@@ -7,7 +7,7 @@
     {
         #region Interaction Prompts
         public const string BonfirePrompt = "[F] 화톳불에서 휴식";
-        public const string BossDoorPrompt = "[F] 안개 속으로 들어가기";
+        public const string BossDoorPrompt = "[F] 보스 씬 들어가기";
         public const string ItemDropPrompt = "[F] 아이템 줍기";
         public const string NpcTalkPrompt = "[F] 대화하기";
         public const string ChestOpenPrompt = "[F] 상자 열기";

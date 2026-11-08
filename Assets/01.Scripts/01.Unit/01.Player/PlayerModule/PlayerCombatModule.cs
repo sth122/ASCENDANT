@@ -66,7 +66,7 @@ public class PlayerCombatModule : UnitBaseModule
         // 앞잡 모션값 320 적용
         float riposteAR = totalAR * (_currentWeaponData.Riposte_MV / 100.0f);
 
-        DamageContext context = new DamageContext(_owner.gameObject, riposteAR, 100.0f, hitPoint, _owner.transform.forward,
+        DamageContext context = new DamageContext(_owner.gameObject, riposteAR, 0f, hitPoint, _owner.transform.forward,
             isParryable: false, impactType: AttackImpactType.Heavy, knockbackForce: 5.0f);
 
         target.ApplyDamage(in context);

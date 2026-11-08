@@ -140,4 +140,19 @@ public class DataManager : MonoSingleton<DataManager>, ILoadable
         return false;
     }
     #endregion
+
+    private readonly Dictionary<int, ItemData> _itemDataCache = new Dictionary<int, ItemData>();
+
+    public void RegisterItemData(ItemData item)
+    {
+        if (item != null && !_itemDataCache.ContainsKey(item.Id))
+        {
+            _itemDataCache[item.Id] = item;
+        }
+    }
+
+    public bool TryGetItemDataById(int id, out ItemData itemData)
+    {
+        return _itemDataCache.TryGetValue(id, out itemData);
+    }
 }

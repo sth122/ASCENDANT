@@ -1,4 +1,5 @@
-﻿using static ConstStrings.ConstString;
+﻿using Cysharp.Threading.Tasks;
+using static ConstStrings.ConstString;
 /// <summary>
 /// 소울라이크 화톳불 상호작용 컴포넌트
 /// </summary>
@@ -33,6 +34,12 @@ public class BonfireInteractable : BaseInteractable
                 player.StatusController.MaxHp,
                 slotIndex: 0
             );
+
+            if (player.TryGetComponent(out PlayerInventoryHandler invHandler) && SaveManager.Instance.CurrentSaveData != null)
+            {
+                invHandler.ExportToSaveData(SaveManager.Instance.CurrentSaveData.PlayerData);
+                SaveManager.Instance.SaveCurrentGameAsync(0).Forget();
+            }
         }
 
         // 3. 월드 리셋 이벤트 발행 (EnemyManager 등이 수신하여 몬스터 리스폰)

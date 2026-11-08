@@ -581,19 +581,19 @@ ModelImporter:
     second: Creature_armature|attack_3
   - first:
       74: 7400006
-    second: Creature_armature|battle_idle
+    second: Idle
   - first:
       74: 7400008
     second: Creature_armature|bite
   - first:
       74: 7400010
-    second: Creature_armature|crawl
+    second: Patrol
   - first:
       74: 7400012
     second: Creature_armature|crawl_bite
   - first:
       74: 7400014
-    second: Creature_armature|crawl_idol
+    second: PatrolIdle
   - first:
       74: 7400016
     second: Creature_armature|crawl_to_state
@@ -1479,7 +1479,7 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: Creature_armature|battle_idle
+      name: Idle
       takeName: Creature_armature|battle_idle
       internalID: 0
       firstFrame: 0
@@ -1913,7 +1913,7 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: Creature_armature|crawl
+      name: Patrol
       takeName: Creature_armature|crawl
       internalID: 0
       firstFrame: 0
@@ -2347,7 +2347,7 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: Creature_armature|crawl_idol
+      name: PatrolIdle
       takeName: Creature_armature|crawl_idol
       internalID: 0
       firstFrame: 0

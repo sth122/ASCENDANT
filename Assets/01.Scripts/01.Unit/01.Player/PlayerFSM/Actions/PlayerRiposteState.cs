@@ -31,7 +31,7 @@ public class PlayerRiposteState : PlayerActionState
         // 1. 피격 대상에게 처형 개시 통보 (적 그로기 회복 타이머 즉각 동결)
         if (_riposteTarget != null && _riposteTarget.RiposteSocket != null)
         {
-            _riposteTarget.OnRiposted(owner.transform);
+            _riposteTarget.OnRiposted();
         }
 
         // 2. 플레이어 처형 애니메이션 재생

@@ -168,4 +168,6 @@ public class WeaponSweepHitbox : MonoBehaviour
         }
         Gizmos.matrix = Matrix4x4.identity;
     }
+
+    public Transform GetMouthHitboxTransform() => _hitPoints != null && _hitPoints.Length > 0 ? _hitPoints[0] : transform;
 }

@@ -202,6 +202,17 @@ public class AssetsManager : MonoSingleton<AssetsManager>, ILoadable
 
     #region 메모리 해제 및 생명 주기
     /// <summary>
+    /// 전역 유지 UI 또는 객체를 씬 전환 파괴 리스트에서 제외
+    /// </summary>
+    public void MarkInstanceAsGlobal(UnityEngine.GameObject instance)
+    {
+        if (instance != null)
+        {
+            _sceneInstances.Remove(instance);
+        }
+    }
+
+    /// <summary>
     /// 생성된 인스턴스 해제
     /// </summary>
     public void ReleaseInstance(UnityEngine.GameObject instance)

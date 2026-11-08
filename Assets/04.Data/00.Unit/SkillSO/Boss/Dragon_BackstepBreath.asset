@@ -9,30 +9,35 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96ffc6090e08224438a24684c523eca2, type: 3}
+  m_Script: {fileID: 11500000, guid: 8b65fba738f1ffe4aa1ec1a2d57355a1, type: 3}
   m_Name: Dragon_BackstepBreath
-  m_EditorClassIdentifier: Assembly-CSharp::DragonGenericSkillSO
+  m_EditorClassIdentifier: Assembly-CSharp::DragonBreathSkillSO
   _info:
     Id: 3001
     AnimState: 1002
-    TargetHitboxSlot: 2
+    TargetHitboxSlot: 0
     ImpactType: 1
-    KnockbackForce: 14
+    KnockbackForce: 0
     RequiredPhase: 1
     BaseDamage: 80
     BasePoiseDamage: 45
     Cooldown: 16
     Range: 8
     IsParryable: 0
-    HitboxStartNormalized: 0.25
-    HitboxEndNormalized: 0.7
-    ActionEndNormalized: 0.8
+    HitboxStartNormalized: 0
+    HitboxEndNormalized: 0
+    ActionEndNormalized: 0.9
   _timelineSteps:
   - StateType: 1000
     SpeedMultiplier: 1
+    ClipDurationOverride: 0
     FaceTargetOnEnter: 0
     UseRootMotion: 1
-    IsAirborne: 0
+    IsAirborne: 1
+    EnablePhysicalDash: 0
+    DashSpeed: 0
+    DashStartNormalized: 0
+    DashEndNormalized: 0
     HasHitbox: 0
     TargetHitboxSlot: 0
     HitboxStartNormalized: 0
@@ -41,12 +46,24 @@ MonoBehaviour:
     EventTriggerNormalized: 0
   - StateType: 1002
     SpeedMultiplier: 1
-    FaceTargetOnEnter: 0
+    ClipDurationOverride: 0
+    FaceTargetOnEnter: 1
     UseRootMotion: 1
     IsAirborne: 0
-    HasHitbox: 1
-    TargetHitboxSlot: 2
-    HitboxStartNormalized: 0.25
-    HitboxEndNormalized: 0.7
-    HasCustomEvent: 0
-    EventTriggerNormalized: 0
+    EnablePhysicalDash: 0
+    DashSpeed: 0
+    DashStartNormalized: 0
+    DashEndNormalized: 0
+    HasHitbox: 0
+    TargetHitboxSlot: 0
+    HitboxStartNormalized: 0
+    HitboxEndNormalized: 0
+    HasCustomEvent: 1
+    EventTriggerNormalized: 0.25
+  _breathType: 1
+  _breathLength: 15
+  _breathAngle: 60
+  _tickInterval: 0.25
+  _targetLayer:
+    serializedVersion: 2
+    m_Bits: 64

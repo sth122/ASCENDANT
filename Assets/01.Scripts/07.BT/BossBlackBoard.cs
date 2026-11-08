@@ -23,12 +23,8 @@ public class BossBlackboard : Blackboard
     #region Runtime Flags & Timestamps
     [NonSerialized] public bool IsPhase2 = false;
     [NonSerialized] public bool IsInvincible = false;
-    [NonSerialized] public bool IsActionExecuting = false;
-    [NonSerialized] public bool IsBasicAttacking = false;
     [NonSerialized] public bool HasExecutedPhase2Entry = false;
     [NonSerialized] public bool IsSkillPending = false;
-
-    // 타임스탬프 기반 주기 관리 (Update 연산 제거)
     [NonSerialized] public float NextSkillCycleTime = 0f;
     #endregion
 
@@ -41,5 +37,6 @@ public class BossBlackboard : Blackboard
     public void ForceReadySkillCycle()
     {
         NextSkillCycleTime = Time.time;
+        IsSkillPending = true;
     }
 }

@@ -4,6 +4,7 @@
 public class BossHUDModel : IUIModel
 {
     public string BossName { get; set; } = string.Empty;
+    public UnityEngine.Sprite PortraitSprite { get; set; }
     public float CurrentHp { get; set; }
     public float MaxHp { get; set; }
     public float CurrentPoise { get; set; }
@@ -13,6 +14,7 @@ public class BossHUDModel : IUIModel
     public void Reset()
     {
         BossName = string.Empty;
+        PortraitSprite = null;
         CurrentHp = 0f;
         MaxHp = 0f;
         CurrentPoise = 0f;
