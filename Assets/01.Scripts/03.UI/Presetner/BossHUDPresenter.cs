@@ -26,6 +26,7 @@ public class BossHUDPresenter : UIPresenterBase<BossHUDView, BossHUDModel>
         EventBusSystem.Subscribe<BossDefeatedEvent>(HandleBossDefeated);
         EventBusSystem.Subscribe<UnitHpChangedEvent>(HandleHpChanged);
         EventBusSystem.Subscribe<UnitPoiseChangedEvent>(HandlePoiseChanged);
+        EventBusSystem.Subscribe<UnitInvincibleChangedEvent>(HandleInvincibleChanged);
     }
 
     protected override void OnUnbindHandler()
@@ -34,6 +35,7 @@ public class BossHUDPresenter : UIPresenterBase<BossHUDView, BossHUDModel>
         EventBusSystem.Unsubscribe<BossDefeatedEvent>(HandleBossDefeated);
         EventBusSystem.Unsubscribe<UnitHpChangedEvent>(HandleHpChanged);
         EventBusSystem.Unsubscribe<UnitPoiseChangedEvent>(HandlePoiseChanged);
+        EventBusSystem.Unsubscribe<UnitInvincibleChangedEvent>(HandleInvincibleChanged);
     }
 
     private void HandleBossEncounter(BossEncounterEvent evt)
@@ -106,6 +108,15 @@ public class BossHUDPresenter : UIPresenterBase<BossHUDView, BossHUDModel>
                 Model.MaxPoise = evt.MaxPoise;
             }
             View.UpdatePoise(evt.CurrentPoise, evt.MaxPoise);
+        }
+    }
+
+    private void HandleInvincibleChanged(UnitInvincibleChangedEvent evt)
+    {
+        if (View == null || _boundBossObject == null) return;
+        if (ReferenceEquals(evt.TargetUnit, _boundBossObject))
+        {
+            View.SetHpInvincibleVisual(evt.IsInvincible);
         }
     }
 }

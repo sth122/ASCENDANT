@@ -104,6 +104,8 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         {
             _enemyStatus.OnStatusDataChanged -= HandleStatusDataChanged;
             _enemyStatus.OnStatusDataChanged += HandleStatusDataChanged;
+            _enemyStatus.OnPoiseBreakEvent -= TriggerGroggy;
+            _enemyStatus.OnPoiseBreakEvent += TriggerGroggy;
         }
 
         EventBusSystem.Subscribe<GameSceneReadyEvent>(HandleGameSceneReady);
@@ -207,7 +209,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
         _patrolModule.SetSpawnPoint(transform.position);
         _groggyModule.ResetState();
-        _enemyStatus?.RestorePoiseToMax();
+        _enemyStatus?.ResetPoiseToDefault();
         ClearTarget();
 
         _rootNode?.Reset();
@@ -229,7 +231,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         _perceptionModule?.StopSensorLoop();
         _groggyModule.ResetState();
         _patrolModule.ResetState();
-        AsyncUtil.CancelAndDispose(ref _actionCts);
+        CancelCurrentAction();
         ClearTarget();
         SetActionState(EnemyActionState.None);
     }
@@ -346,14 +348,23 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         return selector;
     }
 
-    private INode.ENodeState TickGroggyStatus()
+    protected virtual INode.ENodeState TickGroggyStatus()
     {
-        if (!_groggyModule.IsGroggy)
+        // 1. 그로기가 진행 중이면 Running 상태 유지
+        if (_groggyModule.IsGroggy)
         {
-            SetActionState(EnemyActionState.Groggy);
-            _groggyModule.StartGroggy();
+            return INode.ENodeState.ENS_Running;
         }
-        return INode.ENodeState.ENS_Running;
+
+        // 2. 그로기 모듈이 꺼져 있는데 포이즈가 깨져서 진입한 상태라면 그로기 개시
+        if (_enemyStatus != null && _enemyStatus.IsPoiseBroken)
+        {
+            TriggerGroggy();
+            return INode.ENodeState.ENS_Running;
+        }
+
+        // 3. 그로기 타이머가 끝나 IsGroggy가 false가 되었다면 완료
+        return INode.ENodeState.ENS_Success;
     }
     #endregion
 
@@ -411,7 +422,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
             _combatController.CloseAllHitboxes();
             ReleaseAttackToken();
 
-            if (!IsDead)
+            if (!IsDead && ActionState == EnemyActionState.BasicAttacking)
             {
                 _enemyAnim.PlayState(AnimStateType.Idle, force: true);
                 _combatController.RecordAttackCooldown(chosenData.AttackAnimStateType, chosenData.AttackCooldown);
@@ -479,7 +490,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         ReleaseAttackToken();
         SetControllerActive(false);
 
-        AsyncUtil.CancelAndDispose(ref _actionCts);
+        CancelCurrentAction();
         _rootNode?.Reset();
         _groggyModule.Dispose();
         _patrolModule.Dispose();
@@ -530,7 +541,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         if (IsDead) return;
 
         ReleaseAttackToken();
-        AsyncUtil.CancelAndDispose(ref _actionCts);
+        CancelCurrentAction();
         _combatController.CloseAllHitboxes();
 
         _enemyStatus.TakeDamage(0f, parryPoiseDamage);
@@ -565,19 +576,28 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         }
     }
 
-    protected virtual INode.ENodeState TriggerGroggyAction()
-    {
-        SetActionState(EnemyActionState.Groggy);
-        _groggyModule.StartGroggy();
-        return INode.ENodeState.ENS_Running;
-    }
-
     public virtual void OnRiposted() => _groggyModule.HandleRiposted();
 
-    public virtual void OnRiposteFinished()
+    /// <summary>
+    /// [그로기 단일 진입점]: 어떤 행동(공격, 스킬, 이동) 중이든 원자적으로 즉시 중단하고 그로기 돌입
+    /// </summary>
+    public virtual void TriggerGroggy()
     {
-        if (IsDead) return;
-        _groggyModule.ExecuteRiposteWakeUpAsync(GetActionToken()).Forget();
+        if (IsDead || _groggyModule.IsGroggy) return;
+
+        // 1. 진행 중인 공격/스킬 비동기 태스크 즉시 취소 (UniTask CancellationToken 발생)
+        CancelCurrentAction();
+
+        // 2. 물리/이동 및 히트박스, 공격 토큰 즉각 회수
+        _combatController.CloseAllHitboxes();
+        ReleaseAttackToken();
+        _movement.StopMovement();
+
+        // 3. 상태를 Groggy로 변경
+        SetActionState(EnemyActionState.Groggy);
+
+        // 4. 그로기 모듈 시작 (Groggy_Loop 애니메이션 및 8초 카운트다운 타이머 시작)
+        _groggyModule.StartGroggy();
     }
     #endregion
 
@@ -622,12 +642,21 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     public virtual void SetTarget(Transform target) => _currentTarget = target;
     public virtual void ClearTarget() => _currentTarget = null;
 
+    /// <summary>
+    /// 비동기 액션 새로운 CTS 생성
+    /// </summary>
+    /// <returns></returns>
     public CancellationToken GetActionToken()
     {
-        AsyncUtil.CancelAndDispose(ref _actionCts);
+        CancelCurrentAction();
         _actionCts = CancellationTokenSource.CreateLinkedTokenSource(this.destroyCancellationToken);
         return _actionCts.Token;
     }
+
+    /// <summary>
+    /// 현재 실행 중인 비동기 액션 CTS 취소
+    /// </summary>
+    public void CancelCurrentAction() => AsyncUtil.CancelAndDispose(ref _actionCts);
 
     public virtual void ApplyDamage(in DamageContext context)
     {
@@ -650,7 +679,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
         if (_enemyStatus.IsPoiseBroken && !_groggyModule.IsGroggy)
         {
-            _groggyModule.StartGroggy();
+            TriggerGroggy();
             return;
         }
 
@@ -724,6 +753,6 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         _perceptionModule?.Dispose();
         _groggyModule?.Dispose();
         _patrolModule?.Dispose();
-        AsyncUtil.CancelAndDispose(ref _actionCts);
+        CancelCurrentAction();
     }
 }

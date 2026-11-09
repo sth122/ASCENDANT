@@ -40,7 +40,6 @@ public interface IRiposteable
     bool IsDead { get; }
     UnityEngine.Transform RiposteSocket { get; }
     void OnRiposted();
-    void OnRiposteFinished();
 }
 
 /// <summary>

@@ -1,4 +1,6 @@
-﻿public interface IEventType { }
+﻿using UnityEngine;
+
+public interface IEventType { }
 
 /// <summary>
 /// Unit 체력 변동 이벤트 (HUD UI 바인딩용)
@@ -177,5 +179,21 @@ public readonly struct SceneLoadingProgressEvent : IEventType
     {
         Progress = UnityEngine.Mathf.Clamp01(progress);
         Description = description;
+    }
+}
+
+
+/// <summary>
+/// 유닛 무적 갱신 이벤트
+/// </summary>
+public readonly struct UnitInvincibleChangedEvent : IEventType
+{
+    public readonly GameObject TargetUnit;
+    public readonly bool IsInvincible;
+
+    public UnitInvincibleChangedEvent(GameObject targetUnit, bool isInvincible)
+    {
+        TargetUnit = targetUnit;
+        IsInvincible = isInvincible;
     }
 }

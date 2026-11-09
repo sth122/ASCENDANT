@@ -48,11 +48,6 @@ public class PlayerRiposteState : PlayerActionState
         IsInvincible = false;
         _playerAnimController.ResetTrigger(AnimParamType.Riposte);
 
-        // 4. 처형 종료 시 적에게 복귀 신호 전달
-        if (_riposteTarget != null && !_riposteTarget.IsDead)
-        {
-            _riposteTarget.OnRiposteFinished();
-        }
         _riposteTarget = null;
         owner.ClearRiposteTarget();
     }

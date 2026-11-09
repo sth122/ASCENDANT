@@ -25,6 +25,11 @@ public class BossHUDView : UIBase
     [SerializeField] private float _ghostDelayDuration = 0.5f;
     [SerializeField] private float _ghostDrainSpeed = 0.4f;
 
+    [Header("HP Fill Visuals")]
+    [SerializeField] private Image _hpFillImage;
+    [SerializeField] private Color _normalHpColor = new Color(0.85f, 0.12f, 0.12f, 1f); // 기본 붉은색
+    [SerializeField] private Color _invincibleHpColor = new Color(0.85f, 0.85f, 0.85f, 1f); // 무적 은백색
+
     private float _hpGhostTimer = 0f;
     private float _previousHpRatio = 1.0f;
 
@@ -145,6 +150,14 @@ public class BossHUDView : UIBase
                     _ghostDrainSpeed * Time.unscaledDeltaTime
                 );
             }
+        }
+    }
+
+    public void SetHpInvincibleVisual(bool isInvincible)
+    {
+        if (_hpFillImage != null)
+        {
+            _hpFillImage.color = isInvincible ? _invincibleHpColor : _normalHpColor;
         }
     }
 }

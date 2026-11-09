@@ -64,7 +64,7 @@ MonoBehaviour:
     SpeedMultiplier: 1
     ClipDurationOverride: 0
     FaceTargetOnEnter: 0
-    UseRootMotion: 0
+    UseRootMotion: 1
     IsAirborne: 1
     EnablePhysicalDash: 0
     DashSpeed: 0
@@ -93,7 +93,7 @@ MonoBehaviour:
     HasCustomEvent: 0
     EventTriggerNormalized: 0.85
   _breathType: 0
-  _breathLength: 12
+  _breathLength: 15
   _breathAngle: 60
   _breathDuration: 2.4
   _tickInterval: 0.25

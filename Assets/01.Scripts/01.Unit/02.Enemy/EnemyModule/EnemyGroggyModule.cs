@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Threading;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -15,9 +15,10 @@ public class EnemyGroggyModule : UnitBaseModule, IDisposable
     private readonly float _groggyDuration;
 
     private CancellationTokenSource _groggyCts;
+
     public bool IsGroggy { get; private set; } = false;
     public bool CanBeRiposted { get; private set; } = false;
-
+    public event Action OnGroggyEnded;
     public EnemyGroggyModule(EnemyBTController owner, EnemyStatusController status, EnemyAnimController anim, EnemyMovement movement, float groggyDuration = 8.0f)
     {
         _owner = owner;
@@ -38,8 +39,6 @@ public class EnemyGroggyModule : UnitBaseModule, IDisposable
         _owner.CombatController.CloseAllHitboxes();
         _owner.ReleaseAttackToken();
 
-        _status?.SetPoiseRecoveryPause(true);
-
         AsyncUtil.CancelAndDispose(ref _groggyCts);
         _groggyCts = CancellationTokenSource.CreateLinkedTokenSource(_owner.destroyCancellationToken);
 
@@ -51,58 +50,55 @@ public class EnemyGroggyModule : UnitBaseModule, IDisposable
         float elapsed = 0f;
         try
         {
-            // 크리처는 Groggy_Loop 대신 Hit1 모션 재생
-            AnimStateType groggyState = _owner is CreatureBT ? AnimStateType.Hit1 : AnimStateType.Groggy_Loop;
-            _anim.PlayState(groggyState, force: true);
+            _anim.PlayState(AnimStateType.Groggy_Loop, force: true);
 
+            // 1. 그로기 타이머 완주 루프
             while (elapsed < _groggyDuration)
             {
                 bool canceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
                 if (canceled) return;
+
                 elapsed += Time.deltaTime;
+
+                float remainingRatio = Mathf.Clamp01(1f - (elapsed / _groggyDuration));
+                _status?.SetGroggyCountdownPoise(remainingRatio);
             }
         }
         catch (OperationCanceledException) { return; }
-
-        RecoverNaturally();
-    }
-
-    public void RecoverNaturally()
-    {
-        CanBeRiposted = false;
-        IsGroggy = false;
-        _status?.RestorePoiseToMax();
-        _status?.SetPoiseRecoveryPause(false);
-        _anim.PlayState(AnimStateType.Idle, force: true);
+        EndGroggy();
     }
 
     public void HandleRiposted()
     {
+        CanBeRiposted = false;
+
         _owner.ReleaseAttackToken();
         _movement.StopMovement();
-        CanBeRiposted = false;
         _owner.CombatController.CloseAllHitboxes();
-
-        AsyncUtil.CancelAndDispose(ref _groggyCts);
-
-        _anim.PlayState(AnimStateType.Hit2, force: true);
     }
 
-    public async UniTask ExecuteRiposteWakeUpAsync(CancellationToken token)
+    /// <summary>
+    /// CurrentPoise = 0 도달 시 최종 정리 및 복귀
+    /// </summary>
+    private void EndGroggy()
     {
+        IsGroggy = false;
         CanBeRiposted = false;
-        try
+
+        // 사망한 경우 전투로 복귀하지 않음
+        if (_owner.IsDead || (_status != null && _status.CurrentHp <= 0f)) return;
+
+        // 포이즈 0으로 초기화
+        _status?.ResetPoiseToDefault();
+
+        // 보스 컨트롤러 및 상위 시스템에 그로기 종료 통지
+        OnGroggyEnded?.Invoke();
+
+        // 상위 컨트롤러가 후속 연출을 점유하지 않은 경우에만 기본 Idle 복귀
+        if (_owner.ActionState == EnemyActionState.Groggy)
         {
-            await _owner.PlayStateAndWaitAsync(AnimStateType.Hit2, token, force: true, customDuration: 2.5f);
-        }
-        catch (OperationCanceledException) { }
-        finally
-        {
-            _status?.RestorePoiseToMax();
-            _status?.SetPoiseRecoveryPause(false);
-            IsGroggy = false;
-            CanBeRiposted = false;
             _anim.PlayState(AnimStateType.Idle, force: true);
+            _owner.SetActionState(EnemyActionState.None);
         }
     }
 

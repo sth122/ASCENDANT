@@ -40,13 +40,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7608bfc1babf9084a890a724e1161244
-    m_Address: PlayerHUD
+  - m_GUID: 723d0f05f068d964fa024d2038c4ecd4
+    m_Address: EnemyFloatingHpBar
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 852ce88b8d84ac940a1a61da8c3ce551
-    m_Address: EnemyFloatingHpBar
+  - m_GUID: 7608bfc1babf9084a890a724e1161244
+    m_Address: PlayerHUD
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

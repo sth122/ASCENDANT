@@ -249,17 +249,6 @@ public abstract class BossBTController : EnemyBTController, ISkillable
         if (IsDead || _blackboard.IsInvincible) return;
 
         _enemyStatus.TakeDamage(context.Damage, context.PoiseDamage);
-
-        if ((_enemyStatus.CurrentHp / _enemyStatus.MaxHp) <= _blackboard.Phase2HpRatio && !_blackboard.HasExecutedPhase2Entry)
-        {
-            _blackboard.IsInvincible = true;
-
-            if (_groggyModule.IsGroggy)
-            {
-                _groggyModule.ResetState();
-                AsyncUtil.CancelAndDispose(ref _actionCts);
-            }
-        }
     }
     #endregion
 

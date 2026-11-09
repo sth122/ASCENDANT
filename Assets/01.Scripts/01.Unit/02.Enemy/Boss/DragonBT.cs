@@ -2,7 +2,7 @@
 using System;
 using System.Threading;
 using UnityEngine;
-using Util = DebugLogger;
+using Util = DebugLogger<DragonBT>;
 
 /// <summary>
 /// 완성형 드래곤 보스 컨트롤러
@@ -25,6 +25,11 @@ public class DragonBT : BossBTController
         }
         _dragonCombat = _combatController as DragonCombatController;
 
+        if (_groggyModule != null)
+        {
+            _groggyModule.OnGroggyEnded += HandleGroggyEnded;
+        }
+
         base.SetupComponents();
     }
 
@@ -38,22 +43,26 @@ public class DragonBT : BossBTController
         deathSeq.Add(new ActionNode(ExecuteDeath));
         root.Add(deathSeq);
 
-        // 2. 2페이즈 전환 (최우선 순위 인터럽트)
+        // 2. 2페이즈 전환
         var phase2Seq = new SequenceNode();
         phase2Seq.Add(new PredicateNode<DragonBT>(this, static b =>
-            b._isPhase2Transitioning || (!b._blackboard.HasExecutedPhase2Entry && b._enemyStatus != null &&
-             (b._enemyStatus.CurrentHp / b._enemyStatus.MaxHp) <= b._blackboard.Phase2HpRatio)));
+        {
+            if (b._isPhase2Transitioning) return true;
+            if (b._blackboard.HasExecutedPhase2Entry || b._enemyStatus == null) return false;
+            if (b._groggyModule.IsGroggy || b._enemyStatus.IsPhase2Pending) return false;   // 그로기 중이거나 페이즈2 대기 중인 동안에는 BT가 2페이즈 브랜치를 타지 않고 그로기 브랜치 유지
+            return (b._enemyStatus.CurrentHp / b._enemyStatus.MaxHp) <= b._blackboard.Phase2HpRatio;
+        }));
         phase2Seq.Add(new AsyncActionNode(ExecutePhase2TransitionAsync, GetActionToken));
         root.Add(phase2Seq);
 
         // 3. 그로기
         var groggySeq = new SequenceNode();
         groggySeq.Add(new PredicateNode<DragonBT>(this, static b =>
-            b._enemyStatus != null && b._enemyStatus.IsPoiseBroken && !b._groggyModule.IsGroggy));
-        groggySeq.Add(new ActionNode(TriggerGroggyAction));
+            b._enemyStatus != null && (b._groggyModule.IsGroggy || b._enemyStatus.IsPoiseBroken)));
+        groggySeq.Add(new ActionNode(TickGroggyStatus));
         root.Add(groggySeq);
 
-        // 4. 스킬 발동 브랜치 (기본 공격 중에는 진입 불가)
+        // 4. 스킬 발동 브랜치
         var skillSeq = new SequenceNode();
         skillSeq.Add(new PredicateNode<DragonBT>(this, static b =>
         {
@@ -65,7 +74,7 @@ public class DragonBT : BossBTController
                 b._blackboard.IsSkillPending = true;
             }
 
-            // [상호 배타 핵심 가드] 기본 공격이 진행 중이면 스킬을 절대 시전하지 않고 평타 완주를 대기
+            // 기본 공격이 진행 중이면 스킬을 절대 시전하지 않고 평타 종료 대기
             if (b.IsActionExecuting) return false;
 
             return b._blackboard.IsSkillPending && b.HasAnyReadySkill(b._currentTarget);
@@ -142,7 +151,7 @@ public class DragonBT : BossBTController
         {
             _combatController.CloseAllHitboxes();
 
-            if (!IsDead)
+            if (!IsDead && ActionState == EnemyActionState.BasicAttacking)
             {
                 _enemyAnim.PlayState(AnimStateType.Idle, force: true);
                 _combatController.RecordAttackCooldown(chosenData.AttackAnimStateType, chosenData.AttackCooldown);
@@ -177,7 +186,7 @@ public class DragonBT : BossBTController
         _blackboard.IsInvincible = true;
         _movement.StopMovement();
 
-        Util.LogWithTag("BossDragon", "[Phase 2] 무적화 및 공중 체공 진입");
+        Util.Log("[Phase 2] 무적화 및 공중 체공 진입");
 
         try
         {
@@ -199,7 +208,7 @@ public class DragonBT : BossBTController
             _enemyAnim.SetRootMotion(false);
             _movement.EndRootMotionMovement();
 
-            _enemyStatus.RestorePoiseToMax();
+            _enemyStatus.ResetPoiseToDefault();
             _blackboard.IsPhase2 = true;
             _blackboard.HasExecutedPhase2Entry = true;
             _blackboard.IsInvincible = false;
@@ -211,4 +220,26 @@ public class DragonBT : BossBTController
         return true;
     }
     #endregion
+
+    private void HandleGroggyEnded()
+    {
+        // 그로기 도중 2페이즈 기준선에 도달하여 무적 대기 중이었던 경우
+        if (_enemyStatus != null && _enemyStatus.IsPhase2Pending)
+        {
+            _enemyStatus.ClearPhase2Pending();
+            _blackboard.IsPhase2 = true;
+
+            // 즉각 2페이즈 전환 비동기 실행
+            ExecutePhase2TransitionAsync(this.destroyCancellationToken).Forget();
+        }
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        if (_groggyModule != null)
+        {
+            _groggyModule.OnGroggyEnded -= HandleGroggyEnded;
+        }
+    }
 }

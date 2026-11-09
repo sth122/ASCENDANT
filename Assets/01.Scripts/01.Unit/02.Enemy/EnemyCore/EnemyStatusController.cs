@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 using Util = DebugLogger<EnemyStatusController>;
 
 /// <summary>
@@ -13,9 +14,35 @@ public class EnemyStatusController : UnitStatusController
 
     [Header("Enemy ExclusiveL Souls")]
     [SerializeField] private int _dropSouls;
-    public int DropSouls => _dropSouls;
+
+    [Header("Groggy Gauge Settings")]
+    [SerializeField] private float _poiseDecayDelay = 4.0f; // 미피격 시 4초 뒤부터 감쇄
+    [SerializeField] private float _poiseDecayRate = 12.0f;  // 초당 12씩 0으로 자연 감소
+    private float _poiseDecayTimer = 0f;
+
+    #region 2페이즈 플래그
+    private bool _isPhase2Pending = false;
+    private bool _hasTriggeredPhase2 = false;
+    public bool IsPhase2Pending => _isPhase2Pending;
+    public bool HasTriggeredPhase2 => _hasTriggeredPhase2;
+
+    #endregion
 
     public event System.Action<EnemyInfo> OnStatusDataChanged;
+
+    public int DropSouls => _dropSouls;
+    public override bool IsPoiseBroken => _currentPoise >= _maxPoise;   // 100%이상 누적되었을 때 그로기 판정
+
+    protected override void InitPoiseStats(UnitBaseInfo baseStat)
+    {
+        _maxPoise = baseStat.Poise > 0f ? baseStat.Poise : 100f;
+        _currentPoise = 0f;
+        _poiseDecayTimer = 0f;
+        _isPoiseRecoveryPaused = false;
+        _isPoiseDepleted = false;
+        _isPhase2Pending = false;
+        _hasTriggeredPhase2 = false;
+    }
 
     /// <summary>
     /// Enemy 전용 스탯 및 모듈 확장부
@@ -23,12 +50,15 @@ public class EnemyStatusController : UnitStatusController
     /// <param name="baseStat"></param>
     protected override void SetupDerivedStats(UnitBaseInfo baseStat)
     {
-        if (baseStat is EnemyInfo enemyStat)
+        if (!(baseStat is EnemyInfo enemyStat))
+        {
+            enemyStat = ResolveFallbackStat() as EnemyInfo;
+        }
+
+        if (enemyStat != null)
         {
             _runtimeEnemyInfo = (EnemyInfo)enemyStat.Clone();
-
             MotionStatus = new EnemyMotionStatusModule(enemyStat);
-
             SyncStatsFromRuntimeInfo(isInitialSetup: true);
         }
         else
@@ -50,32 +80,120 @@ public class EnemyStatusController : UnitStatusController
         if (isInitialSetup)
         {
             _currentHp = _maxHp;
-            _maxPoise = _runtimeEnemyInfo.Poise;
-            _currentPoise = _maxPoise;
-        }
-        else
-        {
-            // 런타임 튜닝 중 최대 체력이 변경된 경우 현재 체력 비율 유지 보정
-            if (prevMaxHp > 0f)
-            {
-                float hpRatio = _currentHp / prevMaxHp;
-                _currentHp = Mathf.Clamp(_maxHp * hpRatio, 1f, _maxHp);
-            }
-            _maxPoise = _runtimeEnemyInfo.Poise;
-            _currentPoise = Mathf.Min(_currentPoise, _maxPoise);
-
-            if (MotionStatus is EnemyMotionStatusModule enemyMotion)
-            {
-                enemyMotion.ChaseSpeed.BaseValue = _runtimeEnemyInfo.ChaseSpeed;
-                enemyMotion.PatrolSpeed.BaseValue = _runtimeEnemyInfo.PatrolSpeed;
-                enemyMotion.WalkSpeed.BaseValue = _runtimeEnemyInfo.WalkSpeed;
-            }
+            _maxPoise = _runtimeEnemyInfo.Poise > 0f ? _runtimeEnemyInfo.Poise : 100f;
+            _currentPoise = 0f;
         }
 
         _dropSouls = _runtimeEnemyInfo.DropSouls;
-
-        // 상위 컨트롤러(EnemyBTController)의 지각 센서 및 기즈모 동기화 신호 발행
         OnStatusDataChanged?.Invoke(_runtimeEnemyInfo);
+    }
+
+    /// <summary>
+    /// 미피격 시 0을 향해 자연 감쇄하는 루프 가동
+    /// </summary>
+    protected override void StartPoiseLoop()
+    {
+        if (_poiseCts != null)
+        {
+            PoiseNaturalDecayLoopAsync(_poiseCts.Token).Forget();
+        }
+    }
+
+    public override void TakeDamage(float damage, float poiseDamage = 0f)
+    {
+        if (_isDead || _isInvincible) return;
+
+        // 보스가 그로기 중일 때 페이즈 2 기준선 도달 검사
+        if (_runtimeEnemyInfo is BossInfo bossInfo && _isPoiseDepleted)
+        {
+            float thresholdHp = _maxHp * bossInfo.Phase2ThresholdRatio;
+            if (_currentHp - damage <= thresholdHp)
+            {
+                // 체력을 임계점에 고정하고 그로기가 끝날 때까지 무적화
+                _currentHp = thresholdHp;
+                InvokeChangeHPEvent(_currentHp, _maxHp);
+                SetInvincible(true);
+                _isPhase2Pending = true;
+                return;
+            }
+        }
+
+        base.TakeDamage(damage, poiseDamage);
+    }
+
+    /// <summary>
+    /// 대미지를 입으면 0 -> MaxPoise로 누적. 그로기 중에는 추가 누적 불가
+    /// </summary>
+    protected override void ApplyPoiseDamage(float poiseDamage)
+    {
+        if (!_isPoiseDepleted)
+        {
+            _poiseDecayTimer = _poiseDecayDelay;
+            _currentPoise = Mathf.Min(_maxPoise, _currentPoise + poiseDamage);
+            InvokeChangePoiseEvent(_currentPoise, _maxPoise);
+
+            if (_currentPoise >= _maxPoise)
+            {
+                PoiseBreak();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 그로기 지속시간 동안 EnemyGroggyModule에서 호출하여 Max -> 0으로 카운트다운
+    /// </summary>
+    public void SetGroggyCountdownPoise(float remainingRatio)
+    {
+        if (!_isPoiseDepleted) return;
+
+        _currentPoise = Mathf.Clamp(remainingRatio * _maxPoise, 0f, _maxPoise);
+        InvokeChangePoiseEvent(_currentPoise, _maxPoise);
+    }
+
+    public override void ResetPoiseToDefault()
+    {
+        _currentPoise = 0f;
+        _poiseDecayTimer = 0f;
+        _isPoiseDepleted = false;
+        InvokeChangePoiseEvent(_currentPoise, _maxPoise);
+    }
+    public void ClearPhase2Pending()
+    {
+        _isPhase2Pending = false;
+        _hasTriggeredPhase2 = true;
+        SetInvincible(false);
+    }
+
+    /// <summary>
+    /// 비전투 지속 시 누적된 그로기 수치가 서서히 0으로 빠지는 루프
+    /// </summary>
+    private async UniTaskVoid PoiseNaturalDecayLoopAsync(System.Threading.CancellationToken token)
+    {
+        float lastPublishedPoise = _currentPoise;
+
+        while (!token.IsCancellationRequested)
+        {
+            bool isCanceled = await UniTask.Delay(100, cancellationToken: token).SuppressCancellationThrow();
+            if (isCanceled) return;
+
+            // 그로기 상태이거나, 사망했거나, 이미 0이면 스킵
+            if (_isPoiseDepleted || _isPoiseRecoveryPaused || _isDead || _currentPoise <= 0f) continue;
+
+            if (_poiseDecayTimer > 0f)
+            {
+                _poiseDecayTimer -= 0.1f;
+            }
+            else
+            {
+                _currentPoise = Mathf.Max(0f, _currentPoise - _poiseDecayRate * 0.1f);
+
+                if (Mathf.Abs(_currentPoise - lastPublishedPoise) >= 1.0f || _currentPoise <= 0f)
+                {
+                    lastPublishedPoise = _currentPoise;
+                    InvokeChangePoiseEvent(_currentPoise, _maxPoise);
+                }
+            }
+        }
     }
 
 #if UNITY_EDITOR

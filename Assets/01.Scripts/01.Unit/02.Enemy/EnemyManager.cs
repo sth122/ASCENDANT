@@ -183,7 +183,7 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
 
             // 5. 스탯 및 컨트롤러 초기화
             enemy.StatusController.HealHp(enemy.StatusController.MaxHp);
-            enemy.StatusController.RestorePoiseToMax();
+            enemy.StatusController.ResetPoiseToDefault();
             enemy.ClearTarget();
             enemy.SetControllerActive(true);
             enemy.Init();

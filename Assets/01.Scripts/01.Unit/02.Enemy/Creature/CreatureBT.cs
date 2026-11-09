@@ -35,7 +35,7 @@ public class CreatureBT : EnemyBTController
         var groggySeq = new SequenceNode();
         groggySeq.Add(new PredicateNode<CreatureBT>(this, static c =>
             c._enemyStatus != null && c._enemyStatus.IsPoiseBroken && !c._groggyModule.IsGroggy));
-        groggySeq.Add(new ActionNode(TriggerGroggyAction));
+        groggySeq.Add(new ActionNode(TickGroggyStatus));
         root.Add(groggySeq);
 
         // 3. 발소리 감지 수색 (Alert) 브랜치

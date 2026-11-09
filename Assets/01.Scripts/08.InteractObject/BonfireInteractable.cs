@@ -19,7 +19,7 @@ public class BonfireInteractable : BaseInteractable
 
         // 1. 플레이어 상태 완전 회복
         player.StatusController.HealHp(player.StatusController.MaxHp);
-        player.StatusController.RestorePoiseToMax();
+        player.StatusController.ResetPoiseToDefault();
         if (player.StatusController is PlayerStatusController playerStat)
         {
             playerStat.RestoreStamina(playerStat.MaxStamina);

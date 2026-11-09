@@ -11,6 +11,8 @@ public class SceneTransitionInteractable : BaseInteractable
     private bool _isTransitioning = false;
     private string _confirmPromptMessage = "보스 방에 진입하겠습니까?";
 
+    private void Awake() => _interactType = InteractType.BossDoor;
+
     public override void OnInteract(PlayerController player)
     {
         if (_isTransitioning || player == null) return;

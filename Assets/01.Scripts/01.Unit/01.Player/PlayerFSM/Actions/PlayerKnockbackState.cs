@@ -44,7 +44,7 @@ public class PlayerKnockbackState : PlayerActionState
         _playerAnimController.ResetTrigger(AnimParamType.WakeUp);
 
         // 다운 종료 후 강인도(Poise)를 최대치로 즉시 복원하여 기상 직후 연속 경직 방지
-        _playerStatusController?.RestorePoiseToMax();
+        _playerStatusController?.ResetPoiseToDefault();
 
         // 최종 버퍼 비우기
         owner.InputReader.ClearAllCommands();

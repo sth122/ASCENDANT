@@ -45,7 +45,12 @@ public class PlayerStatusController : UnitStatusController
     /// </summary>
     protected override void SetupDerivedStats(UnitBaseInfo baseStat)
     {
-        if (baseStat is PlayerInfo playerStat)
+        if (!(baseStat is PlayerInfo playerStat))
+        {
+            playerStat = ResolveFallbackStat() as PlayerInfo;
+        }
+
+        if (playerStat != null)
         {
             PlayerInfoSource = (PlayerInfo)playerStat.Clone();
 
@@ -61,8 +66,7 @@ public class PlayerStatusController : UnitStatusController
             // 스태미나 회복 비동기 루프 가동
             StartStaminaRegenLoop();
 
-            OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-            EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+            InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
         }
         else
         {
@@ -91,10 +95,7 @@ public class PlayerStatusController : UnitStatusController
         PlayerMotionStats.SyncBaseValues(updatedStat);
 
         InvokeChangeHPEvent(_currentHp, _maxHp);
-        OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-
-        EventBusSystem.Publish(new UnitHpChangedEvent(gameObject, _currentHp, _maxHp));
-        EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+        InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
 
     public bool HasEnoughStamina(float cost) => _currentStamina >= cost;
@@ -104,8 +105,7 @@ public class PlayerStatusController : UnitStatusController
         _currentStamina = UnityEngine.Mathf.Max(0f, _currentStamina - cost);
         _staminaRecoveryTimer = StaminaRegenDelay;
 
-        OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-        EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+        InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
 
     public void RestoreStamina(float amount)
@@ -113,8 +113,7 @@ public class PlayerStatusController : UnitStatusController
         if (_isDead || amount <= 0f) return;
 
         _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + amount);
-        OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-        EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+        InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
 
     /// <summary>
@@ -165,8 +164,7 @@ public class PlayerStatusController : UnitStatusController
                 if (UnityEngine.Mathf.Abs(_currentStamina - lastPublishedStamina) >= 1.0f || _currentStamina >= _maxStamina)
                 {
                     lastPublishedStamina = _currentStamina;
-                    OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-                    EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+                    InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
                 }
             }
         }
@@ -188,8 +186,8 @@ public class PlayerStatusController : UnitStatusController
             _currentPoise = UnityEngine.Mathf.Min(_currentPoise, _maxPoise);
         }
 
-        EventBusSystem.Publish(new UnitPoiseChangedEvent(gameObject, _currentPoise, _maxPoise));
-        DebugLogger.LogWithTag("PlayerStatus", $"[방어구 갱신] 추가 DEF: {_equippedArmorFlatDefense}, 경감률: {_equippedArmorAbsorption * 100f:F1}%, 강인도 보너스: {_equippedArmorPoiseBonus}");
+        InvokeChangePoiseEvent(_currentPoise, _maxPoise);
+        Util.Log($"[방어구 갱신] 추가 DEF: {_equippedArmorFlatDefense}, 경감률: {_equippedArmorAbsorption * 100f:F1}%, 강인도 보너스: {_equippedArmorPoiseBonus}");
     }
 
     /// <summary>
@@ -199,6 +197,12 @@ public class PlayerStatusController : UnitStatusController
     {
         _equippedShieldStability = stability;
         _equippedShieldAbsorption = UnityEngine.Mathf.Clamp01(physicalAbsorption);
-        DebugLogger.LogWithTag("PlayerStatus", $"[방패 갱신] 안정성: {_equippedShieldStability}, 커트율: {_equippedShieldAbsorption * 100f:F1}%");
+        Util.Log($"[방패 갱신] 안정성: {_equippedShieldStability}, 커트율: {_equippedShieldAbsorption * 100f:F1}%");
+    }
+
+    private void InvokeChangeStatminaEvent(float current, float max)
+    {
+        OnStaminaChangedEvent?.Invoke(current, max);
+        EventBusSystem.Publish(new PlayerStaminaChangedEvent(current, max));
     }
 }
