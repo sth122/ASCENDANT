@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 중복되던 PlayerStatSO, BossStatSO, UnitStatSO를 단일 제네릭 구조로 추상화한 데이터 베이스 SO
 /// </summary>
-public abstract class KeyedDataSO<TKey, TValue> : ScriptableObject
+public abstract class KeyedDataSO<TKey, TValue> : ScriptableObject, IInitable
 {
     [System.Serializable]
     public struct Entry
@@ -14,10 +14,10 @@ public abstract class KeyedDataSO<TKey, TValue> : ScriptableObject
     }
 
     [SerializeField] private List<Entry> _entries = new List<Entry>();
-    private readonly Dictionary<TKey, TValue> _dictionary = new Dictionary<TKey, TValue>();
+    protected readonly Dictionary<TKey, TValue> _dictionary = new Dictionary<TKey, TValue>();
     private bool _isInitialized = false;
 
-    public virtual void InitializeDictionary()
+    public virtual void Init()
     {
         _dictionary.Clear();
         for (int i = 0; i < _entries.Count; i++)
@@ -39,7 +39,7 @@ public abstract class KeyedDataSO<TKey, TValue> : ScriptableObject
     {
         if (!_isInitialized)
         {
-            InitializeDictionary();
+            Init();
         }
         return _dictionary.TryGetValue(key, out result);
     }

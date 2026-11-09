@@ -5,14 +5,15 @@
 /// 공통적인 스탯만 가지고 있고, 플레이어 및 특수 유닛에 종속적이 스탯은 하위 클래스에서 구현
 /// </summary>
 [System.Serializable]
-public abstract class UnitBaseStatus
+public abstract class UnitBaseInfo
 {
     [field: Header("Unit Base Common Statsus")]
     [field: SerializeField] public float MaxHp { get; protected set; }
     [field: SerializeField] public float Poise { get; protected set; }
     [field: SerializeField] public float WalkSpeed { get; protected set; }
+    [field: SerializeField] public float FlatDefense { get; protected set; } = 10.0f;
 
-    public abstract UnitBaseStatus Clone();
+    public abstract UnitBaseInfo Clone();
 }
 
 #region PlayerStat
@@ -22,7 +23,7 @@ public abstract class UnitBaseStatus
 /// 성장 스탯( 생명력, 지구력, 근력, 기량 )과 Soul 데이터를 관리
 /// </summary>
 [System.Serializable]
-public class PlayerStatus : UnitBaseStatus
+public class PlayerInfo : UnitBaseInfo
 {
     [field: Header("Player Movement Physics")]
     [field: SerializeField] public float SprintSpeed { get; private set; }
@@ -49,10 +50,46 @@ public class PlayerStatus : UnitBaseStatus
     [field: Tooltip("기량 (Dexterity): 무기 장착치 및 공격 속도")]
     [field: SerializeField] public int Dexterity { get; private set; }
 
-    // 스탯 수치 기반 유도 계산식
-    public float CalculateMaxHp() => MaxHp + (Vigor * 25f);
-    public float CalculateMaxStamina() => MaxStamina + (Endurance * 2f);
-    public float CalculateMaxEquipWeight() => 40f + (Endurance * 1.5f);
+
+    [field: Tooltip("생명력 1레벨 기준 베이스 체력")]
+    [field: SerializeField] public float BaseHealthStandard { get; private set; } = 400f;
+
+    [field: Tooltip("지구력 1레벨 기준 베이스 스태미나")]
+    [field: SerializeField] public float BaseStaminaStandard { get; private set; } = 80f;
+
+    [field: Tooltip("기본 장비 한계 중량 기준치")]
+    [field: SerializeField] public float BaseEquipLoadStandard { get; private set; } = 40.0f;
+
+    [field: Tooltip("지구력 1pt당 장비 중량 증가 계수")]
+    [field: SerializeField] public float EquipLoadPerEndurance { get; private set; } = 1.2f;
+
+
+    public float CalculateMaxHp()
+    {
+        if (Vigor <= 20) return BaseHealthStandard + (Vigor - 1) * 30f;
+        if (Vigor <= 40) return (BaseHealthStandard + 570f) + (Vigor - 20) * 20f;
+        if (Vigor <= 60) return (BaseHealthStandard + 970f) + (Vigor - 40) * 10f;
+        return (BaseHealthStandard + 1170f) + (Vigor - 60) * 2f;
+    }
+
+    public float CalculateMaxStamina()
+    {
+        if (Endurance <= 40) return BaseStaminaStandard + (Endurance - 1) * 2.05f;
+        return 160f + (Endurance - 40) * 0.2f;
+    }
+
+    public float CalculateMaxEquipWeight()
+    {
+        return BaseEquipLoadStandard + (Endurance * EquipLoadPerEndurance);
+    }
+
+    /// <summary>
+    /// 기량(Dexterity)에 따른 공격 속도 배율 산출 (명세서 2.4절: 10~60 구간 최대 +20%)
+    /// </summary>
+    public float CalculateAttackSpeedMultiplier()
+    {
+        return 1.0f + Mathf.Clamp((Dexterity - 10) / 50.0f * 0.20f, 0.0f, 0.20f);
+    }
 
     /// <summary>
     /// 적 처치 또는 소울 아이템 사용 시 소울 획득
@@ -75,27 +112,32 @@ public class PlayerStatus : UnitBaseStatus
     /// <summary>
     /// 원본 SO 훼손을 막기 위한 복제 메서드
     /// </summary>
-    public override UnitBaseStatus Clone()
+    public override UnitBaseInfo Clone()
     {
-        return new PlayerStatus
+        return new PlayerInfo
         {
-            // 부모 필드 복사
-            MaxHp = this.MaxHp,
+            // 부모 필드 복제
+            MaxHp = this.CalculateMaxHp(),
             Poise = this.Poise,
             WalkSpeed = this.WalkSpeed,
+            FlatDefense = this.FlatDefense,
 
-            // 플레이어 고유 필드 복사
+            // 플레이어 스탯 복제
             SprintSpeed = this.SprintSpeed,
             RotationSpeed = this.RotationSpeed,
             JumpForce = this.JumpForce,
             RollForce = this.RollForce,
-            MaxStamina = this.MaxStamina,
+            MaxStamina = this.CalculateMaxStamina(),
             SoulLevel = this.SoulLevel,
             CurrentSouls = this.CurrentSouls,
             Vigor = this.Vigor,
             Endurance = this.Endurance,
             Strength = this.Strength,
-            Dexterity = this.Dexterity
+            Dexterity = this.Dexterity,
+            BaseHealthStandard = this.BaseHealthStandard,
+            BaseStaminaStandard = this.BaseStaminaStandard,
+            BaseEquipLoadStandard = this.BaseEquipLoadStandard,
+            EquipLoadPerEndurance = this.EquipLoadPerEndurance
         };
     }
 
@@ -125,11 +167,63 @@ public class PlayerStatus : UnitBaseStatus
 /// UnitBaseStat을 상속받아 추후 구현하게 될 보스 전용 스탯 클래스
 /// </summary>
 [System.Serializable]
-public class BossGimmickStatus : UnitBaseStatus
+public class BossInfo : EnemyInfo
 {
-    public override UnitBaseStatus Clone()
+    [field: Header("Boss Phase & Gimmick Balance")]
+    [field: Tooltip("2페이즈 전환 체력 비율")]
+    [field: SerializeField] public float Phase2ThresholdRatio { get; private set; } = 0.30f;
+
+    [field: Tooltip("2페이즈 전환 시 체력 즉시 회복 비율")]
+    [field: SerializeField] public float Phase2HealRatio { get; private set; } = 0.10f;
+
+    [field: Tooltip("2페이즈 공격력 및 애니메이션 속도 배율")]
+    [field: SerializeField] public float Phase2StatBuffMultiplier { get; private set; } = 1.30f;
+
+    [field: Tooltip("스킬 사이클 기본 발동 간격")]
+    [field: SerializeField] public float SkillCycleInterval { get; private set; } = 15.0f;
+
+    [field: Tooltip("2페이즈 스킬 즉시 쿨타임 초기화 확률")]
+    [field: SerializeField] public float SkillCooldownResetChance { get; private set; } = 0.30f;
+
+    public BossInfo()
     {
-        return new BossGimmickStatus { };
+        Tier = EnemyTier.Boss;
+    }
+
+    /// <summary>
+    /// 부모 필드(MaxHp, Poise 등) 유실을 원천 방지하는 완전한 깊은 복제(Deep Copy)
+    /// </summary>
+    public override UnitBaseInfo Clone()
+    {
+        return new BossInfo
+        {
+            // UnitBaseInfo 공통
+            MaxHp = this.MaxHp,
+            Poise = this.Poise,
+            WalkSpeed = this.WalkSpeed,
+            FlatDefense = this.FlatDefense, // 고정 방어력 복제 보장
+
+            // EnemyInfo 계승
+            Tier = EnemyTier.Boss,
+            DropSouls = this.DropSouls,
+            AttackPower = this.AttackPower,
+            BasePoiseDamage = this.BasePoiseDamage,
+            AttackRange = this.AttackRange,
+            AttackCooldown = this.AttackCooldown,
+            ChaseSpeed = this.ChaseSpeed,
+            PatrolSpeed = this.PatrolSpeed,
+            MaxLeashDistance = this.MaxLeashDistance,
+            SightRadius = this.SightRadius,
+            SightAngle = this.SightAngle,
+            HearingRadius = this.HearingRadius,
+
+            // BossInfo 고유 기믹
+            Phase2ThresholdRatio = this.Phase2ThresholdRatio,
+            Phase2HealRatio = this.Phase2HealRatio,
+            Phase2StatBuffMultiplier = this.Phase2StatBuffMultiplier,
+            SkillCycleInterval = this.SkillCycleInterval,
+            SkillCooldownResetChance = this.SkillCooldownResetChance
+        };
     }
 }
 #endregion
@@ -140,7 +234,7 @@ public class BossGimmickStatus : UnitBaseStatus
 /// 일반 Enemy 전용 확장 기본 스탯 데이터 클래스
 /// </summary>
 [System.Serializable]
-public class EnemyStatus : UnitBaseStatus
+public class EnemyInfo : UnitBaseInfo
 {
     #region 등급 및 처치 보상
     [field: Header("Classification & Reward")]
@@ -176,31 +270,26 @@ public class EnemyStatus : UnitBaseStatus
     /// 원본 ScriptableObject 데이터 보호를 위한 깊은 복사(Deep Copy) 메서드
     /// 런타임 상태에서 버프/디버프 등에 의해 스탯이 변조되어도 원본 에셋이 유지되도록 처리
     /// </summary>
-    public override UnitBaseStatus Clone()
+    public override UnitBaseInfo Clone()
     {
-        return new EnemyStatus
+        return new EnemyInfo
         {
-            // 1. UnitBaseStat 공통 수치 복제
+            // 부모 공통 수치 복제
             MaxHp = this.MaxHp,
             Poise = this.Poise,
             WalkSpeed = this.WalkSpeed,
+            FlatDefense = this.FlatDefense,
 
-            // 2. Enemy 등급 및 처치 보상 수치 복제
+            // 에너미 전투 및 기동 수치 복제
             Tier = this.Tier,
             DropSouls = this.DropSouls,
-
-            // 3. Enemy 전투 수치 복제
             AttackPower = this.AttackPower,
             BasePoiseDamage = this.BasePoiseDamage,
             AttackRange = this.AttackRange,
             AttackCooldown = this.AttackCooldown,
-
-            // 4. Enemy 기동 및 리쉬 수치 복제
             ChaseSpeed = this.ChaseSpeed,
             PatrolSpeed = this.PatrolSpeed,
             MaxLeashDistance = this.MaxLeashDistance,
-
-            // 5. Enemy 지각 센서 수치 복제
             SightRadius = this.SightRadius,
             SightAngle = this.SightAngle,
             HearingRadius = this.HearingRadius

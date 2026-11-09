@@ -15,13 +15,18 @@ MonoBehaviour:
   m_GroupName: 02.Character
   m_GUID: 395d8daabab9cde49945fd0f3845a1ca
   m_SerializeEntries:
-  - m_GUID: 4057fdef72ac99841a28f962675c977a
-    m_Address: NightmareCreaturePrefab
+  - m_GUID: 833912afc7b0df84499fe4091cd5ffe3
+    m_Address: PlayerPrefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 833912afc7b0df84499fe4091cd5ffe3
-    m_Address: PlayerPrefab
+  - m_GUID: 988e68d3092fee8469195b86bbc371da
+    m_Address: BossDragon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9af30c9ce5bea6d4da9bd60b3045e469
+    m_Address: NightmareCreature
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -29,5 +34,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 7026aa4d763780a49862f1c5ad971903, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: d24428c9a44726c44a5f1b14461f4cee, type: 2}
     - {fileID: 11400000, guid: ead4cd99d070b8b48ae13d88a1a8f6e5, type: 2}
+    - {fileID: 11400000, guid: d24428c9a44726c44a5f1b14461f4cee, type: 2}

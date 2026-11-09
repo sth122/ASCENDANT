@@ -33,6 +33,7 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
 
         _uiInputReader = new UIInputReader();
         _uiInputReader.OnCancelEvent += HandleCancelInput;
+        _uiInputReader.OnInventoryToggleEvent += HandleInventoryToggle;
     }
 
     #region Root Canvas & Layer Containers 자동 구축
@@ -57,7 +58,7 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
 
     /// <summary>
     /// UILayer Enum 순서에 따라 캔버스 하위에 정렬용 컨테이너 생성
-    /// 하이어라키 순서(Background -> World -> HUD -> Window -> Popup -> System)가 곧 렌더링 우선순위가 됩니다.
+    /// 하이어라키 순서(Background -> World -> HUD -> Window -> Popup -> System)가 곧 렌더링 우선순위
     /// </summary>
     private void CreateLayerContainers()
     {
@@ -76,10 +77,16 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
             RectTransform rect = containerGo.GetComponent<RectTransform>();
             SetFullStretch(rect);
 
+            Canvas layerCanvas = containerGo.GetComponent<Canvas>();
+            if (layerCanvas == null) layerCanvas = containerGo.AddComponent<Canvas>();
+            layerCanvas.overrideSorting = true;
+            layerCanvas.sortingOrder = (int)layer; // UILayer의 우선순위 정수 반영
+
+            GraphicRaycaster raycaster = containerGo.GetComponent<GraphicRaycaster>();
+            if (raycaster == null) containerGo.AddComponent<GraphicRaycaster>();
+
             _layerContainers[layer] = rect;
         }
-
-        Util.Log($"총 {_layerContainers.Count}개 UILayer 컨테이너 구축 완료");
     }
 
     private void SetFullStretch(RectTransform rect)
@@ -103,30 +110,34 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
     /// <summary>
     /// UIId 숫자 대역을 분석하여 해당 레이어 컨테이너에 자동 배치하고 Presenter를 바인딩
     /// </summary>
-    public async UniTask<TView> OpenUIAsync<TView, TPresenter, TModel>(UIId id, string addressableKey, TModel model = default, System.Threading.CancellationToken ct = default)
+    public async UniTask<TView> OpenUIAsync<TView, TPresenter, TModel>(UIId id, TModel model = default, System.Threading.CancellationToken ct = default)
         where TView : UIBase
         where TPresenter : IUIPresenter, new()
         where TModel : IUIModel
     {
-        TView view;
+        TView view = null;
         UILayer targetLayer = id.GetExpectedLayer();
 
         // 1. 이미 생성되어 캐싱된 뷰가 존재하는지 검사
-        if (_activeViews.TryGetValue(id, out UIBase existingBase) && existingBase is TView existingView)
+        if (_activeViews.TryGetValue(id, out UIBase existingBase))
         {
-            view = existingView;
+            if (existingBase == null)
+            {
+                _activeViews.Remove(id);
+                existingBase = null;
+            }
+            else if (existingBase is TView existingView)
+            {
+                view = existingView;
+            }
         }
 
-        else
+        if(view == null)
         {
             // 2. 신규 생성 파이프라인
             RectTransform targetContainer = GetLayerContainer(targetLayer);
-            GameObject viewGo = await AssetsManager.Instance.InstantiateAsync(addressableKey, parent: targetContainer, ct: ct);
-            if (viewGo == null)
-            {
-                Util.LogError($"UI 에셋 로드 및 인스턴스화 실패: {addressableKey} (ID: {id})");
-                return null;
-            }
+            bool isGlobalLayer = (targetLayer == UILayer.System);
+            GameObject viewGo = await AssetsManager.Instance.InstantiateAsync(id.GetAddressableKey(), parent: targetContainer, ct: ct);
 
             view = viewGo.GetComponent<TView>();
             if (view == null)
@@ -138,10 +149,18 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
 
             RectTransform viewRect = view.GetComponent<RectTransform>();
             viewRect.SetParent(targetContainer, false);
-            SetFullStretch(viewRect);
+            if (targetLayer != UILayer.HUD && targetLayer != UILayer.Popup)
+            {
+                SetFullStretch(viewRect);
+            }
 
             view.SetIdentity(id, targetLayer);
             view.InitializeView();
+
+            if (view.IsGlobalUI || isGlobalLayer)
+            {
+                AssetsManager.Instance.MarkInstanceAsGlobal(viewGo);
+            }
 
             TPresenter presenter = new TPresenter();
             presenter.Bind(view, model);
@@ -150,7 +169,7 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
             _activePresenters[view] = presenter;
         }
 
-        // 3. [핵심 해결] 캐시 재사용 여부와 무관하게 Window/Popup 스택 및 입력/일시정지 정책 공통 적용
+        // 3. Window/Popup 스택 및 입력/일시정지 공통 적용
         if (targetLayer == UILayer.Window && view is UIWindowView windowView)
         {
             if (!_windowStack.Contains(windowView))
@@ -158,11 +177,18 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
                 _windowStack.Push(windowView);
             }
 
-            _uiInputReader.EnableUIInput();
-
-            if (windowView.PauseTimeWhenOpened && GameManager.Instance != null)
+            if (windowView.PausePolicy == WindowPausePolicy.PauseTime)
             {
-                GameManager.Instance.PauseGame();
+                // 시스템 메뉴: 시간 정지 + 조작 차단
+                if (GameManager.Instance != null) GameManager.Instance.PauseGame();
+                SetInputFocusToUI(true);
+            }
+            else
+            {
+                // 실시간 인게임 창: 시간 정지 없음 (TimeScale = 1.0f 유지), 마우스 커서만 활성화
+                _uiInputReader.EnableUIInput();
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
             }
         }
         else if (targetLayer == UILayer.Popup)
@@ -171,14 +197,45 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
             {
                 _popupStack.Push(view);
             }
-            _uiInputReader.EnableUIInput();
+            SetInputFocusToUI(true);
         }
 
         // 4. 시각적 페이드 연출 실행
         await view.ShowAsync(0.2f, ct);
 
-        Util.Log($"[UI 오픈 완료] ID: {id} (Layer: {targetLayer}, Prefab: {addressableKey})");
+        Util.Log($"[UI 오픈 완료] ID: {id} (Layer: {targetLayer}, Prefab: {id.GetAddressableKey()})");
         return view;
+    }
+
+    /// <summary>
+    /// UI 창 개폐 시 플레이어 캐릭터와 UI 간의 조작권을 상호 스위칭
+    /// </summary>
+    public void SetInputFocusToUI(bool isUIFocused)
+    {
+        if (isUIFocused)
+        {
+            _uiInputReader.EnableUIInput();
+
+            // 인게임 플레이어 조작권 및 이동 즉시 정지
+            if (ServiceLocator.TryGet<IPlayerProvider>(out var provider) && provider.IsPlayerSpawned && provider.Player != null)
+            {
+                provider.Player.InputReader?.DisablePlayerInput();
+                provider.Player.StopMovementAPI();
+            }
+        }
+        else
+        {
+            // 열려 있는 창이나 팝업이 더 이상 없을 때만 플레이어 입력 복원
+            if (_windowStack.Count == 0 && _popupStack.Count == 0)
+            {
+                _uiInputReader.EnablePlayerInput();
+
+                if (ServiceLocator.TryGet<IPlayerProvider>(out var provider) && provider.IsPlayerSpawned && provider.Player != null)
+                {
+                    provider.Player.InputReader?.EnablePlayerInput();
+                }
+            }
+        }
     }
 
     public RectTransform GetLayerContainer(UILayer layer)
@@ -199,33 +256,57 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
             _windowStack.Pop();
         }
 
-        // 모든 윈도우와 팝업이 닫혔다면 인게임 플레이 조작권으로 복구
-        if (_windowStack.Count == 0 && _popupStack.Count == 0)
+        if (window.PausePolicy == WindowPausePolicy.PauseTime && GameManager.Instance != null && GameManager.Instance.IsPaused)
         {
-            _uiInputReader.EnablePlayerInput();
-
-            if (window.PauseTimeWhenOpened && GameManager.Instance != null && GameManager.Instance.IsPaused)
-            {
-                GameManager.Instance.ResumeGame();
-            }
+            GameManager.Instance.ResumeGame();
         }
+
+        SetInputFocusToUI(false);
     }
 
     public void CloseUI(UIId id)
     {
         if (_activeViews.TryGetValue(id, out UIBase view))
         {
-            if (_activePresenters.TryGetValue(view, out IUIPresenter presenter))
+            if (view != null)
             {
-                presenter.Unbind();
-                _activePresenters.Remove(view);
-            }
+                if (_activePresenters.TryGetValue(view, out IUIPresenter presenter))
+                {
+                    presenter.Unbind();
+                    _activePresenters.Remove(view);
+                }
 
-            _activeViews.Remove(id);
-            Destroy(view.gameObject);
+                _activeViews.Remove(id);
+
+                // Destroy 직접 호출 대신 AssetsManager를 통해 Addressables 인스턴스 핸들 해제 및 소멸
+                if (AssetsManager.Instance != null)
+                {
+                    AssetsManager.Instance.ReleaseInstance(view.gameObject);
+                }
+                else
+                {
+                    Destroy(view.gameObject);
+                }
+            }
+            else
+            {
+                _activeViews.Remove(id);
+            }
         }
     }
     #endregion
+
+    public void NotifyPopupClosed(UIBase popup)
+    {
+        if (popup == null) return;
+
+        if (_popupStack.Count > 0 && _popupStack.Peek() == popup)
+        {
+            _popupStack.Pop();
+        }
+
+        SetInputFocusToUI(false);
+    }
 
     #region ESC 입력 및 윈도우 스택 관리
     public bool HasActiveModalOrWindow() => _popupStack.Count > 0 || _windowStack.Count > 0;
@@ -235,8 +316,17 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         // 1. 팝업이 떠 있는 경우 최상단 팝업 취소
         if (_popupStack.Count > 0)
         {
-            UIBase topPopup = _popupStack.Pop();
-            topPopup.HideAsync(0.15f).Forget();
+            UIBase topPopup = _popupStack.Peek();
+            if (topPopup is ConfirmPopupView confirmPopup)
+            {
+                confirmPopup.CancelPopup();
+            }
+            else
+            {
+                _popupStack.Pop();
+                topPopup.HideAsync(0.15f).Forget();
+                SetInputFocusToUI(false);
+            }
             return;
         }
 
@@ -245,7 +335,17 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         {
             UIWindowView topWindow = _windowStack.Peek();
             topWindow.CloseWindowAsync().Forget();
-            return;
+        }
+    }
+
+    private void HandleInventoryToggle()
+    {
+        if (_activeViews.TryGetValue(UIId.InventoryUI, out UIBase invView) && invView.gameObject.activeSelf)
+        {
+            if (invView is UIWindowView win)
+            {
+                win.CloseWindowAsync().Forget();
+            }
         }
     }
 
@@ -255,7 +355,8 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
 
         foreach (KeyValuePair<UIId, UIBase> pair in _activeViews)
         {
-            if (!pair.Value.IsGlobalUI)
+            // 뷰가 이미 소멸되었거나 씬 종속적인 뷰인 경우 정리
+            if (pair.Value == null || !pair.Value.IsGlobalUI)
             {
                 toRemove.Add(pair.Key);
             }
@@ -276,6 +377,7 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         if (_uiInputReader != null)
         {
             _uiInputReader.OnCancelEvent -= HandleCancelInput;
+            _uiInputReader.OnInventoryToggleEvent -= HandleInventoryToggle;
             _uiInputReader.Dispose();
         }
         base.OnDestroy();

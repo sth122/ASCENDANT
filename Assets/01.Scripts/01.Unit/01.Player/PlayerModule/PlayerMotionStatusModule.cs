@@ -1,4 +1,5 @@
-﻿using Util = DebugLogger<PlayerMotionStatusModule>;
+﻿using UnityEngine.UIElements;
+using Util = DebugLogger<PlayerMotionStatusModule>;
 
 /// <summary>
 /// Player 전용 기동력 및 장비 중량(Equip Load) 페널티를 전담 관리하는 순수 C# 모듈
@@ -18,7 +19,9 @@ public class PlayerMotionStatusModule : UnitMotionStatusModule
     public float WeightRatio => MaxEquipWeight > 0f ? CurrentEquipWeight / MaxEquipWeight : 0f;
     #endregion
 
-    public PlayerMotionStatusModule(PlayerStatus playerStat) : base(playerStat)
+    public RollTier CurrentRollTier { get; private set; } = RollTier.Mid;
+
+    public PlayerMotionStatusModule(PlayerInfo playerStat) : base(playerStat)
     {
         if (playerStat == null)
         {
@@ -45,11 +48,31 @@ public class PlayerMotionStatusModule : UnitMotionStatusModule
         WalkSpeed.ClearModifiers();
         SprintSpeed.ClearModifiers();
 
-        if (WeightRatio >= 0.7f)
+        float ratio = WeightRatio * 100f;
+
+        if (ratio <= 30.0f)
         {
-            RollForce.AddModifier(new StatusModifier(-0.3f, StatModType.PercentMult));     // 구르기 거리 30% 감소
-            WalkSpeed.AddModifier(new StatusModifier(-0.2f, StatModType.PercentMult));     // 걷기 속도 20% 감소
-            SprintSpeed.AddModifier(new StatusModifier(-0.25f, StatModType.PercentMult));  // 달리기 속도 25% 감소
+            CurrentRollTier = RollTier.Fast;
+            // 스태미나 기본 100% 회복 (45/s)
+        }
+        else if (ratio <= 70.0f)
+        {
+            CurrentRollTier = RollTier.Mid;
+            // 스태미나 기본 100% 회복 (45/s)
+        }
+        else if (ratio <= 100.0f)
+        {
+            CurrentRollTier = RollTier.Fat;
+            RollForce.AddModifier(new StatusModifier(-0.35f, StatModType.PercentMult));
+            WalkSpeed.AddModifier(new StatusModifier(-0.15f, StatModType.PercentMult));
+            SprintSpeed.AddModifier(new StatusModifier(-0.20f, StatModType.PercentMult));
+        }
+        else
+        {
+            CurrentRollTier = RollTier.Overburdened;
+            // 과중량: 이동속도 절반, 구르기 불가
+            WalkSpeed.AddModifier(new StatusModifier(-0.50f, StatModType.PercentMult));
+            SprintSpeed.AddModifier(new StatusModifier(-0.50f, StatModType.PercentMult));
         }
 
         InvokeMotionStatChanged();
@@ -58,7 +81,7 @@ public class PlayerMotionStatusModule : UnitMotionStatusModule
     /// <summary>
     /// 인스펙터 튜닝 시 ModifiableStat의 기본값을 실시간 동기화
     /// </summary>
-    public void SyncBaseValues(PlayerStatus playerStat)
+    public void SyncBaseValues(PlayerInfo playerStat)
     {
         if (playerStat == null) return;
 

@@ -12,7 +12,8 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     public UnityEngine.Vector2 MoveInput { get; private set; }
     public bool IsSprinting { get; private set; }
     public bool IsGuarding { get; private set; }
-    public bool HasInteractInput { get; private set; }
+
+    public bool HasPendingCommand => _bufferQueue != null && _bufferQueue.HasValidCommand;
     #endregion
 
     #region Input Action Events
@@ -25,6 +26,8 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     public event System.Action OnGuardReleased;
     public event System.Action OnInteractEvent;
     public event System.Action OnLockOnEvent;
+    public event System.Action<int> OnQuickSlotDirectEvent;
+    public event System.Action OnInventoryToggleEvent;
     #endregion
 
     public PlayerInputReader(float bufferDuration = 0.25f)
@@ -61,11 +64,6 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     public bool TryConsumePriorityCommand(out InputCommandType consunmedCommand)
     {
         return _bufferQueue.TryConsumePriorityCommand(out consunmedCommand);
-    }
-
-    public bool TryConsumeAnyCommand(out InputCommandType consumedCommand)
-    {
-        return _bufferQueue.TryConsumeAnyCommand(out consumedCommand);
     }
 
     public void ClearCommand(InputCommandType commandType)
@@ -151,8 +149,8 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
         if(context.performed)
         {
             IsGuarding = true;
-            _bufferQueue.EnqueueCommand(InputCommandType.Parry);
-            OnCommandInputEvent?.Invoke(InputCommandType.Parry);
+            _bufferQueue.EnqueueCommand(InputCommandType.Guard);
+            OnCommandInputEvent?.Invoke(InputCommandType.Guard);
         }
         else if (context.canceled)
         {
@@ -167,7 +165,6 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     {
         if (context.performed)
         {
-            HasInteractInput = true;
             OnInteractEvent?.Invoke();
         }
     }
@@ -181,6 +178,48 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
         if (context.performed)
         {
             OnLockOnEvent?.Invoke();
+        }
+    }
+
+    public void OnQuickSlot1(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            OnQuickSlotDirectEvent?.Invoke(0);
+        }
+    }
+
+    public void OnQuickSlot2(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            OnQuickSlotDirectEvent?.Invoke(1);
+        }
+    }
+    public void OnQuickSlot3(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            OnQuickSlotDirectEvent?.Invoke(2);
+        }
+    }
+
+    public void OnQuickSlot4(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            OnQuickSlotDirectEvent?.Invoke(3);
+        }
+    }
+
+    /// <summary>
+    /// I 키 입력 시 인벤토리 창 열기/닫기 토글
+    /// </summary>
+    public void OnInventory(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            //OnInventoryToggleEvent?.Invoke();
         }
     }
     #endregion

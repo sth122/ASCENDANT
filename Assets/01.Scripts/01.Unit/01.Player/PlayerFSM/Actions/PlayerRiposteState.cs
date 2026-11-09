@@ -5,17 +5,16 @@
 /// </summary>
 public class PlayerRiposteState : PlayerActionState
 {
-    private const float RiposteDuration = 1.8f;
-    private UnityEngine.Transform _targetEnemy;
-    private UnitStatusController _targetEnemyStat;
+    private const float DefaultRiposteDuration = 2.0f;
+    private IRiposteable _riposteTarget;
+    public bool IsInvincible { get; private set; } = false;
 
     public PlayerRiposteState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
 
-    public void SetRiposteTarget(UnityEngine.Transform targetEnemy, UnitStatusController enemyStat)
+    public void SetRiposteTarget(IRiposteable target)
     {
-        _targetEnemy = targetEnemy;
-        _targetEnemyStat = enemyStat;
+        _riposteTarget = target;
     }
 
     public override void Enter()
@@ -24,25 +23,18 @@ public class PlayerRiposteState : PlayerActionState
 
         CanMove = false;
         CanRotate = false;
+        IsInvincible = true;
         owner.StopMovementAPI();
 
-        // 1. 처형 대상 적을 정면으로 정렬
-        if (_targetEnemy != null)
-        {
-            // 적의 전방 일정 거리로 위치 보정
-            UnityEngine.Vector3 snapPos = _targetEnemy.position + _targetEnemy.forward * 1.2f;
-            snapPos.y = owner.transform.position.y;
-            owner.transform.position = snapPos;
+        _riposteTarget = owner.CurrentRiposteTarget;
 
-            UnityEngine.Vector3 lookDirection = _targetEnemy.position - owner.transform.position;
-            lookDirection.y = 0f;
-            if (lookDirection.sqrMagnitude > 0.001f)
-            {
-                owner.transform.rotation = UnityEngine.Quaternion.LookRotation(lookDirection);
-            }
+        // 1. 피격 대상에게 처형 개시 통보 (적 그로기 회복 타이머 즉각 동결)
+        if (_riposteTarget != null && _riposteTarget.RiposteSocket != null)
+        {
+            _riposteTarget.OnRiposted();
         }
 
-        // 2. 애니메이터 Riposte 트리거 작동
+        // 2. 플레이어 처형 애니메이션 재생
         _playerAnimController.SetTrigger(AnimParamType.Riposte);
 
         // 3. 비동기 처형 타이머 가동 (모션 중 무적)
@@ -53,31 +45,26 @@ public class PlayerRiposteState : PlayerActionState
     public override void Exit()
     {
         base.Exit();
-        _targetEnemy = null;
-        _targetEnemyStat = null;
+        IsInvincible = false;
         _playerAnimController.ResetTrigger(AnimParamType.Riposte);
+
+        _riposteTarget = null;
+        owner.ClearRiposteTarget();
     }
     private async UniTaskVoid ExecuteRiposteAsync(System.Threading.CancellationToken token)
     {
-        // 모션 절반 시점에 치명타 대미지 주입
-        bool canceledHalf = await UniTask.Delay((int)((RiposteDuration * 0.45f) * 1000f),
-            cancellationToken: token).SuppressCancellationThrow();
+        float halfTime = DefaultRiposteDuration * 0.45f;
+        bool canceledHalf = await UniTask.Delay(System.TimeSpan.FromSeconds(halfTime), cancellationToken: token).SuppressCancellationThrow();
         if (canceledHalf) return;
 
-        if (_targetEnemy != null && _targetEnemy.TryGetComponent(out IDamageable damageable))
+        if (_riposteTarget != null && _riposteTarget is IDamageable damageable)
         {
-            owner.CombatModule.ExecuteRiposteDamage(damageable, _targetEnemy.position);
+            owner.CombatModule.ExecuteRiposteDamage(damageable, owner.transform.position);
         }
 
-        // 전체 모션 완료 대기
-        bool canceledFinish = await UniTask.Delay((int)((RiposteDuration * 0.55f) * 1000f),
-            cancellationToken: token).SuppressCancellationThrow();
+        float remainTime = DefaultRiposteDuration * 0.55f;
+        bool canceledFinish = await UniTask.Delay(System.TimeSpan.FromSeconds(remainTime), cancellationToken: token).SuppressCancellationThrow();
         if (canceledFinish) return;
-
-        if(_targetEnemyStat != null)
-        {
-            _targetEnemyStat.RestorePoiseToMax();
-        }
 
         CompleteActionAndEvaluateTransition();
     }

@@ -24,30 +24,7 @@ public interface IState
 }
 
 /// <summary>
-/// 공격 및 타격 시 전달되는 순수 데이터 컨텍스트 구조체
-/// </summary>
-public readonly struct DamageContext
-{
-    public readonly UnityEngine.GameObject Attacker;
-    public readonly float Damage;
-    public readonly float PoiseDamage;
-    public readonly UnityEngine.Vector3 HitPoint;
-    public readonly UnityEngine.Vector3 HitNormal;
-    public readonly bool IsParryable;
-
-    public DamageContext(UnityEngine.GameObject attacker, float damage, float poiseDamage, UnityEngine.Vector3 hitPoint, UnityEngine.Vector3 hitNormal, bool isParryable = true)
-    {
-        Attacker = attacker;
-        Damage = damage;
-        PoiseDamage = poiseDamage;
-        HitPoint = hitPoint;
-        HitNormal = hitNormal;
-        IsParryable = isParryable;
-    }
-}
-
-/// <summary>
-/// 공격 수신 인터페이스 (플레이어, 몬스터, 보스 공통)
+/// 공격 수신 인터페이스
 /// </summary>
 public interface IDamageable
 {
@@ -55,14 +32,23 @@ public interface IDamageable
 }
 
 /// <summary>
-/// Enemy 공격 실행 전략 인터페이스
+/// 그로기 및 앞잡(Riposte / 처형) 피격 대상 인터페이스
 /// </summary>
-public interface IEnemyAttackStrategy
+public interface IRiposteable
 {
-    bool CanExecute(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data);
-    void Execute(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data);
-    void Update(in EnemyAttackContext context, UnityEngine.Transform target, in EnemyAttackData data, float normalizedTime);
-    void Stop(in EnemyAttackContext context);
+    bool CanBeRiposted { get; }
+    bool IsDead { get; }
+    UnityEngine.Transform RiposteSocket { get; }
+    void OnRiposted();
+}
+
+/// <summary>
+/// 강인도 고갈(Poise Break) 가능 개체 인터페이스
+/// </summary>
+public interface IPoiseBreakable
+{
+    bool IsPoiseBroken { get; }
+    void OnPoiseBroken();
 }
 
 /// <summary>
@@ -70,8 +56,8 @@ public interface IEnemyAttackStrategy
 /// </summary>
 public interface IEnemyManager
 {
-    void RegisterEnemy(EnemyController enemy);
-    void UnregisterEnemy(EnemyController enemy);
+    void RegisterEnemy(EnemyBTController enemy);
+    void UnregisterEnemy(EnemyBTController enemy);
     void RegisterDefeatedPermanentEnemy(string permanentId);
     bool IsPermanentEnemyDefeated(string permanentId);
     void ResetAllEnemies();
@@ -86,6 +72,16 @@ public interface IUIPresenter
 {
     void Bind(UIBase view, IUIModel model);
     void Unbind();
+}
+
+/// <summary>
+/// 퀵슬롯에 등록 가능한 소모성 및 투척 아이템의 규약 인터페이스
+/// </summary>
+public interface IQuickSlotUsable
+{
+    int ItemId { get; }
+    UnityEngine.Sprite Icon { get; }
+    float CooldownDuration { get; }
 }
 #endregion
 
@@ -117,5 +113,40 @@ public interface IPlayerProvider
     PlayerController Player { get; }
     UnityEngine.Transform PlayerTransform { get; }
     bool IsPlayerSpawned { get; }
+}
+#endregion
+
+#region BT Interface
+public interface INode
+{
+    public enum ENodeState
+    {
+        ENS_Running, ENS_Success, ENS_Failure
+    }
+
+    public INode.ENodeState Evaluate();
+
+    // 비동기 액션 종료 후 동일 액션 재진입 방지
+    public void Reset();
+}
+#endregion
+
+#region Skill Interface
+public interface ISkillable
+{
+    bool CanExecuteSkill(SkillId skillId);
+    Cysharp.Threading.Tasks.UniTask<bool> ExecuteSkillAsync(SkillId skillId, System.Threading.CancellationToken ct);
+    void CancelSkill();
+}
+#endregion
+
+#region Interact Interface
+/// <summary>
+/// 인게임 상호작용 규약
+/// </summary>
+public interface IInteractable
+{
+    string InteractionPrompt { get; }
+    void OnInteract(PlayerController player);
 }
 #endregion

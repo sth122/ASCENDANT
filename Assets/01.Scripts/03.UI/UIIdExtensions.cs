@@ -1,11 +1,41 @@
-﻿/// <summary>
-/// UIId 숫자 대역 기반 레이어 자동 변환 및 무결성 검증 헬퍼
+﻿using ConstStrings;
+using System.Collections.Generic;
+
+/// <summary>
+/// UIId 숫자 대역 기반 레이어 자동 변환 및 AddressableKey 캐싱 매핑 헬퍼
 /// </summary>
 public static class UIIdExtensions
 {
-    /// <summary>
-    /// UIId의 정수 대역을 통해 해당 UI가 배치되어야 할 UILayer를 즉각 산출
-    /// </summary>
+    private static readonly Dictionary<UIId, string> _addressableKeyMap = new Dictionary<UIId, string>
+    {
+        { UIId.TitleBackgroundUI, ConstString.TitleBackgroundUI },
+        { UIId.GameOverBackgroundUI, ConstString.GameOverBackgroundUI },
+        { UIId.PlayerHUD, ConstString.PlayerHUD },
+        { UIId.EnemyFloatingHUD, ConstString.EnemyFloatingHUD },
+        { UIId.BossHUD, ConstString.BossHUD },
+        { UIId.QuickSlotHUD, ConstString.QuickSlotHUD },
+        { UIId.TitleMenuUI, ConstString.TitleMenuUI },
+        { UIId.SystemMenuUI, ConstString.SystemMenuUI },
+        { UIId.InventoryUI, ConstString.InventoryUI },
+        { UIId.EquipmentUI, ConstString.EquipmentUI },
+        { UIId.StatusUI, ConstString.StatusUI },
+        { UIId.GameOverUI, ConstString.GameOverUI },
+        { UIId.ConfirmPopup, ConstString.ConfirmPopupUI },
+        { UIId.NoticePopup, ConstString.NoticePopupUI },
+        { UIId.KeyBindingPopup, ConstString.KeyBindingPopupUI },
+        { UIId.FadeCurtainUI, ConstString.FadeCurtainUI },
+        { UIId.LoadingScreenUI, ConstString.LoadingScreenUI },
+    };
+
+    public static string GetAddressableKey(this UIId uiId)
+    {
+        if (_addressableKeyMap.TryGetValue(uiId, out string key))
+        {
+            return key;
+        }
+        return uiId.ToString();
+    }
+
     public static UILayer GetExpectedLayer(this UIId uiId)
     {
         int idValue = (int)uiId;
@@ -19,9 +49,6 @@ public static class UIIdExtensions
         return UILayer.HUD;
     }
 
-    /// <summary>
-    /// UIBase 컴포넌트에 설정된 Layer와 UIId 번호 대역이 일치하는지 검증
-    /// </summary>
     public static bool ValidateLayerMatch(this UIId uiId, UILayer actualLayer)
     {
         return uiId.GetExpectedLayer() == actualLayer;

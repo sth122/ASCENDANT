@@ -21,18 +21,38 @@ public class PlayerStatusController : UnitStatusController
     public float MaxStamina => _maxStamina;
     #endregion
 
+    #region Player 장비 연동 스탯
+    [UnityEngine.Header("Equipped Armor Defense & Shield Spec")]
+    [UnityEngine.SerializeField] private float _equippedArmorFlatDefense = 0f;
+    [UnityEngine.SerializeField] private float _equippedArmorAbsorption = 0f;
+    [UnityEngine.SerializeField] private float _equippedArmorPoiseBonus = 0f;
+    [UnityEngine.SerializeField] private float _equippedShieldStability = 0f;
+    [UnityEngine.SerializeField] private float _equippedShieldAbsorption = 0f;
+
+    public float EquippedArmorFlatDefense => _equippedArmorFlatDefense;
+    public float EquippedArmorAbsorption => _equippedArmorAbsorption;
+    public float EquippedArmorPoiseBonus => _equippedArmorPoiseBonus;
+    public float EquippedShieldStability => _equippedShieldStability;
+    public float EquippedShieldAbsorption => _equippedShieldAbsorption;
+    #endregion
+
     public PlayerMotionStatusModule PlayerMotionStats => MotionStatus as PlayerMotionStatusModule;
-    public PlayerStatus PlayerStatusSource { get; private set; }
+    public PlayerInfo PlayerInfoSource { get; private set; }
     public event System.Action<float, float> OnStaminaChangedEvent;
 
     /// <summary>
     /// Player 전용 스탯 및 모듈 확장부
     /// </summary>
-    protected override void SetupDerivedStats(UnitBaseStatus baseStat)
+    protected override void SetupDerivedStats(UnitBaseInfo baseStat)
     {
-        if (baseStat is PlayerStatus playerStat)
+        if (!(baseStat is PlayerInfo playerStat))
         {
-            PlayerStatusSource = playerStat;
+            playerStat = ResolveFallbackStat() as PlayerInfo;
+        }
+
+        if (playerStat != null)
+        {
+            PlayerInfoSource = (PlayerInfo)playerStat.Clone();
 
             // Player 전용 공식에 의한 Max 수치 계산
             _maxHp = playerStat.CalculateMaxHp();
@@ -46,8 +66,7 @@ public class PlayerStatusController : UnitStatusController
             // 스태미나 회복 비동기 루프 가동
             StartStaminaRegenLoop();
 
-            OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-            EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+            InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
         }
         else
         {
@@ -65,21 +84,18 @@ public class PlayerStatusController : UnitStatusController
     /// <summary>
     /// 인스펙터에서 수정된 PlayerStat 수치를 런타임 모듈에 실시간 주입
     /// </summary>
-    public void SyncRuntimeStats(PlayerStatus updatedStat)
+    public void SyncRuntimeStats(PlayerInfo updatedStat)
     {
         if (updatedStat == null || PlayerMotionStats == null) return;
 
-        PlayerStatusSource = updatedStat;
+        PlayerInfoSource = updatedStat;
         _maxHp = updatedStat.CalculateMaxHp();
         _maxStamina = updatedStat.CalculateMaxStamina();
 
         PlayerMotionStats.SyncBaseValues(updatedStat);
 
         InvokeChangeHPEvent(_currentHp, _maxHp);
-        OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-
-        EventBusSystem.Publish(new UnitHpChangedEvent(gameObject, _currentHp, _maxHp));
-        EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+        InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
 
     public bool HasEnoughStamina(float cost) => _currentStamina >= cost;
@@ -89,8 +105,7 @@ public class PlayerStatusController : UnitStatusController
         _currentStamina = UnityEngine.Mathf.Max(0f, _currentStamina - cost);
         _staminaRecoveryTimer = StaminaRegenDelay;
 
-        OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-        EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+        InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
 
     public void RestoreStamina(float amount)
@@ -98,8 +113,7 @@ public class PlayerStatusController : UnitStatusController
         if (_isDead || amount <= 0f) return;
 
         _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + amount);
-        OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-        EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+        InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
 
     /// <summary>
@@ -129,25 +143,66 @@ public class PlayerStatusController : UnitStatusController
     /// </summary>
     private async UniTaskVoid StaminaRegenLoopAsync(System.Threading.CancellationToken token)
     {
+        float lastPublishedStamina = _currentStamina;
+
         while (!token.IsCancellationRequested)
         {
-            bool isCanceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+            bool isCanceled = await UniTask.Delay(100, cancellationToken: token).SuppressCancellationThrow();
             if (isCanceled) return;
 
             if (_staminaRecoveryTimer > 0f)
             {
-                _staminaRecoveryTimer -= UnityEngine.Time.deltaTime;
+                _staminaRecoveryTimer -= 0.1f;
                 continue;
             }
 
             if (_currentStamina < _maxStamina)
             {
                 float finalRate = _staminaRegenRate * StaminaRegenMultiplier;
-                _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + finalRate * UnityEngine.Time.deltaTime);
+                _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + finalRate * 0.1f);
 
-                OnStaminaChangedEvent?.Invoke(_currentStamina, _maxStamina);
-                EventBusSystem.Publish(new PlayerStaminaChangedEvent(_currentStamina, _maxStamina));
+                if (UnityEngine.Mathf.Abs(_currentStamina - lastPublishedStamina) >= 1.0f || _currentStamina >= _maxStamina)
+                {
+                    lastPublishedStamina = _currentStamina;
+                    InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
+                }
             }
         }
+    }
+
+    /// <summary>
+    /// 인벤토리 장비 교체 시 4부위(투구, 갑옷, 각반, 신발)의 합산 방어 스탯을 갱신
+    /// </summary>
+    public void UpdateArmorDefense(float totalFlatDefense, float totalAbsorption, float totalPoiseBonus)
+    {
+        _equippedArmorFlatDefense = totalFlatDefense;
+        _equippedArmorAbsorption = UnityEngine.Mathf.Clamp(totalAbsorption, 0f, 0.95f);
+        _equippedArmorPoiseBonus = totalPoiseBonus;
+
+        // 베이스 스탯에 방어구 강인도 보너스 합산 반영
+        if (PlayerInfoSource != null)
+        {
+            _maxPoise = PlayerInfoSource.Poise + _equippedArmorPoiseBonus;
+            _currentPoise = UnityEngine.Mathf.Min(_currentPoise, _maxPoise);
+        }
+
+        InvokeChangePoiseEvent(_currentPoise, _maxPoise);
+        Util.Log($"[방어구 갱신] 추가 DEF: {_equippedArmorFlatDefense}, 경감률: {_equippedArmorAbsorption * 100f:F1}%, 강인도 보너스: {_equippedArmorPoiseBonus}");
+    }
+
+    /// <summary>
+    /// 인벤토리 장비 교체 시 장착된 방패의 물리 커트율 및 안정도를 실시간 갱신
+    /// </summary>
+    public void UpdateShieldSpec(float stability, float physicalAbsorption)
+    {
+        _equippedShieldStability = stability;
+        _equippedShieldAbsorption = UnityEngine.Mathf.Clamp01(physicalAbsorption);
+        Util.Log($"[방패 갱신] 안정성: {_equippedShieldStability}, 커트율: {_equippedShieldAbsorption * 100f:F1}%");
+    }
+
+    private void InvokeChangeStatminaEvent(float current, float max)
+    {
+        OnStaminaChangedEvent?.Invoke(current, max);
+        EventBusSystem.Publish(new PlayerStaminaChangedEvent(current, max));
     }
 }

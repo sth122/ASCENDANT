@@ -1,4 +1,6 @@
-﻿public interface IEventType { }
+﻿using UnityEngine;
+
+public interface IEventType { }
 
 /// <summary>
 /// Unit 체력 변동 이벤트 (HUD UI 바인딩용)
@@ -104,5 +106,94 @@ public readonly struct GameStateChangedEvent : IEventType
     {
         PreviousState = previousState;
         NewState = newState;
+    }
+}
+
+/// <summary>
+/// 씬 부트스트래퍼의 모든 시스템, 데이터, 플레이어 스폰 완료를 전역 신호
+/// 씬에 정적으로 배치된 에너미와 시스템 액터들은 이 이벤트를 수신한 후 로직을 기동
+/// </summary>
+public readonly struct GameSceneReadyEvent : IEventType
+{
+    public readonly SceneId Scene;
+    public GameSceneReadyEvent(SceneId scene) => Scene = scene;
+}
+
+public readonly struct InteractionPromptEvent : IEventType
+{
+    public readonly bool Show;
+    public readonly string PromptText;
+
+    public InteractionPromptEvent(bool show, string promptText)
+    {
+        Show = show;
+        PromptText = promptText;
+    }
+}
+
+/// <summary>
+/// 보스 조우 시점 보스 HUD를 활성화하는 이벤트
+/// </summary>
+public readonly struct BossEncounterEvent : IEventType
+{
+    public readonly string BossName;
+    public readonly UnityEngine.GameObject BossObject;
+    public readonly float InitialHp;
+    public readonly float MaxHp;
+    public readonly float InitialPoise;
+    public readonly float MaxPoise;
+
+    public BossEncounterEvent(string bossName, UnityEngine.GameObject bossObject, float initialHp, float maxHp, float initialPoise, float maxPoise)
+    {
+        BossName = bossName;
+        BossObject = bossObject;
+        InitialHp = initialHp;
+        MaxHp = maxHp;
+        InitialPoise = initialPoise;
+        MaxPoise = maxPoise;
+    }
+}
+
+/// <summary>
+/// 보스 처치 또는 전투 이탈 시 보스 HUD를 비활성화하는 이벤트
+/// </summary>
+public readonly struct BossDefeatedEvent : IEventType
+{
+    public readonly UnityEngine.GameObject BossObject;
+
+    public BossDefeatedEvent(UnityEngine.GameObject bossObject)
+    {
+        BossObject = bossObject;
+    }
+}
+
+/// <summary>
+/// 씬 로딩 진행도 및 안내 문구 갱신 이벤트
+/// </summary>
+public readonly struct SceneLoadingProgressEvent : IEventType
+{
+    public readonly float Progress; // 0.0f ~ 1.0f
+    public readonly string Description;
+
+    public SceneLoadingProgressEvent(float progress, string description = "")
+    {
+        Progress = UnityEngine.Mathf.Clamp01(progress);
+        Description = description;
+    }
+}
+
+
+/// <summary>
+/// 유닛 무적 갱신 이벤트
+/// </summary>
+public readonly struct UnitInvincibleChangedEvent : IEventType
+{
+    public readonly GameObject TargetUnit;
+    public readonly bool IsInvincible;
+
+    public UnitInvincibleChangedEvent(GameObject targetUnit, bool isInvincible)
+    {
+        TargetUnit = targetUnit;
+        IsInvincible = isInvincible;
     }
 }

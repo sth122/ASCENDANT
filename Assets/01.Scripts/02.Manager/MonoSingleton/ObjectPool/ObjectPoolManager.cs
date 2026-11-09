@@ -82,11 +82,7 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
     #region 동기 등록 및 풀 생성
     public void RegisterPool(PoolType poolType, GameObject prefab, int initialCount = 1, bool isSceneDependent = false)
     {
-        if (_pools.ContainsKey(poolType))
-        {
-            Util.Log($"이미 등록된 풀: {poolType}");
-            return;
-        }
+        if (_pools.ContainsKey(poolType)) return;
 
         EnsureRoot();
 

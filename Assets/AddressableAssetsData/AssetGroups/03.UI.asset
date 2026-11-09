@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: 03.UI
   m_GUID: 34322189bbc1b104dbcb524459a6b6b4
   m_SerializeEntries:
+  - m_GUID: 1410ed52fbfd361438e2e2bb3b63ea39
+    m_Address: BossHUD
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 208dd0bf6c76f8b48b504976b899387a
     m_Address: TitleMenuUI
     m_ReadOnly: 0
@@ -25,18 +30,33 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44796477123a8e140b8ed49a76413cff
+    m_Address: FadeCurtainUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47b43e9bba8d1e944830c5a9aeaaddd5
+    m_Address: LoadingScreenUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 723d0f05f068d964fa024d2038c4ecd4
+    m_Address: EnemyFloatingHpBar
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7608bfc1babf9084a890a724e1161244
     m_Address: PlayerHUD
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 852ce88b8d84ac940a1a61da8c3ce551
-    m_Address: EnemyFloatingHpBar
+  - m_GUID: 93a4762f249d986409321f63f0186a1d
+    m_Address: SystemMenuUI
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 93a4762f249d986409321f63f0186a1d
-    m_Address: SystemMenuUI
+  - m_GUID: c7713a1ecfa840e44989a99a5355a548
+    m_Address: ConfirmPopupUI
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

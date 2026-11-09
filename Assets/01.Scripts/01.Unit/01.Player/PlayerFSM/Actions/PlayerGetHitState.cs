@@ -2,7 +2,6 @@
 
 public class PlayerGetHitState : PlayerActionState
 {
-    private System.Threading.CancellationTokenSource _hitCts;
     private const float HitStunDuration = 0.45f;
 
     public PlayerGetHitState(PlayerController owner, PlayerStateMachine stateMachine) : base(owner, stateMachine) { }
@@ -17,25 +16,13 @@ public class PlayerGetHitState : PlayerActionState
 
         _playerAnimController.SetTrigger(AnimParamType.GetHit);
 
-        ResetToken();
-        _hitCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(owner.destroyCancellationToken);
-        ExecuteHitAsync(_hitCts.Token).Forget();
+        System.Threading.CancellationToken token = CreateActionToken();
+        ExecuteHitAsync(token).Forget();
     }
 
     public override void Exit()
     {
         base.Exit();
-        ResetToken();
-    }
-
-    private void ResetToken()
-    {
-        if (_hitCts != null)
-        {
-            _hitCts.Cancel();
-            _hitCts.Dispose();
-            _hitCts = null;
-        }
     }
 
     private async UniTaskVoid ExecuteHitAsync(System.Threading.CancellationToken token)

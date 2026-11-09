@@ -4,8 +4,10 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Util = DebugLogger<AssetsManager>;
 
-public class AssetsManager : MonoSingleton<AssetsManager>
+public class AssetsManager : MonoSingleton<AssetsManager>, ILoadable
 {
+    public int LoadOrder => 0;
+
     // 전역 유지 에셋 핸들
     private readonly Dictionary<string, AsyncOperationHandle> _globalAssetHandles = new Dictionary<string, AsyncOperationHandle>();
 
@@ -15,11 +17,20 @@ public class AssetsManager : MonoSingleton<AssetsManager>
     // 1회성 인스턴스화 오브젝트 캐시
     private readonly Dictionary<UnityEngine.GameObject, AsyncOperationHandle> _instanceHandles = new Dictionary<UnityEngine.GameObject, AsyncOperationHandle>();
 
+    // 씬 전환 시 함께 해제되어야 할 씬 종속 인스턴스 추적용 해시셋
+    private readonly HashSet<UnityEngine.GameObject> _sceneInstances = new HashSet<UnityEngine.GameObject>();
+
     protected override void Awake()
     {
         _isDDOL = true;
         base.Awake();
     }
+
+    #region ILoadable 구현부
+    public UniTask OnSceneLoadCreate(SceneId scene) => UniTask.CompletedTask;
+    public void Init(SceneId scene) => Util.Log($"[{scene}] AssetsManager 준비 완료");
+    public void OnSceneDestroy(SceneId scene) => ReleaseSceneAssets();
+    #endregion
 
     #region UniTask(비동기) 에셋 로드
     /// <summary>
@@ -36,13 +47,27 @@ public class AssetsManager : MonoSingleton<AssetsManager>
         }
 
         AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(addressableKey);
-        T result = await handle.ToUniTask(cancellationToken: ct);
-
-        if (handle.Status == AsyncOperationStatus.Succeeded)
+        try
         {
-            targetDict[addressableKey] = handle;
-            Util.Log($"[비동기 로드 성공] Key: {addressableKey} (Global: {isGlobal})");
-            return result;
+            T result = await handle.ToUniTask(cancellationToken: ct);
+
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                targetDict[addressableKey] = handle;
+                Util.Log($"[비동기 로드 성공] Key: {addressableKey} (Global: {isGlobal})");
+                return result;
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            Addressables.Release(handle);
+            return null;
+        }
+        catch (System.Exception ex)
+        {
+            Util.LogError($"[비동기 로드 예외 발생] Key: {addressableKey} / {ex.Message}");
+            Addressables.Release(handle);
+            return null;
         }
 
         Util.LogError($"[비동기 로드 실패] Key: {addressableKey}");
@@ -63,12 +88,27 @@ public class AssetsManager : MonoSingleton<AssetsManager>
         }
 
         AsyncOperationHandle<IList<T>> handle = Addressables.LoadAssetsAsync<T>(label, onSingleLoaded);
-        IList<T> result = await handle.ToUniTask( cancellationToken: ct);
+        try
+        {
+            IList<T> result = await handle.ToUniTask(cancellationToken: ct);
 
-        if(handle.Status == AsyncOperationStatus.Succeeded) {
-            targetDict[label] = handle;
-            Util.Log($"[라벨 일괄 로드 성공] Label: {label} (개수: {result.Count})");
-            return result;
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                targetDict[label] = handle;
+                Util.Log($"[라벨 일괄 로드 성공] Label: {label} (개수: {result.Count})");
+                return result;
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            Addressables.Release(handle);
+            return null;
+        }
+        catch (System.Exception ex)
+        {
+            Util.LogError($"[라벨 로드 예외 발생] Label: {label} / {ex.Message}");
+            Addressables.Release(handle);
+            return null;
         }
 
         Util.LogError($"[라벨 일괄 로드 실패] Label: {label}");
@@ -78,20 +118,38 @@ public class AssetsManager : MonoSingleton<AssetsManager>
     /// <summary>
     /// 풀링하지 않는 1회성 프리팹 비동기 인스턴스화
     /// </summary>
-    public async UniTask<UnityEngine.GameObject> InstantiateAsync(string addressableKey, UnityEngine.Transform parent = null, System.Threading.CancellationToken ct = default)
+    public async UniTask<UnityEngine.GameObject> InstantiateAsync(string addressableKey, UnityEngine.Transform parent = null,
+        bool inWorldSpace = false, 
+        bool isSceneAsset = true, // 씬 종속 에셋 여부 (전역 에셋은 false)
+        System.Threading.CancellationToken ct = default)
     {
-        AsyncOperationHandle<UnityEngine.GameObject> handle = Addressables.InstantiateAsync(addressableKey, parent);
-        UnityEngine.GameObject instance = await handle.ToUniTask(cancellationToken: ct);
-
-        if(handle.Status == AsyncOperationStatus.Succeeded)
+        try
         {
+            AsyncOperationHandle<UnityEngine.GameObject> handle = Addressables.InstantiateAsync(addressableKey, parent, inWorldSpace);
+            UnityEngine.GameObject instance = await handle.WithCancellation(ct);
+
+            if (instance == null)
+            {
+                Util.LogError($"인스턴스 생성 실패 (NULL 반환): {addressableKey}");
+                return null;
+            }
+
+            // 모든 인스턴스는 매핑에 등록
             _instanceHandles[instance] = handle;
-            Util.Log($"[인스턴스 비동기 생성] Key: {addressableKey}");
+
+            // 씬 로컬 에셋일 때만 등록하여 씬 전환 시 일괄 해제 추적 해시셋에 등록
+            if (isSceneAsset)
+            {
+                _sceneInstances.Add(instance);
+            }
+
             return instance;
         }
-
-        Util.LogError($"[인스턴스 생성 실패] Key: {addressableKey}");
-        return null;
+        catch (System.Exception ex)
+        {
+            Util.LogError($"InstantiateAsync 실패 [{addressableKey}]: {ex.Message}");
+            return null;
+        }
     }
     #endregion
 
@@ -144,6 +202,17 @@ public class AssetsManager : MonoSingleton<AssetsManager>
 
     #region 메모리 해제 및 생명 주기
     /// <summary>
+    /// 전역 유지 UI 또는 객체를 씬 전환 파괴 리스트에서 제외
+    /// </summary>
+    public void MarkInstanceAsGlobal(UnityEngine.GameObject instance)
+    {
+        if (instance != null)
+        {
+            _sceneInstances.Remove(instance);
+        }
+    }
+
+    /// <summary>
     /// 생성된 인스턴스 해제
     /// </summary>
     public void ReleaseInstance(UnityEngine.GameObject instance)
@@ -154,7 +223,8 @@ public class AssetsManager : MonoSingleton<AssetsManager>
         {
             Addressables.ReleaseInstance(instance);
             _instanceHandles.Remove(instance);
-            Util.LogError($"[인스턴스 해제] {instance.name}");
+            _sceneInstances.Remove(instance);
+            Util.Log($"[인스턴스 해제] {instance.name}");
         }
         else
         {
@@ -167,15 +237,19 @@ public class AssetsManager : MonoSingleton<AssetsManager>
     /// </summary>
     public void ReleaseSceneAssets()
     {
+        int releasedInstanceCount = 0;
+
         // 1. 씬 종속 인스턴스 해제
-        foreach(KeyValuePair<UnityEngine.GameObject, AsyncOperationHandle> pair in _instanceHandles)
+        foreach (UnityEngine.GameObject instance in _sceneInstances)
         {
-            if(pair.Key != null)
+            if (instance != null)
             {
-                Addressables.Release(pair.Value);
+                Addressables.ReleaseInstance(instance);
+                _instanceHandles.Remove(instance);
+                releasedInstanceCount++;
             }
         }
-        _instanceHandles.Clear();
+        _sceneInstances.Clear();
 
         // 2. 씬 종속 에셋 핸들 해제
         int releasedCount = _sceneAssetHandles.Count;
@@ -193,8 +267,20 @@ public class AssetsManager : MonoSingleton<AssetsManager>
     /// </summary>
     public void ReleaseAll()
     {
+        // 씬 종속 에셋 정리
         ReleaseSceneAssets();
 
+        // 전역 인스턴스 정리
+        foreach (KeyValuePair<UnityEngine.GameObject, AsyncOperationHandle> pair in _instanceHandles)
+        {
+            if (pair.Key != null)
+            {
+                Addressables.ReleaseInstance(pair.Key);
+            }
+        }
+        _instanceHandles.Clear();
+
+        // 전역 에셋 핸들 정리
         foreach (AsyncOperationHandle handle in _globalAssetHandles.Values)
         {
             Addressables.Release(handle);

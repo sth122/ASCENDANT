@@ -17,6 +17,5 @@ public class SystemMenuView : UIWindowView
     {
         base.InitializeView();
         Layer = UILayer.Window;
-        _pauseTimeWhenOpened = true;
     }
 }

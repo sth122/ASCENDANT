@@ -12,7 +12,7 @@ public abstract class UnitMotionStatusModule : UnitBaseModule
 
     public event System.Action OnMotionStatChanged;
     
-    public UnitMotionStatusModule(UnitBaseStatus baseStat)
+    public UnitMotionStatusModule(UnitBaseInfo baseStat)
     {
         if (baseStat == null)
         {

@@ -1,15 +1,13 @@
-﻿using UnityEngine;
-
-/// <summary>
+﻿/// <summary>
 /// Enemy 개체에 부착되어 UnitStatController(Model)와 EnemyFloatingHUDView(View)를 1:1 중계하는 절충형 MVP Presenter
 /// 컴포넌트 라이프사이클을 활용하여 풀에서 View를 배정받고 반환하며,
 /// 부모 캔버스를 UIManager의 HUD 레이어로 안전하게 리패런팅
 /// </summary>
-[RequireComponent(typeof(EnemyController), typeof(UnitStatusController))]
-public class EnemyFloatingHUDPresenter : MonoBehaviour
+[UnityEngine.RequireComponent(typeof(EnemyBTController), typeof(UnitStatusController))]
+public class EnemyFloatingHUDPresenter : UnityEngine.MonoBehaviour
 {
-    [Header("Tracking Offset")]
-    [SerializeField] private Vector3 _worldOffset = new Vector3(0f, 2.3f, 0f);
+    [UnityEngine.Header("Tracking Offset")]
+    [UnityEngine.SerializeField] private UnityEngine.Vector3 _worldOffset = new UnityEngine.Vector3(0f, 2.3f, 0f);
 
     private UnitStatusController _statModel;
     private EnemyFloatingHUDView _floatingView;
@@ -22,6 +20,7 @@ public class EnemyFloatingHUDPresenter : MonoBehaviour
     private void OnEnable()
     {
         SubscribeModelEvents();
+        AllocateAndBindView();
     }
 
     private void OnDisable()
@@ -38,13 +37,12 @@ public class EnemyFloatingHUDPresenter : MonoBehaviour
         if (_floatingView != null) return;
 
         // 1. UIManager의 HUD 레이어 컨테이너(@Layer_100_HUD) 획득
-        RectTransform hudContainer = UIManager.Instance != null
-            ? UIManager.Instance.GetLayerContainer(UILayer.HUD)
-            : null;
+        UnityEngine.RectTransform hudContainer = UIManager.Instance != null
+            ? UIManager.Instance.GetLayerContainer(UILayer.HUD) : null;
 
         // 2. 풀에서 View 인스턴스 획득 (부모를 캔버스 HUD 레이어로 즉시 지정)
         _floatingView = ObjectPoolManager.Instance.Spawn<EnemyFloatingHUDView>(
-            PoolType.EnemyFloatingHpBar, Vector3.zero, Quaternion.identity, hudContainer
+            PoolType.EnemyFloatingHpBar, UnityEngine.Vector3.zero, UnityEngine.Quaternion.identity, hudContainer
         );
 
         if (_floatingView != null)

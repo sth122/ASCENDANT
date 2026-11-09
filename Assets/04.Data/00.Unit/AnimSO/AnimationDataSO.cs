@@ -14,6 +14,8 @@ public class AnimationDataSO : ScriptableObject
     public struct StateEntry
     {
         public AnimStateType StateType;
+        public AnimationClip Clip;
+        [Range(0.1f, 3.0f)] public float SpeedMultiplier;
         public float CrossFadeDuration;
     }
 
@@ -22,7 +24,7 @@ public class AnimationDataSO : ScriptableObject
 
 
     private readonly Dictionary<AnimParamType, int> _paramHashMap = new Dictionary<AnimParamType, int>();
-    private readonly Dictionary<AnimStateType, (int Hash, float Duration)> _stateHashMap = new Dictionary<AnimStateType, (int Hash, float Duration)>();
+    private readonly Dictionary<AnimStateType, (int Hash, float CrossFadeDuration, float ClipDuration)> _stateHashMap = new Dictionary<AnimStateType, (int Hash, float CrossFadeDuration, float ClipDuration)>();
     private bool _isInitialized = false;
 
     public void Init()
@@ -35,9 +37,13 @@ public class AnimationDataSO : ScriptableObject
         }
 
         _stateHashMap.Clear();
-        foreach(var s in _states)
+        foreach (var s in _states)
         {
-            _stateHashMap[s.StateType] = (Animator.StringToHash(s.StateType.ToString()), s.CrossFadeDuration);
+            int stateHash = Animator.StringToHash(s.StateType.ToString());
+            float speed = s.SpeedMultiplier <= 0f ? 1.0f : s.SpeedMultiplier;
+            float effectiveDuration = (s.Clip != null ? s.Clip.length : 1.0f) / speed;
+
+            _stateHashMap[s.StateType] = (stateHash, s.CrossFadeDuration, effectiveDuration);
         }
         _isInitialized = true;
     }
@@ -56,12 +62,22 @@ public class AnimationDataSO : ScriptableObject
         if(_stateHashMap.TryGetValue(stateType, out var data))
         {
             hash = data.Hash;
-            duration = data.Duration;
+            duration = data.CrossFadeDuration;
             return true;
         }
         hash = 0;
-        duration = 0.1f;
+        duration = 1f;
         return false;
     }
+    public float GetClipDuration(AnimStateType stateType)
+    {
+        if (!_isInitialized) Init();
 
+        if (_stateHashMap.TryGetValue(stateType, out var data))
+        {
+            return data.ClipDuration;
+        }
+
+        return 1.0f; // 미등록 시 기본 안전값
+    }
 }

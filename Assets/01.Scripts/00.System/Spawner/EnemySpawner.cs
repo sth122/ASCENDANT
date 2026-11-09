@@ -4,7 +4,7 @@ using Util = DebugLogger<EnemySpawner>;
 /// <summary>
 /// 소울라이크 레벨 디자인 배치 앵커 컴포넌트
 /// PoolType과 UnitId 설정을 통해 모든 종류의 Enemy를 범용적으로 스폰·초기화하며,
-/// 화롯불(세이브 터미널) 상호작용 시 사망한 개체를 자동으로 리셋 및 부활시킵니다.
+/// 화톳불(세이브 터미널) 상호작용 시 사망한 개체를 자동으로 리셋 및 부활시킵니다.
 /// </summary>
 public class EnemySpawner : MonoBehaviour
 {
@@ -18,7 +18,7 @@ public class EnemySpawner : MonoBehaviour
     [Header("Spawn Settings")]
     [SerializeField] private bool _spawnOnStart = true;
 
-    private EnemyController _spawnedEnemy;
+    private EnemyBTController _spawnedEnemy;
     private bool _isEnemyDead = false;
 
     private void Start()
@@ -38,7 +38,7 @@ public class EnemySpawner : MonoBehaviour
         if (_spawnedEnemy != null && !_isEnemyDead) return;
 
         // 1. 오브젝트 풀에서 컴포넌트 타입으로 인스턴스 획득 (어떤 Enemy 파생 클래스든 수용)
-        _spawnedEnemy = ObjectPoolManager.Instance.Spawn<EnemyController>(
+        _spawnedEnemy = ObjectPoolManager.Instance.Spawn<EnemyBTController>(
             _enemyPoolType, transform.position, transform.rotation
         );
 
@@ -51,19 +51,19 @@ public class EnemySpawner : MonoBehaviour
         _isEnemyDead = false;
 
         // 2. DataManager에서 해당 UnitId의 최신 기획 스탯 데이터 획득
-        EnemyStatus runtimeStatus = null;
+        EnemyInfo runtimeStatus = null;
         if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<EnemyStatusSO>(out var enemyStatusSO))
         {
-            if (enemyStatusSO.TryGetData(_unitId, out EnemyStatus baseStatus))
+            if (enemyStatusSO.TryGetData(_unitId, out EnemyInfo baseStatus))
             {
-                runtimeStatus = (EnemyStatus)baseStatus.Clone();
+                runtimeStatus = (EnemyInfo)baseStatus.Clone();
             }
         }
 
         // 3. 다형성 초기화 메서드 호출 (위치 및 스탯 확정 바인딩)
-        _spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
+        //_spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
 
-        // 4. 사망 이벤트 리스너 바인딩 (화롯불 리셋 추적용)
+        // 4. 사망 이벤트 리스너 바인딩 (화톳불 리셋 추적용)
         _spawnedEnemy.StatusController.OnDieEvent -= HandleEnemyDied;
         _spawnedEnemy.StatusController.OnDieEvent += HandleEnemyDied;
 
@@ -81,22 +81,23 @@ public class EnemySpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// 화롯불(세이브 터미널)과 상호작용하여 월드가 리셋될 때 호출
+    /// 화톳불
+    /// (세이브 터미널)과 상호작용하여 월드가 리셋될 때 호출
     /// </summary>
     public void ResetSpawnerOnBonfire()
     {
         // 살아있는 적은 위치와 체력을 초기 상태로 리셋
         if (_spawnedEnemy != null && !_isEnemyDead)
         {
-            EnemyStatus runtimeStatus = null;
+            EnemyInfo runtimeStatus = null;
             if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<EnemyStatusSO>(out var enemyStatusSO))
             {
-                if (enemyStatusSO.TryGetData(_unitId, out EnemyStatus baseStatus))
+                if (enemyStatusSO.TryGetData(_unitId, out EnemyInfo baseStatus))
                 {
-                    runtimeStatus = (EnemyStatus)baseStatus.Clone();
+                    runtimeStatus = (EnemyInfo)baseStatus.Clone();
                 }
             }
-            _spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
+            //_spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
         }
         // 이미 사망한 적은 풀에서 새로 스폰하여 제자리에 배치
         else if (_isEnemyDead)

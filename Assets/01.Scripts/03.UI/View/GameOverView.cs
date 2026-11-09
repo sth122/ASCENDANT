@@ -19,7 +19,6 @@ public class GameOverView : UIWindowView
     public override void InitializeView()
     {
         base.InitializeView();
-        _pauseTimeWhenOpened = false; // 사망 후 슬로우 모션 연출 보존을 위해 timeScale 직접 조작 방지
     }
 
     /// <summary>

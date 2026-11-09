@@ -6,7 +6,7 @@ public static class AnimStateHelper
     public const AnimStateType HitMin = AnimStateType.Hit1;
     public const AnimStateType HitMax = AnimStateType.Hit2;
 
-    public const AnimStateType DeathMin = AnimStateType.Death1;
+    public const AnimStateType DeathMin = AnimStateType.Death;
     public const AnimStateType DeathMax = AnimStateType.Death2;
 
     /// <summary>

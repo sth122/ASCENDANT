@@ -1,6 +1,6 @@
 ﻿[UnityEngine.CreateAssetMenu(fileName = "PlayerStatusSO", menuName = "Unit/PlayerStatusData")]
 
-public class PlayerStatusSO : KeyedDataSO<UnitId, PlayerStatus>
+public class PlayerStatusSO : KeyedDataSO<UnitId, PlayerInfo>
 {
 
 }

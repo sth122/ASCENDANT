@@ -67,21 +67,48 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
 
     private void HandleNewGameClicked()
     {
-        Util.Log("새 게임 시작: 인게임 씬 전환 호출");
+        ExecuteNewGameFlowAsync().Forget();
+    }
+    private void HandleContinueClicked()
+    {
+        ExecuteContinueFlowAsync().Forget();
+    }
 
-        // 신규 세이브 데이터 슬롯 0번 생성
+    private void HandleQuitClicked()
+    {
+        Util.Log("게임 종료 요청");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        UnityEngine.Application.Quit();
+#endif
+    }
+
+    private async UniTaskVoid ExecuteNewGameFlowAsync()
+    {
+        bool hasSave = SaveManager.Instance != null && SaveManager.Instance.HasSaveData(0);
+
+        string promptMessage = hasSave
+            ? "이전 데이터를 삭제하고 새로 시작하시겠습니까?"
+            : "게임을 시작하시겠습니까?";
+
+        bool isConfirmed = await OpenConfirmDialogAsync(promptMessage);
+        if (!isConfirmed) return;
+
+        Util.Log("[새 게임 확정] 세이브 파일 생성 및 GameScene 이동");
+
         if (SaveManager.Instance != null)
         {
             SaveManager.Instance.CreateNewGameSave(0);
         }
 
-        // GameScene으로 전환
         if (SceneLoadManager.Instance != null)
         {
             SceneLoadManager.Instance.LoadSceneFlowAsync(SceneId.GameScene).Forget();
         }
     }
-    private void HandleContinueClicked()
+
+    private async UniTaskVoid ExecuteContinueFlowAsync()
     {
         if (SaveManager.Instance == null || !SaveManager.Instance.HasSaveData(0))
         {
@@ -89,7 +116,10 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
             return;
         }
 
-        Util.Log("[이어하기] 기존 세이브 데이터 로드 후 씬 로드");
+        bool isConfirmed = await OpenConfirmDialogAsync("게임을 불러오시겠습니까?");
+        if (!isConfirmed) return;
+
+        Util.Log("[이어하기] 세이브 데이터 로드 후 씬 이동");
 
         bool loadSuccess = SaveManager.Instance.LoadGame(0);
         if (loadSuccess && SaveManager.Instance.CurrentSaveData != null)
@@ -103,13 +133,19 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
         }
     }
 
-    private void HandleQuitClicked()
+    private async UniTask<bool> OpenConfirmDialogAsync(string message)
     {
-        Util.Log("게임 종료 요청");
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        UnityEngine.Application.Quit();
-#endif
+        if (UIManager.Instance == null) return false;
+
+        ConfirmPopupView popup = await UIManager.Instance.OpenUIAsync<ConfirmPopupView, ConfirmPopupPresenter, ConfirmPopupModel>(
+            UIId.ConfirmPopup);
+
+        if (popup != null)
+        {
+            popup.SetMessage(message);
+            return await popup.WaitForResultAsync();
+        }
+
+        return false;
     }
 }

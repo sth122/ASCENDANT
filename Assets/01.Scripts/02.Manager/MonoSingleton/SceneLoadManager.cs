@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 using Util = DebugLogger<SceneLoadManager>;
 
 /// <summary>
@@ -9,12 +11,20 @@ using Util = DebugLogger<SceneLoadManager>;
 /// </summary>
 public class SceneLoadManager : MonoSingleton<SceneLoadManager>
 {
+    #region 변수
     private readonly List<ILoadable> _loadables = new List<ILoadable>();
+    private AsyncOperationHandle<SceneInstance> _currentSceneHandle;        // 어드레서블 씬 핸들 보관 (씬 전환 시 언로드 누수 방지)
+    private ISceneBootstrap _activeSceneBootstrap;
     private SceneId _currentScene = SceneId.None;
-    private bool _isLoading = false;
 
+    private bool _hasActiveSceneHandle = false;
+    private bool _isLoading = false;
+    #endregion
+
+    #region Property
     public SceneId CurrentScene => _currentScene;
     public bool IsLoading => _isLoading;
+    #endregion
 
     protected override void Awake()
     {
@@ -22,7 +32,7 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
         base.Awake();
 
         // 코어 매니저들을 ILoadable 파이프라인에 등록
-        RegisterLoadable(AssetsManager.Instance as ILoadable);
+        RegisterLoadable(AssetsManager.Instance);
         RegisterLoadable(ObjectPoolManager.Instance);
         RegisterLoadable(UIManager.Instance);
     }
@@ -35,47 +45,100 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
         }
     }
 
-    public void UnregisterLoadable(ILoadable loadable)
+    public void UnregisterLoadable(ILoadable loadable) => _loadables.Remove(loadable);
+
+    /// <summary>
+    /// 씬 부트스트래퍼가 Awake 시점에 스스로를 등록
+    /// </summary>
+    public void RegisterBootstrapper(ISceneBootstrap bootstrap) => _activeSceneBootstrap = bootstrap;
+
+    public void UnregisterBootstrapper(ISceneBootstrap bootstrap)
     {
-        _loadables.Remove(loadable);
+        if (_activeSceneBootstrap == bootstrap)
+        {
+            _activeSceneBootstrap = null;
+        }
     }
 
     public async UniTask LoadSceneFlowAsync(SceneId nextScene)
     {
-        if (_isLoading)
-        {
-            Util.LogWarning("이미 씬 전환이 진행 중입니다.");
-            return;
-        }
+        if (_isLoading) return;
         _isLoading = true;
+        FadeCurtainView fadeCurtain = null;
 
         try
         {
-            Util.Log($"[{_currentScene}] -> [{nextScene}] 씬 전환 파이프라인 개시");
+            // 1. 암막 호출 및 화면 Fade Out
+            if (UIManager.Instance != null)
+            {
+                fadeCurtain = await UIManager.Instance.OpenUIAsync<FadeCurtainView, FadeCurtainPresenter, FadeCurtainModel>(
+                    UIId.FadeCurtainUI, ct: this.destroyCancellationToken
+                );
 
-            // 1. 이전 씬 정리 (역순 실행)
+                if (fadeCurtain != null)
+                {
+                    await fadeCurtain.FadeOutAsync(0.4f, this.destroyCancellationToken);
+                }
+            }
+
+            // 2. 화면이 완전히 암전된 상태에서 로딩 화면
+            if (UIManager.Instance != null)
+            {
+                await UIManager.Instance.OpenUIAsync<LoadingScreenView, LoadingScreenPresenter, LoadingScreenModel>(
+                    UIId.LoadingScreenUI, ct: this.destroyCancellationToken
+                );
+            }
+
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.1f, "이전 씬 데이터를 정리하는 중..."));
+
+            // 3. 로컬 UI 및 이전 씬 리소스 정리
             NotifySceneDestroyToLoadables(_currentScene);
-
-            // 2. 로컬 서비스 및 이전 씬 에셋 정리
             ServiceLocator.ClearSceneLocalServices();
             AssetsManager.Instance.ReleaseSceneAssets();
-            await UnityEngine.Resources.UnloadUnusedAssets().ToUniTask(cancellationToken: this.destroyCancellationToken);
-            System.GC.Collect();
 
-            // 3. Addressables 씬 비동기 로드
-            await Addressables.LoadSceneAsync(nextScene.ToString()).ToUniTask(cancellationToken: this.destroyCancellationToken);
+            // 4. 이전 씬 언로드
+            if (_hasActiveSceneHandle)
+            {
+                await Addressables.UnloadSceneAsync(_currentSceneHandle).ToUniTask(cancellationToken: this.destroyCancellationToken);
+                _hasActiveSceneHandle = false;
+            }
 
-            // 현재 씬 ID 갱신 - Bootstrapper 실행 전 선행 갱신으로 인한 Start 실행 차단
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.35f, "신규 씬을 불러오는 중..."));
+
+            // 5. 신규 씬 비동기 로드
+            AsyncOperationHandle<SceneInstance> sceneHandle = Addressables.LoadSceneAsync(nextScene.ToString());
+            await sceneHandle.ToUniTask(cancellationToken: this.destroyCancellationToken);
+            _currentSceneHandle = sceneHandle;
+            _hasActiveSceneHandle = true;
             _currentScene = nextScene;
 
-            // 4. ILoadable 시스템 순차 초기화 (LoadOrder 오름차순)
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.7f, "시스템 및 오브젝트 풀을 적재하는 중..."));
+
+            // 6. 시스템 순차 초기화 (ObjectPoolManager 씬 종속 풀 로드 등)
             await InitializeLoadablesAsync(nextScene);
 
-            // 5. 새 씬 내부의 ISceneBootstrap 감지 및 실행
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.9f, "월드 액터를 준비하는 중..."));
+
+            // 7. 씬 부트스트랩 실행 (플레이어 스폰, 카메라 타깃 바인딩)
             await ExecuteSceneBootstrapAsync(nextScene);
 
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(1.0f, "로딩 완료"));
 
-            Util.Log($"[{nextScene}] 씬 전환 완료");
+            // 액터 위치 및 카메라 블렌드 완벽 안착을 위한 1프레임 대기
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellationToken: this.destroyCancellationToken);
+            await UniTask.Delay(System.TimeSpan.FromSeconds(0.2f), cancellationToken: this.destroyCancellationToken);
+
+            // 8. 씬 준비가 완전히 끝났으므로 로딩 화면 제거
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.CloseUI(UIId.LoadingScreenUI);
+            }
+
+            // 9. 암막을 걷어내며 화면 페이드 인 (Fade In)
+            if (fadeCurtain != null)
+            {
+                await fadeCurtain.FadeInAsync(0.5f, this.destroyCancellationToken);
+            }
         }
         finally
         {
@@ -85,16 +148,18 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
 
     private void NotifySceneDestroyToLoadables(SceneId scene)
     {
-        _loadables.RemoveAll(x => x is UnityEngine.Object obj && obj == null);
+        _loadables.RemoveAll(HandleNullLoadablePredicate);
         for (int i = _loadables.Count - 1; i >= 0; i--)
         {
             _loadables[i].OnSceneDestroy(scene);
         }
     }
 
+    private bool HandleNullLoadablePredicate(ILoadable loadable) => loadable is UnityEngine.Object obj && obj == null;
+
     private async UniTask InitializeLoadablesAsync(SceneId scene)
     {
-        var sorted = _loadables.OrderBy(x => x.LoadOrder).ToList();
+        var sorted = _loadables.OrderBy(GetLoadOrderKey).ToList();
         for (int i = 0; i < sorted.Count; i++)
         {
             await sorted[i].OnSceneLoadCreate(scene);
@@ -104,24 +169,18 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
             sorted[i].Init(scene);
         }
     }
+    private int GetLoadOrderKey(ILoadable loadable) => loadable.LoadOrder;
 
     private async UniTask ExecuteSceneBootstrapAsync(SceneId scene)
     {
-        ISceneBootstrap bootstrap = null;
-        var monos = UnityEngine.Object.FindObjectsByType<UnityEngine.MonoBehaviour>(UnityEngine.FindObjectsSortMode.None);
-        foreach (var mono in monos)
+        if (_activeSceneBootstrap != null)
         {
-            if (mono is ISceneBootstrap target)
-            {
-                bootstrap = target;
-                break;
-            }
+            Util.Log($"[{scene}] 등록된 ISceneBootstrap 감지: 비동기 셋업 실행");
+            await _activeSceneBootstrap.OnSceneReadyAsync();
         }
-
-        if (bootstrap != null)
+        else
         {
-            Util.Log($"[{scene}] ISceneBootstrap 감지: 비동기 셋업 실행");
-            await bootstrap.OnSceneReadyAsync();
+            Util.LogWarning($"[{scene}] 등록된 ISceneBootstrap이 없습니다.");
         }
     }
 }

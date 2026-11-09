@@ -1,8 +1,6 @@
 ﻿// 모든 유닛이 공유할 수 있는 제네릭 Idle 상태 클래스
 public class PlayerGroundState : PlayerBaseState
 {
-    private const float RequiredAttackStamina = 14.0f;
-
     public PlayerGroundState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
     public override void Enter()
@@ -10,6 +8,16 @@ public class PlayerGroundState : PlayerBaseState
         base.Enter();
         // 상태 입장 시 커맨드 이벤트 구독
         SubscribeEvent();
+    }
+
+    public override void Update()
+    {
+        base.Update();
+        if (!owner.Movement.CheckGrounded() && owner.Rigidbody.linearVelocity.y < -1.5f)
+        {
+            _playerStateMachine.ChangeState(UnitState.Fall);
+            return;
+        }
     }
 
     public override void Exit()
@@ -25,53 +33,56 @@ public class PlayerGroundState : PlayerBaseState
     /// <param name="command"></param>
     public virtual void HandleCommandInput(InputCommandType command)
     {
+        PlayerCombatConfigSO config = owner.CombatConfig;
+
         switch (command)
         {
             case InputCommandType.Roll:
-                // 스태미나가 부족하면 구르기 상태로 전이하지 않고 입력을 폐기
-                if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(PlayerRollState.RollStaminaCost))
+                float rollCost = config != null ? config.RollStaminaCost : 18.0f;
+                if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(rollCost))
                 {
                     owner.InputReader.ClearCommand(InputCommandType.Roll);
                     return;
                 }
-                _playerStateMachine.ChangeState(UnitState.Roll); 
+                _playerStateMachine.ChangeState(UnitState.Roll);
                 break;
 
             case InputCommandType.Jump:
-                // 스태미나가 부족하면 점프 상태로 전이하지 않고 입력을 폐기
                 if (!owner.Movement.IsGrounded)
                 {
                     owner.InputReader.ClearCommand(InputCommandType.Jump);
                     return;
                 }
 
-                if (owner.Movement.IsGrounded)
+                float jumpCost = config != null ? config.JumpStaminaCost : 12.0f;
+                if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(jumpCost))
                 {
-                    _playerStateMachine.ChangeState(UnitState.Jump);
+                    owner.InputReader.ClearCommand(InputCommandType.Jump);
+                    return;
                 }
+
+                _playerStateMachine.ChangeState(UnitState.Jump);
                 break;
 
             case InputCommandType.Attack:
-                // 1. 앞잡(Riposte) 대상이 있는지 우선 검사
                 if (owner.TryTriggerRiposte())
                 {
                     owner.InputReader.ClearCommand(InputCommandType.Attack);
                     return;
                 }
 
-                // 2. 스태미나가 부족하면 공격 상태로 전이하지 않고 입력을 폐기
-                if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(RequiredAttackStamina))
+                float atkCost = config != null ? config.AttackStaminaCost : 14.0f;
+                if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(atkCost))
                 {
                     owner.InputReader.ClearCommand(InputCommandType.Attack);
                     return;
                 }
 
-                // 3. 자원이 충분할 때만 공격 FSM 진입
                 _playerStateMachine.ChangeState(UnitState.Attack);
                 break;
 
-            case InputCommandType.Parry:
-                _playerStateMachine.ChangeState(UnitState.Parry); 
+            case InputCommandType.Guard:
+                _playerStateMachine.ChangeState(UnitState.Guard);
                 break;
         }
     }
@@ -86,7 +97,8 @@ public class PlayerGroundState : PlayerBaseState
     protected virtual void HandleSprintChanged(bool isSprinting)
     {
         // Shift 입력 감지 시 스태미나 여유가 있으면 Sprint 상태로 전이
-        if (isSprinting && _playerStatusController != null && _playerStatusController.HasEnoughStamina(5.0f))
+        float minStamina = owner.CombatConfig != null ? owner.CombatConfig.MinimumSprintStamina : 5.0f;
+        if (isSprinting && _playerStatusController != null && _playerStatusController.HasEnoughStamina(minStamina))
         {
             _playerStateMachine.ChangeState(UnitState.Sprint);
         }

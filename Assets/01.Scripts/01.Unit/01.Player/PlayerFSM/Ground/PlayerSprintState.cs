@@ -60,8 +60,8 @@ public class PlayerSprintState : PlayerGroundState
         float sprintSpeed = _playerStatusController != null && _playerStatusController.PlayerMotionStats != null
             ? _playerStatusController.PlayerMotionStats.SprintSpeed.Value            : 0f;
 
-        float rotSpeed = _playerStatusController != null && _playerStatusController.PlayerStatusSource != null
-            ? _playerStatusController.PlayerStatusSource.RotationSpeed : 16.0f;
+        float rotSpeed = _playerStatusController != null && _playerStatusController.PlayerInfoSource != null
+            ? _playerStatusController.PlayerInfoSource.RotationSpeed : 16.0f;
 
         owner.MoveAPI(moveDir, sprintSpeed);
 

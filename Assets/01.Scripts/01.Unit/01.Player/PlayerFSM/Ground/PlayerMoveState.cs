@@ -44,8 +44,8 @@ public class PlayerMoveState : PlayerGroundState
         owner.MoveAPI(moveDir, walkSpeed);
 
         // 2. 회전 속도 안전 참조 (NullReferenceException 원천 차단)
-        float rotSpeed = (_playerStatusController != null && _playerStatusController.PlayerStatusSource != null)
-            ? _playerStatusController.PlayerStatusSource.RotationSpeed
+        float rotSpeed = (_playerStatusController != null && _playerStatusController.PlayerInfoSource != null)
+            ? _playerStatusController.PlayerInfoSource.RotationSpeed
             : 16f;
 
 

@@ -128,4 +128,15 @@ public class CameraManager : MonoSingleton<CameraManager>
             cam.Priority = priority;
         }
     }
+
+    public void SnapToFreeLook()
+    {
+        ResetToFreeLook();
+
+        if (Camera.main != null && Camera.main.TryGetComponent(out CinemachineBrain brain))
+        {
+            // 다음 1프레임 동안 블렌드를 건너뛰고 위치 강제 스냅
+            brain.ActiveBlend = null;
+        }
+    }
 }

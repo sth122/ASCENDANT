@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1f04262a7742884ea7d7ca1d1d94204, type: 3}
+  m_Name: DragonAnimData
+  m_EditorClassIdentifier: Assembly-CSharp::AnimationDataSO
+  _parameters: []
+  _states:
+  - StateType: 0
+    Clip: {fileID: 2730551832294769963, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 13
+    Clip: {fileID: -889264731830517786, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 8
+    Clip: {fileID: 7531551409715563450, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 200
+    Clip: {fileID: 4086041140739928925, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 50
+    Clip: {fileID: 6614646293377695111, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 51
+    Clip: {fileID: -2811045609781711205, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1000
+    Clip: {fileID: -8821035615558864286, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1001
+    Clip: {fileID: 1335988897893820275, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1002
+    Clip: {fileID: -2584334475559331786, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1003
+    Clip: {fileID: 5017467760070778570, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1004
+    Clip: {fileID: -7817215251607377197, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1005
+    Clip: {fileID: -4625757715728654789, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1006
+    Clip: {fileID: -133544251841929872, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1007
+    Clip: {fileID: 4513996099314511126, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1008
+    Clip: {fileID: -8205536771205602356, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1009
+    Clip: {fileID: 4684307791825903127, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1010
+    Clip: {fileID: 5764295385670679468, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 1011
+    Clip: {fileID: 6826597370919330143, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 72
+    Clip: {fileID: 6826597370919330143, guid: c182ae99900b46247aa161bd9ba840d3, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15

@@ -8,7 +8,7 @@ public class PlayerJumpState : PlayerBaseState
     public const float JumpStaminaCost = 12.0f;     // 임시 외부 참조 허용. 소모값 SO나 Module을 따로 만들 예정
     private const float AirControlFactor = 0.4f;    // 공중 이동 제어 감쇠율
     private const float JumpCooldown = 0.15f;       // 도약 직후 즉시 착지 판정되는 것 방지
-    private float _tiemInAir = 0f;
+    private float _timeInAir = 0f;
 
     public PlayerJumpState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
@@ -17,7 +17,7 @@ public class PlayerJumpState : PlayerBaseState
     {
         base.Enter();
 
-        _tiemInAir = 0f;
+        _timeInAir = 0f;
         owner.InputReader.ClearCommand(InputCommandType.Jump);
 
         // 방어선
@@ -49,21 +49,31 @@ public class PlayerJumpState : PlayerBaseState
     public override void Update()
     {
         base.Update();
-        _tiemInAir += UnityEngine.Time.deltaTime;
+        _timeInAir += UnityEngine.Time.deltaTime;
 
-        if(_tiemInAir >= JumpCooldown && owner.Movement.IsGrounded)
+        if (_timeInAir >= JumpCooldown)
         {
-            owner.InputReader.ClearCommand(InputCommandType.Jump);
+            // 1. 점프 정점을 지나 하강하기 시작하면 Fall 상태로 전이하여 체공 시퀀스 인계
+            if (owner.Rigidbody.linearVelocity.y <= 0f && !owner.Movement.IsGrounded)
+            {
+                _playerStateMachine.ChangeState(UnitState.Fall);
+                return;
+            }
 
-            if(owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
+            // 2. 즉시 착지한 경우 기본 지상 상태 복귀
+            if (owner.Movement.IsGrounded)
             {
-                _playerStateMachine.ChangeState(UnitState.Move);
+                owner.InputReader.ClearCommand(InputCommandType.Jump);
+                if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
+                {
+                    _playerStateMachine.ChangeState(UnitState.Move);
+                }
+                else
+                {
+                    _playerStateMachine.ChangeState(UnitState.Idle);
+                }
+                return;
             }
-            else
-            {
-                _playerStateMachine.ChangeState(UnitState.Idle);
-            }
-            return;
         }
     }
 

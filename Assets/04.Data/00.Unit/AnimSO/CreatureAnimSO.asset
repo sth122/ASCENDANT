@@ -14,35 +14,67 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimationDataSO
   _parameters: []
   _states:
-  - StateType: 3
-    CrossFadeDuration: 0.15
-  - StateType: 4
-    CrossFadeDuration: 0.15
-  - StateType: 5
-    CrossFadeDuration: 0.15
-  - StateType: 11
-    CrossFadeDuration: 0.15
-  - StateType: 12
+  - StateType: 0
+    Clip: {fileID: 7400006, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
     CrossFadeDuration: 0.15
   - StateType: 13
+    Clip: {fileID: 7400042, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
     CrossFadeDuration: 0.15
   - StateType: 14
+    Clip: {fileID: 7400038, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
     CrossFadeDuration: 0.15
-  - StateType: 6
-    CrossFadeDuration: 0.1
-  - StateType: 7
-    CrossFadeDuration: 0.1
   - StateType: 8
-    CrossFadeDuration: 0.1
-  - StateType: 9
+    Clip: {fileID: 7400028, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
     CrossFadeDuration: 0.15
   - StateType: 100
-    CrossFadeDuration: 0.05
+    Clip: {fileID: 7400028, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
   - StateType: 101
-    CrossFadeDuration: 0.05
+    Clip: {fileID: 7400030, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
   - StateType: 200
-    CrossFadeDuration: 0.1
+    Clip: {fileID: 7400020, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
   - StateType: 201
+    Clip: {fileID: 7400022, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
     CrossFadeDuration: 0.1
   - StateType: 15
+    Clip: {fileID: 7400010, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
     CrossFadeDuration: 0.1
+  - StateType: 16
+    Clip: {fileID: 7400014, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.1
+  - StateType: 71
+    Clip: {fileID: 7400040, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15
+  - StateType: 70
+    Clip: {fileID: 7400016, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.05
+  - StateType: 50
+    Clip: {fileID: 7400000, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.05
+  - StateType: 51
+    Clip: {fileID: 7400002, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.1
+  - StateType: 52
+    Clip: {fileID: 7400004, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.1
+  - StateType: 72
+    Clip: {fileID: 7400036, guid: 5af37b30310b3054a8a565b87ed504b7, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.15

@@ -16,7 +16,7 @@ public class TitleSceneBootstrapper : SceneBootstrapper
 
         // 타이틀 시작 메뉴 오픈
         await UIManager.Instance.OpenUIAsync<TitleMenuView, TitleMenuPresenter, TitleMenuModel>(
-                    UIId.None, "TitleMenuUI", model, ct: this.destroyCancellationToken);
+                    UIId.TitleMenuUI, model, ct: this.destroyCancellationToken);
     }
 
     protected override void OnSceneReadyCompleted()

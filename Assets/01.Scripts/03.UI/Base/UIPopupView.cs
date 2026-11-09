@@ -30,11 +30,23 @@ public abstract class UIPopupView<TResult> : UIBase
 
         await ShowAsync(0.2f, ct);
 
-        // 유저 클릭 또는 취소까지 대기
-        TResult result = await _popupTaskSource.Task;
+        TResult result;
+        try
+        {
+            using (ct.Register(HandleExternalCancel))
+            {
+                result = await _popupTaskSource.Task;
+            }
+        }
+        finally
+        {
+            await HideAsync(0.15f, ct); 
 
-        await HideAsync(0.15f, ct);
-
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.NotifyPopupClosed(this);
+            }
+        }
         return result;
     }
 
@@ -56,8 +68,17 @@ public abstract class UIPopupView<TResult> : UIBase
 
     protected virtual void HandleDimmedClicked() => CancelPopup();
 
+    private void HandleExternalCancel()
+    {
+        if (_popupTaskSource != null && !_popupTaskSource.Task.Status.IsCompleted())
+        {
+            _popupTaskSource.TrySetCanceled();
+        }
+    }
+
     protected override void OnDestroy()
     {
+        HandleExternalCancel();
         base.OnDestroy();
         if (_dimmedBackgroundButton != null)
         {

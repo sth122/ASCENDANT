@@ -6,9 +6,9 @@
 /// </summary>
 public class PlayerRollState : PlayerActionState
 {
-    public const float RollStaminaCost = 18.0f;        // 임시 외부 참조 허용. 소모값 SO나 Module을 따로 만들 예정
-    private const float InvincibleDuration = 0.35f;
-    private const float RollTotalDuration = 0.85f;
+    private UnityEngine.Vector3 _rollExecutionDirection;
+    private float _currentRollDuration;
+    private float _elapsedRollTime;
 
     public bool IsInvincible { get; private set; }
 
@@ -19,63 +19,114 @@ public class PlayerRollState : PlayerActionState
     {
         base.Enter();
 
-        // 방어선
-        if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(RollStaminaCost))
-        {
-            CompleteActionAndEvaluateTransition();
-            return;
-        }
+        float staminaCost = _playerCombatConfigSO != null ? _playerCombatConfigSO.RollStaminaCost : 18.0f;
 
-        // 1. 구르기 방향 결정 (입력 방향 우선, 무입력 시 백스탭 대용 180도 반전 - 현재 잠시 해제)
+        // 1. 구르기 방향 결정
         UnityEngine.Vector3 moveInputDirection = owner.CurrentMoveDirection;
         if (moveInputDirection.sqrMagnitude > 0.001f)
         {
-            owner.transform.rotation = UnityEngine.Quaternion.LookRotation(moveInputDirection.normalized);
+            _rollExecutionDirection = moveInputDirection.normalized;
+            owner.transform.rotation = UnityEngine.Quaternion.LookRotation(_rollExecutionDirection);
+        }
+        else
+        {
+            // 이동 입력이 없을 경우 캐릭터의 현재 전방으로 방향 할당
+            _rollExecutionDirection = owner.transform.forward;
         }
 
         // 2. 스태미나 차감
-        _playerStatusController?.ConsumeStamina(RollStaminaCost);
+        _playerStatusController?.ConsumeStamina(staminaCost);
 
-        // 3. 기존 잔여 관성 속도 초기화 (이전 이동 속도가 구르기에 간섭하는 것 방지)
-        owner.StopMovementAPI();
-
-        // 4. Root Motion 활성화 (클립의 전진 변위가 Rigidbody를 직접 추진하도록 권한 부여)
-        _playerAnimController.SetRootMotion(true);
-
-        // 5. 애니메이터 Roll 트리거 실행
         _playerAnimController.SetTrigger(AnimParamType.Roll);
 
+        _elapsedRollTime = 0f;
         System.Threading.CancellationToken token = CreateActionToken();
         ExecuteRollAsync(token).Forget();
+    }
+
+    public override void FixedUpdate()
+    {
+        base.FixedUpdate();
+
+        if (_currentRollDuration > 0f)
+        {
+            _elapsedRollTime += UnityEngine.Time.fixedDeltaTime;
+            float normalized = UnityEngine.Mathf.Clamp01(_elapsedRollTime / _currentRollDuration);
+
+            float rollForce = (_playerStatusController != null && _playerStatusController.PlayerMotionStats != null)
+                ? _playerStatusController.PlayerMotionStats.RollForce.Value : 9.0f;
+
+            owner.ApplyRollAPI(_rollExecutionDirection, rollForce, normalized);
+        }
     }
 
     public override void Exit()
     {
         base.Exit();
-        // 구르기가 종료되면 Root Motion을 회수하여 일반 이동 제어권 복원
-        _playerAnimController.SetRootMotion(false);
+        _currentRollDuration = 0f;
+        _elapsedRollTime = 0f;
+        _rollExecutionDirection = UnityEngine.Vector3.zero;
         owner.StopMovementAPI();
         IsInvincible = false;
     }
 
     private async Cysharp.Threading.Tasks.UniTaskVoid ExecuteRollAsync(System.Threading.CancellationToken token)
     {
+        RollTier tier = owner.StatusController.PlayerMotionStats.CurrentRollTier;
+
+        if (tier == RollTier.Overburdened)
+        {
+            CompleteActionAndEvaluateTransition();
+            return;
+        }
+
+        RollTierConfig tierConfig = owner.CombatConfig != null ? owner.CombatConfig.GetRollTierConfig(tier)
+            : new RollTierConfig(12f / 60f, 25f / 60f, 21f / 60f);
+
+        _currentRollDuration = tierConfig.TotalDuration;
         IsInvincible = true;
 
         // 1. 무적 시간 대기
-        bool isCanceledAtInvincible = await Cysharp.Threading.Tasks.UniTask.Delay((int)(InvincibleDuration * 1000f),
+        bool canceledAtIFrame = await Cysharp.Threading.Tasks.UniTask.Delay(System.TimeSpan.FromSeconds(tierConfig.InvincibleDuration),
+            delayTiming: Cysharp.Threading.Tasks.PlayerLoopTiming.Update,
             cancellationToken: token).SuppressCancellationThrow();
-        if (isCanceledAtInvincible) return;
+        if (canceledAtIFrame) return;
 
         IsInvincible = false;
 
-        // 2. 잔여 후딜레이 대기
-        float remainDelay = RollTotalDuration - InvincibleDuration;
-        bool isCanceledAtFinish = await Cysharp.Threading.Tasks.UniTask.Delay((int)(remainDelay * 1000f),
+        // 2. 캔슬 윈도우 대기 
+        float lockoutDuration = UnityEngine.Mathf.Max(0f, tierConfig.CancelWindow - tierConfig.InvincibleDuration);
+        bool canceledAtLockout = await Cysharp.Threading.Tasks.UniTask.Delay(System.TimeSpan.FromSeconds(lockoutDuration),
+            delayTiming: Cysharp.Threading.Tasks.PlayerLoopTiming.Update,
             cancellationToken: token).SuppressCancellationThrow();
-        if (isCanceledAtFinish) return;
+        if (canceledAtLockout) return;
 
-        // 3. 다음 상태 전이 콜백
+        // 3. 캔슬 윈도우 도달
+        float remainingWindow = UnityEngine.Mathf.Max(0f, tierConfig.TotalDuration - tierConfig.CancelWindow);
+        float elapsedWindow = 0f;
+
+        while (elapsedWindow < remainingWindow)
+        {
+            if (token.IsCancellationRequested) return;
+
+            // 이동 입력이 들어오면 후딜레이를 즉시 캔슬하고 이동 상태로 전이
+            if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
+            {
+                CompleteActionAndEvaluateTransition();
+                return;
+            }
+
+            // 선입력 큐의 커맨드를 여기서 TryConsume하지 않고, 존재 여부만 감지하여 CompleteActionAndEvaluateTransition으로 일원화
+            if (owner.InputReader.HasPendingCommand)
+            {
+                CompleteActionAndEvaluateTransition();
+                return;
+            }
+
+            elapsedWindow += UnityEngine.Time.deltaTime;
+            await Cysharp.Threading.Tasks.UniTask.Yield(Cysharp.Threading.Tasks.PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+        }
+
         CompleteActionAndEvaluateTransition();
     }
 }

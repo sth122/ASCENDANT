@@ -71,6 +71,11 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
 
         SetupPlayerRuntimeStatus(_spawnedPlayer, save);
 
+        if (_spawnedPlayer.TryGetComponent(out PlayerInventoryHandler invHandler))
+        {
+            invHandler.InitializeInventory(DataManager.Instance);
+        }
+
         // 4. 시네마신 가상 카메라 타깃 주입
         if (CameraManager.Instance != null && _spawnedPlayer != null)
         {
@@ -101,26 +106,33 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
             Util.LogError("PlayerStatusSO에서 PlayerStatus를 찾을 수 없습니다.");
             return;
         }
-        PlayerStatus runtimeStatus = (PlayerStatus)status.Clone();
+        PlayerInfo runtimeStatus = (PlayerInfo)status.Clone();
 
         float initialHp;
 
-        // 세이브 데이터가 존재한다면 성장 스탯과 체력 복원
-        if (save != null && save.HasCheckpoint && save.PlayerData != null)
+
+        // 1. 인메모리 세션 데이터가 존재하는 경우
+        if (SessionDataManager.Instance.HasActiveSession)
+        {
+            PlayerSaveData sessionData = SessionDataManager.Instance.CurrentSessionData;
+            runtimeStatus.ApplySaveData(sessionData);
+            initialHp = sessionData.CurrentHp;
+            Util.Log($"[세션 데이터 주입] 체력: {initialHp}, 레벨: {sessionData.SoulLevel}");
+        }
+        // 2. 화톳불 세이브 데이터가 존재하는 경우
+        else if (save != null && save.HasCheckpoint && save.PlayerData != null)
         {
             runtimeStatus.ApplySaveData(save.PlayerData);
-
-            // 새 게임인 경우 풀피, 이어하기인 경우 세이브된 체력 적용
             initialHp = save.PlayerData.CurrentHp;
+            SessionDataManager.Instance.LoadSessionFromSave(save.PlayerData);
+            Util.Log($"[화톳불 영속 세이브 주입] 체력: {initialHp}");
         }
+        // 3. 신규 게임 초기 상태
         else
         {
             initialHp = runtimeStatus.CalculateMaxHp();
-            if (save != null && save.PlayerData != null)
-            {
-                save.PlayerData = new PlayerSaveData(runtimeStatus, initialHp);
-                SaveManager.Instance.SaveCurrentGame(save.SaveSlotIndex);
-            }
+            SessionDataManager.Instance.InitializeNewSession(runtimeStatus);
+            Util.Log("[신규 게임 기본 스탯 주입]");
         }
 
         // PlayerController 초기화 실행 (상태머신 생성, HP 주입, FSM 기동)
@@ -130,9 +142,14 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
     protected override async Cysharp.Threading.Tasks.UniTask SetupSceneUIAsync()
     {
         PlayerHUDModel hudModel = new PlayerHUDModel();
-        await UIManager.Instance.OpenUIAsync<PlayerHUDView, PlayerHUDPresetner, PlayerHUDModel>(
-            UIId.PlayerHUD, "PlayerHUD", hudModel, ct: this.destroyCancellationToken
+        await UIManager.Instance.OpenUIAsync<PlayerHUDView, PlayerHUDPresenter, PlayerHUDModel>(
+            UIId.PlayerHUD, hudModel, ct: this.destroyCancellationToken
         );
+
+        //QuickSlotModel quickSlotModel = new QuickSlotModel();
+        //await UIManager.Instance.OpenUIAsync<QuickSlotView, QuickSlotPresenter, QuickSlotModel>(
+        //    UIId.QuickSlotHUD, quickSlotModel, ct: this.destroyCancellationToken
+        //);
     }
 
     protected override void OnSceneReadyCompleted()
@@ -156,6 +173,9 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
 
         UnityEngine.Cursor.lockState = UnityEngine.CursorLockMode.Locked;
         UnityEngine.Cursor.visible = false;
+
+        // 3. 씬 준비 완료 브로드캐스트
+        EventBusSystem.Publish(new GameSceneReadyEvent(_sceneId));
 
         Util.Log("[GameScene 부트스트랩 완료: 인게임 조작 개시]");
     }

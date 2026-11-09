@@ -14,36 +14,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimationDataSO
   _parameters:
   - ParamType: 0
-    ParameterName: MoveX
   - ParamType: 1
-    ParameterName: MoveZ
   - ParamType: 2
-    ParameterName: StrafeX
   - ParamType: 3
-    ParameterName: StrafeZ
   - ParamType: 4
-    ParameterName: IsLockOn
   - ParamType: 5
-    ParameterName: Attack
   - ParamType: 6
-    ParameterName: ComboStep
   - ParamType: 7
-    ParameterName: Riposte
   - ParamType: 8
-    ParameterName: IsGuarding
   - ParamType: 9
-    ParameterName: Parry
   - ParamType: 10
-    ParameterName: ParrySuccess
   - ParamType: 11
-    ParameterName: GetHit
   - ParamType: 12
-    ParameterName: Die
   - ParamType: 13
-    ParameterName: Jump
   - ParamType: 14
-    ParameterName: Roll
+  - ParamType: 15
+  - ParamType: 16
+  - ParamType: 17
+  - ParamType: 18
+  - ParamType: 19
+  - ParamType: 20
+  - ParamType: 21
+  - ParamType: 22
   _states:
-  - StateType: 2
-    StateName: Stun
-    CrossFadeDuration: 0.05
+  - StateType: 9
+    Clip: {fileID: -203655887218126122, guid: 407d26d7ac3c87f45b8e126ffd4ee95c, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.1
+  - StateType: 10
+    Clip: {fileID: -203655887218126122, guid: 1a4879f5bcf334549818eb3ce6550e77, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.1
