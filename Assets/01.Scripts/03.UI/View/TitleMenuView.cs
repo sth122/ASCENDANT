@@ -1,4 +1,6 @@
-﻿/// <summary>
+﻿using Cysharp.Threading.Tasks;
+
+/// <summary>
 /// 타이틀 화면 시각 요소 뷰 (버튼, 로고 등)
 /// </summary>
 public class TitleMenuView : UIWindowView
@@ -20,11 +22,21 @@ public class TitleMenuView : UIWindowView
         Layer = UILayer.Window;
     }
 
+
+
     public void SetContinueInteractable(bool interactable)
     {
         if (_continueButton != null)
         {
             _continueButton.interactable = interactable;
         }
+    }
+    public override async UniTask CloseWindowAsync(float duration = 0.15f)
+    {
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Title)
+        {
+            return;
+        }
+        await base.CloseWindowAsync();
     }
 }

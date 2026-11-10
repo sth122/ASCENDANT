@@ -28,12 +28,7 @@ public class BonfireInteractable : BaseInteractable
         // 2. 세이브 매니저 영속 파일 기록
         if (SaveManager.Instance != null)
         {
-            SaveManager.Instance.UpdateCheckpoint(
-                spawnPos, rotY, _currentScene,
-                player.StatusController.PlayerInfoSource,
-                player.StatusController.MaxHp,
-                slotIndex: 0
-            );
+            SaveManager.Instance.UpdateCheckpoint(spawnPos, rotY, _currentScene, player, slotIndex: 0);
 
             if (player.TryGetComponent(out PlayerInventoryHandler invHandler) && SaveManager.Instance.CurrentSaveData != null)
             {

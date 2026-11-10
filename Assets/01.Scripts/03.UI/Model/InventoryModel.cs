@@ -3,30 +3,35 @@
 /// </summary>
 public class InventoryModel : IUIModel
 {
-    // 좌측 슬롯 및 중량 상태
-    public float CurrentWeight { get; set; } = 0f;
-    public float MaxWeight { get; set; } = 40f;
-    public float WeightRatio => MaxWeight > 0f ? (CurrentWeight / MaxWeight) * 100f : 0f;
-    public RollTier CurrentRollTier { get; set; } = RollTier.Mid;
+    public int SoulLevel { get; set; }
+    public int CurrentSouls { get; set; }
 
-    // 우측 캐릭터 데이터 스냅샷
-    public float CurrentHp { get; set; } = 0f;
-    public float CurrentStamina { get; set; } = 0f;
-    public float CurrentPoise { get; set; } = 0f;
-    public float CurrentAR { get; set; } = 0f;
+    public int Vigor { get; set; }
+    public int Endurance { get; set; }
+    public int Strength { get; set; }
+    public int Dexterity { get; set; }
 
-    // 현재 선택/포커스된 아이템
-    public Item FocusedItem { get; set; } = null;
+    public int BonusStrength { get; set; }
+    public int BonusDexterity { get; set; }
+
+    public float CurrentHp { get; set; }
+    public float MaxHp { get; set; }
+    public float CurrentStamina { get; set; }
+    public float MaxStamina { get; set; }
+
+    public float CurrentWeight { get; set; }
+    public float MaxWeight { get; set; }
+    public RollTier CurrentRollTier { get; set; }
+
+    public float CurrentAR { get; set; }
+    public float CurrentPoise { get; set; }
+    public float FlatDefense { get; set; }
+    public float Absorption { get; set; }
+
+    public Item FocusedItem { get; set; }
 
     public void Reset()
     {
-        CurrentWeight = 0f;
-        MaxWeight = 40f;
-        CurrentRollTier = RollTier.Mid;
-        CurrentHp = 0f;
-        CurrentStamina = 0f;
-        CurrentPoise = 0f;
-        CurrentAR = 0f;
         FocusedItem = null;
     }
 }

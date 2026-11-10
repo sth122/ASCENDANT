@@ -1,8 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
+using UnityEngine.EventSystems;
 
-/// <summary>
-/// InventoryView와 Inventory 도메인을 중계하는 프리젠터
-/// </summary>
 public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
 {
     private PlayerController _player;
@@ -13,9 +11,14 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
     {
         ResolvePlayerReferences();
         OnBindHandler();
+
+        if (View != null && View.WeaponTabToggle != null)
+        {
+            View.WeaponTabToggle.isOn = true;
+        }
         FilterGridByCategory(ItemCategory.Weapon);
         SynchronizeEquipAndQuickSlots();
-        UpdateFullView();
+        UpdateFullModel();
     }
 
     protected override void OnUnbind()
@@ -30,39 +33,32 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         OnUnbindHandler();
         if (View == null) return;
 
-        if (View.CloseButton != null)
-        {
-            View.CloseButton.onClick.AddListener(HandleCloseClicked);
-        }
+        if (View.CloseButton != null) View.CloseButton.onClick.AddListener(HandleCloseClicked);
 
-        // 카테고리 탭 버튼 리스너 등록
-        if (View.WeaponTabButton != null) View.WeaponTabButton.onClick.AddListener(HandleWeaponTabClicked);
-        if (View.ShieldTabButton != null) View.ShieldTabButton.onClick.AddListener(HandleShieldTabClicked);
-        if (View.ArmorTabButton != null) View.ArmorTabButton.onClick.AddListener(HandleArmorTabClicked);
-        if (View.ConsumableTabButton != null) View.ConsumableTabButton.onClick.AddListener(HandleConsumableTabClicked);
+        if (View.WeaponTabToggle != null) View.WeaponTabToggle.onValueChanged.AddListener((isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Weapon); });
+        if (View.ShieldTabToggle != null) View.ShieldTabToggle.onValueChanged.AddListener((isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Shield); });
+        if (View.ArmorTabToggle != null) View.ArmorTabToggle.onValueChanged.AddListener((isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Armor); });
+        if (View.AccessoryTabToggle != null) View.AccessoryTabToggle.onValueChanged.AddListener((isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Accessory); });
+        if (View.ConsumableTabToggle != null) View.ConsumableTabToggle.onValueChanged.AddListener((isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Consumable); });
 
-        // 그리드 슬롯 호버 및 클릭 등록
         for (int i = 0; i < View.GridSlots.Count; i++)
         {
             View.GridSlots[i].OnSlotClickedEvent += HandleSlotClicked;
             View.GridSlots[i].OnSlotHoverEvent += HandleSlotHover;
         }
 
-        // 6대 장비 슬롯 등록
         BindEquipSlot(View.MainWeaponSlot);
         BindEquipSlot(View.ShieldSlot);
         BindEquipSlot(View.HelmetSlot);
         BindEquipSlot(View.ChestArmorSlot);
-        BindEquipSlot(View.LeggingsSlot);
+        BindEquipSlot(View.GauntletsSlot);
         BindEquipSlot(View.BootsSlot);
+        BindEquipSlot(View.NecklaceSlot);
+        BindEquipSlot(View.RingSlot);
 
-        // 4대 퀵슬롯 등록 슬롯 등록
         for (int i = 0; i < View.QuickAssignSlots.Count; i++)
         {
-            if (View.QuickAssignSlots[i] != null)
-            {
-                View.QuickAssignSlots[i].OnSlotHoverEvent += HandleSlotHover;
-            }
+            if (View.QuickAssignSlots[i] != null) View.QuickAssignSlots[i].OnSlotHoverEvent += HandleSlotHover;
         }
 
         if (_inventory != null)
@@ -76,15 +72,13 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
     {
         if (View == null) return;
 
-        if (View.CloseButton != null)
-        {
-            View.CloseButton.onClick.RemoveListener(HandleCloseClicked);
-        }
+        if (View.CloseButton != null) View.CloseButton.onClick.RemoveAllListeners();
 
-        if (View.WeaponTabButton != null) View.WeaponTabButton.onClick.RemoveListener(HandleWeaponTabClicked);
-        if (View.ShieldTabButton != null) View.ShieldTabButton.onClick.RemoveListener(HandleShieldTabClicked);
-        if (View.ArmorTabButton != null) View.ArmorTabButton.onClick.RemoveListener(HandleArmorTabClicked);
-        if (View.ConsumableTabButton != null) View.ConsumableTabButton.onClick.RemoveListener(HandleConsumableTabClicked);
+        if (View.WeaponTabToggle != null) View.WeaponTabToggle.onValueChanged.RemoveAllListeners();
+        if (View.ShieldTabToggle != null) View.ShieldTabToggle.onValueChanged.RemoveAllListeners();
+        if (View.ArmorTabToggle != null) View.ArmorTabToggle.onValueChanged.RemoveAllListeners();
+        if (View.AccessoryTabToggle != null) View.AccessoryTabToggle.onValueChanged.RemoveAllListeners();
+        if (View.ConsumableTabToggle != null) View.ConsumableTabToggle.onValueChanged.RemoveAllListeners();
 
         for (int i = 0; i < View.GridSlots.Count; i++)
         {
@@ -96,69 +90,15 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         UnbindEquipSlot(View.ShieldSlot);
         UnbindEquipSlot(View.HelmetSlot);
         UnbindEquipSlot(View.ChestArmorSlot);
-        UnbindEquipSlot(View.LeggingsSlot);
+        UnbindEquipSlot(View.GauntletsSlot);
         UnbindEquipSlot(View.BootsSlot);
+        UnbindEquipSlot(View.NecklaceSlot);
+        UnbindEquipSlot(View.RingSlot);
 
         if (_inventory != null)
         {
             _inventory.OnSlotUpdated -= HandleDomainSlotUpdated;
             _inventory.OnEquipmentChanged -= HandleDomainEquipmentChanged;
-        }
-    }
-
-    private void HandleWeaponTabClicked() => FilterGridByCategory(ItemCategory.Weapon);
-    private void HandleShieldTabClicked() => FilterGridByCategory(ItemCategory.Shield);
-    private void HandleArmorTabClicked() => FilterGridByCategory(ItemCategory.Armor);
-    private void HandleConsumableTabClicked() => FilterGridByCategory(ItemCategory.Consumable);
-
-    /// <summary>
-    /// 상단 탭에 맞춰 가방 아이템을 필터링하여 30칸 그리드에 순차 정렬 렌더링
-    /// </summary>
-    private void FilterGridByCategory(ItemCategory category)
-    {
-        _currentCategory = category;
-        if (_inventory == null || View == null) return;
-
-        int gridIdx = 0;
-        for (int i = 0; i < Inventory.DefaultCapacity; i++)
-        {
-            Item item = _inventory.GetItem(i);
-            if (item != null && item.Data != null && item.Data.Category == category)
-            {
-                if (gridIdx < View.GridSlots.Count)
-                {
-                    View.GridSlots[gridIdx].BindItem(item);
-                    gridIdx++;
-                }
-            }
-        }
-
-        // 남은 슬롯은 빈 슬롯으로 클리어
-        while (gridIdx < View.GridSlots.Count)
-        {
-            View.GridSlots[gridIdx].ClearSlot();
-            gridIdx++;
-        }
-    }
-
-    private void SynchronizeEquipAndQuickSlots()
-    {
-        if (_inventory == null || View == null) return;
-
-        if (View.MainWeaponSlot != null) View.MainWeaponSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.MainWeapon));
-        if (View.ShieldSlot != null) View.ShieldSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Shield));
-        if (View.HelmetSlot != null) View.HelmetSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Helmet));
-        if (View.ChestArmorSlot != null) View.ChestArmorSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.ChestArmor));
-        if (View.LeggingsSlot != null) View.LeggingsSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Leggings));
-        if (View.BootsSlot != null) View.BootsSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Boots));
-
-        // 퀵슬롯 등록 상태 동기화
-        for (int i = 0; i < View.QuickAssignSlots.Count; i++)
-        {
-            if (View.QuickAssignSlots[i] != null)
-            {
-                View.QuickAssignSlots[i].BindItem(_inventory.QuickSlots.GetItem(i));
-            }
         }
     }
 
@@ -188,131 +128,138 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         }
     }
 
-    private void HandleSlotClicked(ItemSlotUI slot, UnityEngine.EventSystems.PointerEventData.InputButton button)
+    private void FilterGridByCategory(ItemCategory category)
     {
-        if (_inventory == null || _player == null || slot.BoundItem == null) return;
+        _currentCategory = category;
+        if (_inventory == null || View == null) return;
 
-        // 선택 아이템 상세창 갱신
-        Model.FocusedItem = slot.BoundItem;
-        if (View != null && View.DetailPaneUI != null)
+        int gridIdx = 0;
+        for (int i = 0; i < Inventory.DefaultCapacity; i++)
         {
-            View.DetailPaneUI.ShowDetails(slot.BoundItem);
-        }
-
-        // 좌클릭: 장비 아이템 즉각 장착
-        if (button == UnityEngine.EventSystems.PointerEventData.InputButton.Left)
-        {
-            if (slot.BoundItem is EquipmentItem)
+            Item item = _inventory.GetItem(i);
+            if (item != null && item.Data != null && item.Data.Category == category)
             {
-                _inventory.EquipItem(slot.SlotIndex, _player);
-                UpdateFullView();
+                if (gridIdx < View.GridSlots.Count)
+                {
+                    View.GridSlots[gridIdx].BindItem(item);
+                    gridIdx++;
+                }
             }
         }
-        // 우클릭: 소모품 퀵슬롯 등록
-        else if (button == UnityEngine.EventSystems.PointerEventData.InputButton.Right)
+
+        while (gridIdx < View.GridSlots.Count)
         {
-            if (slot.BoundItem is PortionItem portion)
-            {
-                _inventory.QuickSlots.RegisterItem(0, portion);
-            }
+            View.GridSlots[gridIdx].ClearSlot();
+            gridIdx++;
         }
     }
 
-    private void HandleEquipSlotClicked(ItemSlotUI slot, UnityEngine.EventSystems.PointerEventData.InputButton button)
+    private void SynchronizeEquipAndQuickSlots()
+    {
+        if (_inventory == null || View == null) return;
+
+        if (View.MainWeaponSlot != null) View.MainWeaponSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.MainWeapon));
+        if (View.ShieldSlot != null) View.ShieldSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Shield));
+        if (View.HelmetSlot != null) View.HelmetSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Helmet));
+        if (View.ChestArmorSlot != null) View.ChestArmorSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.ChestArmor));
+        if (View.GauntletsSlot != null) View.GauntletsSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Gauntlets));
+        if (View.BootsSlot != null) View.BootsSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Boots));
+        if (View.NecklaceSlot != null) View.NecklaceSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Necklace));
+        if (View.RingSlot != null) View.RingSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Ring));
+
+        for (int i = 0; i < View.QuickAssignSlots.Count; i++)
+        {
+            if (View.QuickAssignSlots[i] != null) View.QuickAssignSlots[i].BindItem(_inventory.QuickSlots.GetItem(i));
+        }
+    }
+
+    private void HandleSlotClicked(ItemSlotUI slot, PointerEventData.InputButton button)
+    {
+        if (_inventory == null || _player == null || slot.BoundItem == null) return;
+
+        Model.FocusedItem = slot.BoundItem;
+        View?.DetailPaneUI?.ShowDetails(slot.BoundItem);
+
+        if (button == PointerEventData.InputButton.Left && slot.BoundItem is EquipmentItem)
+        {
+            _inventory.EquipItem(slot.SlotIndex, _player);
+            UpdateFullModel();
+        }
+        else if (button == PointerEventData.InputButton.Right && slot.BoundItem is PortionItem portion)
+        {
+            _inventory.QuickSlots.RegisterItem(0, portion);
+        }
+    }
+
+    private void HandleEquipSlotClicked(ItemSlotUI slot, PointerEventData.InputButton button)
     {
         if (_inventory == null || _player == null || !slot.EquipmentSlotType.HasValue) return;
 
-        // 장착 해제 실행
         _inventory.UnequipItem(slot.EquipmentSlotType.Value, _player);
-        UpdateFullView();
+        UpdateFullModel();
     }
 
     private void HandleSlotHover(ItemSlotUI slot, bool isEnter)
     {
-        if (View == null || View.DetailPaneUI == null) return;
+        if (View?.DetailPaneUI == null) return;
 
         if (isEnter && slot.BoundItem != null)
         {
             View.DetailPaneUI.ShowDetails(slot.BoundItem);
         }
-        else if (!isEnter)
+        else if (!isEnter && Model.FocusedItem == null)
         {
             View.DetailPaneUI.ClearDetails();
         }
     }
 
-    private void HandleDomainSlotUpdated(int slotIndex, Item item)
-    {
-        if (View != null && slotIndex >= 0 && slotIndex < View.GridSlots.Count)
-        {
-            View.GridSlots[slotIndex].BindItem(item);
-        }
-    }
-
+    private void HandleDomainSlotUpdated(int slotIndex, Item item) => FilterGridByCategory(_currentCategory);
     private void HandleDomainEquipmentChanged(EquipSlotType slotType, EquipmentItem item)
     {
-        if (View == null) return;
-
-        switch (slotType)
-        {
-            case EquipSlotType.MainWeapon:
-                if (View.MainWeaponSlot != null) View.MainWeaponSlot.BindItem(item);
-                break;
-            case EquipSlotType.Shield:
-                if (View.ShieldSlot != null) View.ShieldSlot.BindItem(item);
-                break;
-            case EquipSlotType.Helmet:
-                if (View.HelmetSlot != null) View.HelmetSlot.BindItem(item);
-                break;
-            case EquipSlotType.ChestArmor:
-                if (View.ChestArmorSlot != null) View.ChestArmorSlot.BindItem(item);
-                break;
-            case EquipSlotType.Leggings:
-                if (View.LeggingsSlot != null) View.LeggingsSlot.BindItem(item);
-                break;
-            case EquipSlotType.Boots:
-                if (View.BootsSlot != null) View.BootsSlot.BindItem(item);
-                break;
-        }
-
-        // 장비 변경 즉시 캐릭터 스탯 패널 재연산 및 UI 반영
-        UpdateFullView();
+        SynchronizeEquipAndQuickSlots();
+        UpdateFullModel();
     }
 
-    private void UpdateFullView()
+    private void UpdateFullModel()
     {
-        if (_player == null || View == null) return;
+        if (_player == null || View == null || Model == null) return;
 
         PlayerStatusController status = _player.StatusController;
         PlayerInfo info = status.PlayerInfoSource;
         PlayerMotionStatusModule motion = status.PlayerMotionStats;
 
-        float curWeight = motion != null ? motion.CurrentEquipWeight : 0f;
-        RollTier tier = motion != null ? motion.CurrentRollTier : RollTier.Mid;
+        Model.SoulLevel = info != null ? info.SoulLevel : 1;
+        Model.CurrentSouls = info != null ? info.CurrentSouls : 0;
+        Model.Vigor = info != null ? info.Vigor : 10;
+        Model.Endurance = info != null ? info.Endurance : 10;
+        Model.Strength = info != null ? info.Strength : 10;
+        Model.Dexterity = info != null ? info.Dexterity : 10;
 
-        float curHp = status.CurrentHp;
-        float curStamina = status is PlayerStatusController pStat ? pStat.CurrentStamina : 100f;
-        float curPoise = status.CurrentPoise;
+        Model.BonusStrength = status.EquippedBonusStrength;
+        Model.BonusDexterity = status.EquippedBonusDexterity;
 
-        // 현재 장착된 무기 공격력 산출
-        float currentAR = 0f;
-        EquipmentItem weapon = _inventory != null ? _inventory.GetEquippedItem(EquipSlotType.MainWeapon) : null;
-        if (weapon is WeaponItem wItem && info != null)
+        Model.CurrentHp = status.CurrentHp;
+        Model.MaxHp = status.MaxHp;
+        Model.CurrentStamina = status.CurrentStamina;
+        Model.MaxStamina = status.MaxStamina;
+
+        Model.CurrentWeight = motion != null ? motion.CurrentEquipWeight : 0f;
+        Model.MaxWeight = motion != null ? motion.MaxEquipWeight : 40f;
+        Model.CurrentRollTier = motion != null ? motion.CurrentRollTier : RollTier.Mid;
+
+        Model.CurrentAR = _player.CombatModule != null ? _player.CombatModule.CalculateCurrentAR() : 0f;
+        Model.CurrentPoise = status.CurrentPoise;
+        Model.FlatDefense = (info != null ? info.FlatDefense : 10f) + status.EquippedArmorFlatDefense;
+        Model.Absorption = status.EquippedArmorAbsorption;
+
+        // 상단 헤더 소지 소울 텍스트 갱신
+        if (View.CurrentSoulsText != null)
         {
-            currentAR = wItem.WeaponData.BaseDamage + (info.Strength * wItem.WeaponData.StrScaling) + (info.Dexterity * wItem.WeaponData.DexScaling);
+            View.CurrentSoulsText.text = Model.CurrentSouls.ToString("N0");
         }
 
-        if (View.CharacterDataPaneUI != null)
-        {
-            View.CharacterDataPaneUI.UpdateCharacterData(info, curHp, curStamina, curPoise, curWeight, tier, currentAR);
-        }
+        View.CharacterDataPaneUI?.UpdateCharacterData(Model);
     }
 
-    private void HandleCloseClicked()
-    {
-        if (View != null)
-        {
-            View.CloseWindowAsync().Forget();
-        }
-    }
+    private void HandleCloseClicked() => View?.CloseWindowAsync().Forget();
 }

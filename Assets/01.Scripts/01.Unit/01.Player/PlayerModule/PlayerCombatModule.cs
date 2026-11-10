@@ -27,15 +27,8 @@ public class PlayerCombatModule : UnitBaseModule
     {
         if (_weaponHitbox == null || _currentWeaponData == null) return;
 
-        PlayerInfo playerInfo = _owner.StatusController != null ? _owner.StatusController.PlayerInfoSource : null;
-        int str = playerInfo != null ? playerInfo.Strength : 10;
-        int dex = playerInfo != null ? playerInfo.Dexterity : 10;
-
         // 1. 단일 물리 베이스 공격력 연산 (STR / DEX 보정치 결합)
-        float baseDmg = _currentWeaponData.BaseDamage;
-        float strBonus = baseDmg * _currentWeaponData.StrScaling * (str / 40.0f); // 소프트캡 곡선 적용
-        float dexBonus = baseDmg * _currentWeaponData.DexScaling * (dex / 40.0f);
-        float totalAR = baseDmg + strBonus + dexBonus;
+        float totalAR = CalculateCurrentAR();
 
         // 2. 모션값(MV) 적용
         float mv = _currentWeaponData.GetMotionValue(comboStep);
@@ -56,19 +49,27 @@ public class PlayerCombatModule : UnitBaseModule
     {
         if (target == null || _currentWeaponData == null) return;
 
-        PlayerInfo playerInfo = _owner.StatusController != null ? _owner.StatusController.PlayerInfoSource : null;
-        int str = playerInfo != null ? playerInfo.Strength : 10;
-        int dex = playerInfo != null ? playerInfo.Dexterity : 10;
-
-        float baseDmg = _currentWeaponData.BaseDamage;
-        float totalAR = baseDmg + (baseDmg * _currentWeaponData.StrScaling * (str / 40.0f)) + (baseDmg * _currentWeaponData.DexScaling * (dex / 40.0f));
-
-        // 앞잡 모션값 320 적용
+        float totalAR = CalculateCurrentAR();
         float riposteAR = totalAR * (_currentWeaponData.Riposte_MV / 100.0f);
 
         DamageContext context = new DamageContext(_owner.gameObject, riposteAR, 0f, hitPoint, _owner.transform.forward,
             isParryable: false, impactType: AttackImpactType.Heavy, knockbackForce: 5.0f);
 
         target.ApplyDamage(in context);
+    }
+
+    public float CalculateCurrentAR()
+    {
+        if (_currentWeaponData == null) return 0f;
+
+        PlayerInfo info = _owner.StatusController != null ? _owner.StatusController.PlayerInfoSource : null;
+        int str = (info != null ? info.Strength : 10) + _owner.StatusController.EquippedBonusStrength;
+        int dex = (info != null ? info.Dexterity : 10) + _owner.StatusController.EquippedBonusDexterity;
+
+        float baseDmg = _currentWeaponData.BaseDamage;
+        float strBonus = baseDmg * _currentWeaponData.StrScaling * (str / 40.0f);
+        float dexBonus = baseDmg * _currentWeaponData.DexScaling * (dex / 40.0f);
+
+        return baseDmg + strBonus + dexBonus + _owner.StatusController.EquippedBonusAttackPower;
     }
 }

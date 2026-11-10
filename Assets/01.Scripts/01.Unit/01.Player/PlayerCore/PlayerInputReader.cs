@@ -12,7 +12,6 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     public UnityEngine.Vector2 MoveInput { get; private set; }
     public bool IsSprinting { get; private set; }
     public bool IsGuarding { get; private set; }
-
     public bool HasPendingCommand => _bufferQueue != null && _bufferQueue.HasValidCommand;
     #endregion
 
@@ -34,27 +33,12 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     {
         _bufferQueue = new InputBufferQueue(bufferDuration);
 
-        if (_inputActions == null)
-        {
-            _inputActions = new PlayerInput();
-            _inputActions.Player.SetCallbacks(this);
-        }
-        EnablePlayerInput();
+        _inputActions = InputSystemHandler.Actions;
+        _inputActions.Player.SetCallbacks(this);
     }
 
-    public void EnablePlayerInput()
-    {
-        _inputActions?.UI.Disable();
-        _inputActions?.Player.Disable();
-        _inputActions?.Player.Enable();
-    }
-
-    public void EnableUIInput()
-    {
-        _inputActions?.Player.Disable();
-        _inputActions?.UI.Disable();
-        _inputActions?.UI.Enable();
-    }
+    public void EnablePlayerInput() => InputSystemHandler.SetMode(InputMode.Gameplay);
+    public void EnableUIInput() => InputSystemHandler.SetMode(InputMode.RealtimeUI);
 
     #region Input Buffer Control
     public bool TryConsumeCommand(InputCommandType commandtype)
@@ -219,14 +203,13 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     {
         if (context.performed)
         {
-            //OnInventoryToggleEvent?.Invoke();
+            OnInventoryToggleEvent?.Invoke();
         }
     }
     #endregion
 
     public void DisablePlayerInput()
     {
-        _inputActions?.Player.Disable();
         MoveInput = UnityEngine.Vector2.zero;
         IsSprinting = false;
         IsGuarding = false;
@@ -237,10 +220,7 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     {
         if (_inputActions != null)
         {
-            _inputActions.Player.Disable();
-            _inputActions.UI.Disable();
             _inputActions.Player.SetCallbacks(null);
-            _inputActions.Dispose();
             _inputActions = null;
         }
     }

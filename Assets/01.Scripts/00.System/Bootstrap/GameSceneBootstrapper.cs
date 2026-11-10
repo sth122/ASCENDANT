@@ -146,10 +146,10 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
             UIId.PlayerHUD, hudModel, ct: this.destroyCancellationToken
         );
 
-        //QuickSlotModel quickSlotModel = new QuickSlotModel();
-        //await UIManager.Instance.OpenUIAsync<QuickSlotView, QuickSlotPresenter, QuickSlotModel>(
-        //    UIId.QuickSlotHUD, quickSlotModel, ct: this.destroyCancellationToken
-        //);
+        QuickSlotModel quickSlotModel = new QuickSlotModel();
+        await UIManager.Instance.OpenUIAsync<QuickSlotView, QuickSlotPresenter, QuickSlotModel>(
+            UIId.QuickSlotHUD, quickSlotModel, ct: this.destroyCancellationToken
+        );
     }
 
     protected override void OnSceneReadyCompleted()
@@ -161,23 +161,10 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
         }
 
         // 2. 조작권 활성화 및 커서 잠금
-        if (UIManager.Instance != null && UIManager.Instance.InputReader != null)
-        {
-            UIManager.Instance.InputReader.EnablePlayerInput();
-        }
-
-        if (_spawnedPlayer != null && _spawnedPlayer.InputReader != null)
-        {
-            _spawnedPlayer.InputReader.EnablePlayerInput();
-        }
-
-        UnityEngine.Cursor.lockState = UnityEngine.CursorLockMode.Locked;
-        UnityEngine.Cursor.visible = false;
+        InputSystemHandler.SetMode(InputMode.Gameplay);
 
         // 3. 씬 준비 완료 브로드캐스트
         EventBusSystem.Publish(new GameSceneReadyEvent(_sceneId));
-
-        Util.Log("[GameScene 부트스트랩 완료: 인게임 조작 개시]");
     }
 
     protected override void OnDestroy()

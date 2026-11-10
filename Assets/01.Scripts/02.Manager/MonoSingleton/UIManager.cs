@@ -31,9 +31,9 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         EnsureRootCanvas();
         CreateLayerContainers();
 
-        _uiInputReader = new UIInputReader();
-        _uiInputReader.OnCancelEvent += HandleCancelInput;
-        _uiInputReader.OnInventoryToggleEvent += HandleInventoryToggle;
+        InputSystemHandler.Initialize();
+        InputSystemHandler.OnCancelRequested += HandleCancelInput;
+        InputSystemHandler.OnInventoryToggleRequested += HandleInventoryToggle;
     }
 
     #region Root Canvas & Layer Containers 자동 구축
@@ -214,26 +214,18 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
     {
         if (isUIFocused)
         {
-            _uiInputReader.EnableUIInput();
+            InputSystemHandler.SetMode(InputMode.RealtimeUI);
 
-            // 인게임 플레이어 조작권 및 이동 즉시 정지
             if (ServiceLocator.TryGet<IPlayerProvider>(out var provider) && provider.IsPlayerSpawned && provider.Player != null)
             {
-                provider.Player.InputReader?.DisablePlayerInput();
                 provider.Player.StopMovementAPI();
             }
         }
         else
         {
-            // 열려 있는 창이나 팝업이 더 이상 없을 때만 플레이어 입력 복원
             if (_windowStack.Count == 0 && _popupStack.Count == 0)
             {
-                _uiInputReader.EnablePlayerInput();
-
-                if (ServiceLocator.TryGet<IPlayerProvider>(out var provider) && provider.IsPlayerSpawned && provider.Player != null)
-                {
-                    provider.Player.InputReader?.EnablePlayerInput();
-                }
+                InputSystemHandler.SetMode(InputMode.Gameplay);
             }
         }
     }
@@ -347,6 +339,10 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
                 win.CloseWindowAsync().Forget();
             }
         }
+        else
+        {
+            OpenUIAsync<InventoryView, InventoryPresenter, InventoryModel>(UIId.InventoryUI).Forget();
+        }
     }
 
     public void CloseAllSceneDependentViews()
@@ -374,12 +370,9 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
 
     protected override void OnDestroy()
     {
-        if (_uiInputReader != null)
-        {
-            _uiInputReader.OnCancelEvent -= HandleCancelInput;
-            _uiInputReader.OnInventoryToggleEvent -= HandleInventoryToggle;
-            _uiInputReader.Dispose();
-        }
+        InputSystemHandler.OnCancelRequested -= HandleCancelInput;
+        InputSystemHandler.OnInventoryToggleRequested -= HandleInventoryToggle;
+        InputSystemHandler.Dispose();
         base.OnDestroy();
     }
     #endregion

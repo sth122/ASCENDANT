@@ -10,7 +10,7 @@ public class Inventory
     public const int DefaultCapacity = 30;
     private readonly Item[] _slots = new Item[DefaultCapacity];
 
-    // 장착 슬롯 (무기 1, 방패 1, 방어구 1)
+    // 8대 장비 슬롯 (머리, 상의, 장갑, 신발 / 목걸이, 반지 / 한손검, 방패)
     private readonly Dictionary<EquipSlotType, EquipmentItem> _equipmentSlots = new Dictionary<EquipSlotType, EquipmentItem>();
 
     public QuickSlotSystem QuickSlots { get; } = new QuickSlotSystem();
@@ -46,7 +46,7 @@ public class Inventory
         while (amount > 0)
         {
             int emptyIndex = FindEmptySlotIndex();
-            if (emptyIndex == -1) return false; // 가방 가득 참
+            if (emptyIndex == -1) return false;
 
             Item newItem = data.CreateItem();
             if (newItem is CountableItem countable)
@@ -127,50 +127,64 @@ public class Inventory
     /// </summary>
     public void RecalculateEquipStats(PlayerController player)
     {
-        float totalWeight = 0f;
-        float totalFlatDefense = 0f;
-        float totalAbsorption = 0f;
-        float totalPoise = 0f;
-        float shieldStability = 0f;
-        float shieldAbsorption = 0f;
+        EquipmentTotalStats stats = new EquipmentTotalStats();
 
         foreach (var pair in _equipmentSlots)
         {
             EquipmentItem equip = pair.Value;
             if (equip == null) continue;
 
-            totalWeight += equip.Data.Weight;
+            stats.TotalWeight += equip.Data.Weight;
 
-            // 1. 무기 교체 반영
             if (pair.Key == EquipSlotType.MainWeapon && equip is WeaponItem weapon)
             {
                 player.CombatModule.SetWeaponData(weapon.WeaponData);
             }
-            // 2. 방패 사양 반영
             else if (pair.Key == EquipSlotType.Shield && equip is ShieldItem shield)
             {
-                shieldStability = shield.ShieldData.Stability;
-                shieldAbsorption = shield.ShieldData.PhysicalAbsorption;
+                stats.ShieldStability = shield.ShieldData.Stability;
+                stats.ShieldAbsorption = shield.ShieldData.PhysicalAbsorption;
             }
-            // 3. 4부위 방어구(투구, 갑옷, 각반, 신발) 스탯 합산
             else if (equip is ArmorItem armor)
             {
-                totalFlatDefense += armor.ArmorData.FlatDefense;
-                totalAbsorption += armor.ArmorData.ArmorAbsorption;
-                totalPoise += armor.ArmorData.PoiseBonus;
+                stats.TotalFlatDefense += armor.ArmorData.FlatDefense;
+                stats.TotalAbsorption += armor.ArmorData.ArmorAbsorption;
+                stats.TotalPoiseBonus += armor.ArmorData.PoiseBonus;
+            }
+            else if (equip is AccessoryItem accessory)
+            {
+                stats.BonusStrength += accessory.AccessoryData.BonusStrength;
+                stats.BonusDexterity += accessory.AccessoryData.BonusDexterity;
+                stats.BonusMaxHp += accessory.AccessoryData.BonusMaxHp;
+                stats.BonusMaxStamina += accessory.AccessoryData.BonusMaxStamina;
+                stats.BonusAttackPower += accessory.AccessoryData.BonusAttackPower;
+                stats.TotalFlatDefense += accessory.AccessoryData.BonusFlatDefense;
             }
         }
 
-        // 메인 무기가 해제되어 없을 경우 맨손 상태로 캐시 초기화
         if (!_equipmentSlots.ContainsKey(EquipSlotType.MainWeapon) || _equipmentSlots[EquipSlotType.MainWeapon] == null)
         {
             player.CombatModule.SetWeaponData(null);
         }
 
-        // 스탯 모듈에 방어 사양 및 중량비 일괄 동기화
-        player.StatusController.UpdateArmorDefense(totalFlatDefense, totalAbsorption, totalPoise);
-        player.StatusController.UpdateShieldSpec(shieldStability, shieldAbsorption);
-        player.StatusController.PlayerMotionStats.UpdateWeight(totalWeight);
+        player.StatusController.ApplyEquipmentStats(in stats);
+    }
+
+    /// <summary>
+    /// 수량이 0이 된 소모품 인스턴스를 인벤토리 슬롯 배열에서 완전 소거
+    /// </summary>
+    public void CleanDepletedSlot(Item itemInstance)
+    {
+        if (itemInstance == null) return;
+        for (int i = 0; i < DefaultCapacity; i++)
+        {
+            if (ReferenceEquals(_slots[i], itemInstance))
+            {
+                _slots[i] = null;
+                OnSlotUpdated?.Invoke(i, null);
+                break;
+            }
+        }
     }
 
     private int FindEmptySlotIndex()
@@ -216,8 +230,11 @@ public class Inventory
         // 2. 4부위 방어구 장착
         if (loadout.StartingHelmet != null) EquipDirect(loadout.StartingHelmet, player);
         if (loadout.StartingChestArmor != null) EquipDirect(loadout.StartingChestArmor, player);
-        if (loadout.StartingLeggings != null) EquipDirect(loadout.StartingLeggings, player);
+        if (loadout.StartingGauntlets != null) EquipDirect(loadout.StartingGauntlets, player);
         if (loadout.StartingBoots != null) EquipDirect(loadout.StartingBoots, player);
+
+        if(loadout.StartingNecklace != null) EquipDirect(loadout.StartingNecklace, player);
+        if(loadout.StartingRing != null) EquipDirect(loadout.StartingRing, player);
 
         // 3. 소모품 인벤토리 추가 및 지정된 퀵슬롯 등록
         for (int i = 0; i < loadout.StartingConsumables.Count; i++)
@@ -253,23 +270,6 @@ public class Inventory
     }
     #endregion
 
-    /// <summary>
-    /// 수량이 0이 된 소모품 인스턴스를 인벤토리 슬롯 배열에서 완전 소거
-    /// </summary>
-    public void CleanDepletedSlot(Item itemInstance)
-    {
-        if (itemInstance == null) return;
-
-        for (int i = 0; i < DefaultCapacity; i++)
-        {
-            if (ReferenceEquals(_slots[i], itemInstance))
-            {
-                _slots[i] = null;
-                OnSlotUpdated?.Invoke(i, null);
-                break;
-            }
-        }
-    }
 
     #region MyRegion
     /// <summary>
@@ -340,17 +340,15 @@ public class Inventory
             }
         }
 
-        // 2. 착용 슬롯 복원 (CS0165 방지: 명시적 중첩 검증)
+        // 2. 착용 슬롯 복원
         for (int i = 0; i < sourceData.EquippedSlots.Count; i++)
         {
             var entry = sourceData.EquippedSlots[i];
-            if (dataManager.TryGetItemDataById(entry.ItemId, out ItemData itemData))
+            if (dataManager.TryGetItemDataById(entry.ItemId, out ItemData itemData) && itemData is EquipmentItemData equipData)
             {
-                EquipmentItemData equipData = itemData as EquipmentItemData;
-                if (equipData != null)
-                {
-                    EquipDirect(equipData, player);
-                }
+                EquipmentItem equipItem = (EquipmentItem)equipData.CreateItem();
+                _equipmentSlots[entry.SlotType] = equipItem;
+                OnEquipmentChanged?.Invoke(entry.SlotType, equipItem);
             }
         }
 

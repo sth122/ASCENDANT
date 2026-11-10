@@ -148,20 +148,27 @@ public class SaveManager : MonoSingleton<SaveManager>
     /// <summary>
     /// 화톳불(세이브 터미널)과 상호작용 시 현재 플레이어 위치 및 스탯 동기화 저장
     /// </summary>
-    public void UpdateCheckpoint(Vector3 bonfirePosition, float bonfireRotationY, SceneId currentScene, PlayerInfo status, float currentHp, int slotIndex = 0)
+    public void UpdateCheckpoint(Vector3 bonfirePosition, float bonfireRotationY, SceneId currentScene, PlayerController player, int slotIndex = 0)
     {
-        if (CurrentSaveData == null)
-        {
-            CurrentSaveData = new SaveData();
-        }
+        if (CurrentSaveData == null) CurrentSaveData = new SaveData();
 
         CurrentSaveData.HasCheckpoint = true;
         CurrentSaveData.LastSavedScene = currentScene;
         CurrentSaveData.LastBonfirePosition = SerializableVector3.FromVector3(bonfirePosition);
         CurrentSaveData.LastBonfireRotationY = bonfireRotationY;
-        CurrentSaveData.PlayerData = new PlayerSaveData(status, currentHp);
+
+        // 스탯 및 HP 동기화
+        PlayerInfo status = player.StatusController.PlayerInfoSource;
+        CurrentSaveData.PlayerData = new PlayerSaveData(status, player.StatusController.CurrentHp);
+
+        // 인벤토리, 착용 장비, 퀵슬롯 원자적 직렬화 보장
+        if (player.TryGetComponent(out PlayerInventoryHandler handler) && handler.InventoryInstance != null)
+        {
+            handler.InventoryInstance.ExportToSaveData(CurrentSaveData.PlayerData);
+            CurrentSaveData.PlayerData.HasReceivedInitialEquipment = true;
+        }
 
         SaveCurrentGameAsync(slotIndex).Forget();
-        Util.Log($"[체크포인트 갱신 완료] 위치: {bonfirePosition}, 씬: {currentScene}");
+        DebugLogger.LogWithTag("SaveManager", $"[체크포인트 & 인벤토리 완전 저장 완료] 슬롯: {slotIndex}");
     }
 }

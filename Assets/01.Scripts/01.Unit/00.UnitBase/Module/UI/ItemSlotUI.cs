@@ -17,6 +17,10 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     [SerializeField] private GameObject _equipMarker;
     [SerializeField] private GameObject _highlightOutline;
 
+    [Header("Empty Slot & Silhouette Bindings")]
+    [SerializeField] private Image _placeholderIcon; // 장비 슬롯 비어있을 때 표시되는 실루엣
+    [SerializeField] private GameObject _activeFrame;    // 아이템이 있을 때만 켜지는 은색 테두리/유리광
+
     [Header("Drag & Drop Ghost")]
     private static GameObject _dragGhostObject;
     private static Image _dragGhostImage;
@@ -54,14 +58,91 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         ClearSlot();
     }
 
+    public void BindItem(Item item, bool isEquipped = false)
+    {
+        BoundItem = item;
+
+        if (item == null || item.Data == null)
+        {
+            ClearSlot();
+            return;
+        }
+
+        if (_activeFrame != null)
+        {
+            _activeFrame.SetActive(true);
+        }
+        if (_placeholderIcon != null)
+        {
+            _placeholderIcon.gameObject.SetActive(false);
+        }
+        if (_iconImage != null)
+        {
+            _iconImage.gameObject.SetActive(true);
+            _iconImage.sprite = item.Data.Icon;
+        }
+
+        if (_amountText != null)
+        {
+            if (item is CountableItem countable && countable.CurrentAmount > 1)
+            {
+                _amountText.gameObject.SetActive(true);
+                _amountText.text = countable.CurrentAmount.ToString();
+            }
+            else
+            {
+                _amountText.gameObject.SetActive(false);
+            }
+        }
+
+        if (_equipMarker != null)
+        {
+            _equipMarker.SetActive(isEquipped);
+        }
+    }
+
+    public void ClearSlot()
+    {
+        BoundItem = null;
+
+        if (_activeFrame != null)
+        {
+            _activeFrame.SetActive(false);
+        }
+
+        if (_iconImage != null)
+        {
+            _iconImage.gameObject.SetActive(false);
+            _iconImage.sprite = null;
+        }
+
+        if (_placeholderIcon != null)
+        {
+            _placeholderIcon.gameObject.SetActive(true);
+        }
+
+        if (_amountText != null)
+        {
+            _amountText.gameObject.SetActive(false);
+        }
+
+        if (_equipMarker != null)
+        {
+            _equipMarker.SetActive(false);
+        }
+
+        if (_highlightOutline != null)
+        {
+            _highlightOutline.SetActive(false);
+        }
+    }
+
     #region Drag & Drop 구현부
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (BoundItem == null || BoundItem.Data == null) return;
-
         _draggingSlot = this;
 
-        // 드래그 고스트 생성 및 설정
         Canvas rootCanvas = GetComponentInParent<Canvas>();
         if (rootCanvas != null && _dragGhostObject == null)
         {
@@ -70,9 +151,7 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
             _dragGhostImage = _dragGhostObject.GetComponent<Image>();
             _dragGhostImage.raycastTarget = false;
-
-            RectTransform rect = _dragGhostObject.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(70f, 70f);
+            _dragGhostObject.GetComponent<RectTransform>().sizeDelta = new Vector2(70f, 70f);
 
             CanvasGroup group = _dragGhostObject.GetComponent<CanvasGroup>();
             group.blocksRaycasts = false;
@@ -115,27 +194,24 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         if (!player.TryGetComponent(out PlayerInventoryHandler handler)) return;
         Inventory inventory = handler.InventoryInstance;
 
-        // 1. [하단 좌측 6대 장비 슬롯 드롭 판정]
+        // 1. 8대 장비 슬롯 드롭 판정
         if (EquipmentSlotType.HasValue)
         {
             if (sourceItem is EquipmentItem equipItem)
             {
-                // 장비 슬롯 부위 일치 검증
                 if (equipItem.EquipData.EquipSlot != EquipmentSlotType.Value)
                 {
-                    DebugLogger.LogWarningWithTag("InventoryUI", $"장착 부위가 일치하지 않습니다. 필요 부위: {EquipmentSlotType.Value}");
+                    DebugLogger.LogWarningWithTag("InventoryUI", $"장착 부위 불일치. 필요 부위: {EquipmentSlotType.Value}");
                     return;
                 }
 
-                // 캐릭터 스탯(STR, DEX) 요구치 검증
                 PlayerInfo info = player.StatusController.PlayerInfoSource;
                 if (info.Strength < equipItem.EquipData.RequiredStrength || info.Dexterity < equipItem.EquipData.RequiredDexterity)
                 {
-                    DebugLogger.LogWarningWithTag("InventoryUI", $"[장착 불가] 능력치 미달! 요구 근력: {equipItem.EquipData.RequiredStrength}, 요구 기량: {equipItem.EquipData.RequiredDexterity}");
+                    DebugLogger.LogWarningWithTag("InventoryUI", $"[능력치 미달] STR {equipItem.EquipData.RequiredStrength}, DEX {equipItem.EquipData.RequiredDexterity}");
                     return;
                 }
 
-                // 장착 실행
                 if (_draggingSlot.SlotIndex >= 0)
                 {
                     inventory.EquipItem(_draggingSlot.SlotIndex, player);
@@ -144,23 +220,17 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             return;
         }
 
-        // 2. [최하단 좌측 퀵슬롯 등록 바 드롭 판정]
+        // 2. 퀵슬롯 등록 바 드롭 판정
         if (QuickSlotAssignIndex >= 0)
         {
-            // IQuickSlotUsable 인터페이스 기반 검증 (일반 장비/재료 원천 차단)
             if (sourceItem.Data is IQuickSlotUsable && sourceItem is PortionItem portion)
             {
                 inventory.QuickSlots.RegisterItem(QuickSlotAssignIndex, portion);
-                DebugLogger.LogWithTag("InventoryUI", $"{QuickSlotAssignIndex}번 퀵슬롯에 [{portion.Data.ItemName}] 등록 완료");
-            }
-            else
-            {
-                DebugLogger.LogWarningWithTag("InventoryUI", "퀵슬롯에 등록할 수 없는 아이템입니다. (IQuickSlotUsable 미구현)");
             }
             return;
         }
 
-        // 3. [장비 슬롯 -> 가방 그리드로 드롭하여 장착 해제]
+        // 3. 장비창 -> 가방 드롭 해제
         if (_draggingSlot.EquipmentSlotType.HasValue && SlotIndex >= 0)
         {
             inventory.UnequipItem(_draggingSlot.EquipmentSlotType.Value, player);
@@ -168,71 +238,8 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     }
     #endregion
 
-    public void BindItem(Item item, bool isEquipped = false)
-    {
-        BoundItem = item;
-
-        if (item == null || item.Data == null)
-        {
-            ClearSlot();
-            return;
-        }
-
-        if (_iconImage != null)
-        {
-            _iconImage.gameObject.SetActive(true);
-            _iconImage.sprite = item.Data.Icon;
-        }
-
-        if (_amountText != null)
-        {
-            if (item is CountableItem countable && countable.CurrentAmount > 1)
-            {
-                _amountText.gameObject.SetActive(true);
-                _amountText.text = countable.CurrentAmount.ToString();
-            }
-            else
-            {
-                _amountText.gameObject.SetActive(false);
-            }
-        }
-
-        if (_equipMarker != null)
-        {
-            _equipMarker.SetActive(isEquipped);
-        }
-    }
-
-    public void ClearSlot()
-    {
-        BoundItem = null;
-
-        if (_iconImage != null)
-        {
-            _iconImage.gameObject.SetActive(false);
-            _iconImage.sprite = null;
-        }
-
-        if (_amountText != null)
-        {
-            _amountText.gameObject.SetActive(false);
-        }
-
-        if (_equipMarker != null)
-        {
-            _equipMarker.SetActive(false);
-        }
-
-        if (_highlightOutline != null)
-        {
-            _highlightOutline.SetActive(false);
-        }
-    }
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        OnSlotClickedEvent?.Invoke(this, eventData.button);
-    }
+    #region Pointer 구현부
+    public void OnPointerClick(PointerEventData eventData) => OnSlotClickedEvent?.Invoke(this, eventData.button);
 
     public void OnPointerEnter(PointerEventData eventData)
     {
@@ -245,4 +252,5 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         if (_highlightOutline != null) _highlightOutline.SetActive(false);
         OnSlotHoverEvent?.Invoke(this, false);
     }
+    #endregion
 }

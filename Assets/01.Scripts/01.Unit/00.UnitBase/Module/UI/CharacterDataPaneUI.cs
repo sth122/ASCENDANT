@@ -1,14 +1,10 @@
 ﻿using TMPro;
 using UnityEngine;
 
-/// <summary>
-/// 다크소울 3 인벤토리 우측에 위치하는 캐릭터 상태 데이터 UI 컴포넌트
-/// </summary>
 public class CharacterDataPaneUI : MonoBehaviour
 {
-    [Header("Level & Souls")]
+    [Header("Level Info")]
     [SerializeField] private TextMeshProUGUI _soulLevelText;
-    [SerializeField] private TextMeshProUGUI _currentSoulsText;
 
     [Header("Core Attributes")]
     [SerializeField] private TextMeshProUGUI _vigorText;
@@ -20,34 +16,36 @@ public class CharacterDataPaneUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _hpText;
     [SerializeField] private TextMeshProUGUI _staminaText;
 
-    [Header("Equip Load & Defense")]
+    [Header("Combat & Defense")]
+    [SerializeField] private TextMeshProUGUI _attackPowerText;
+    [SerializeField] private TextMeshProUGUI _defenseText;
+    [SerializeField] private TextMeshProUGUI _absorptionText;
+    [SerializeField] private TextMeshProUGUI _poiseText;
     [SerializeField] private TextMeshProUGUI _equipWeightText;
     [SerializeField] private TextMeshProUGUI _weightRatioText;
-    [SerializeField] private TextMeshProUGUI _poiseText;
-    [SerializeField] private TextMeshProUGUI _attackPowerText;
 
-    public void UpdateCharacterData(PlayerInfo info, float currentHp, float currentStamina, float currentPoise, float currentWeight, RollTier rollTier, float currentAR)
+    public void UpdateCharacterData(InventoryModel model)
     {
-        if (info == null) return;
+        if (model == null) return;
 
-        if (_soulLevelText != null) _soulLevelText.text = info.SoulLevel.ToString();
-        if (_currentSoulsText != null) _currentSoulsText.text = info.CurrentSouls.ToString("N0");
+        if (_soulLevelText != null) _soulLevelText.text = $"레벨: {model.SoulLevel}";
+        if (_hpText != null) _hpText.text = $"HP: {model.CurrentHp:F0} / {model.MaxHp:F0}";
+        if (_staminaText != null) _staminaText.text = $"스태미너: {model.CurrentStamina:F0} / {model.MaxStamina:F0}";
 
-        if (_vigorText != null) _vigorText.text = info.Vigor.ToString();
-        if (_enduranceText != null) _enduranceText.text = info.Endurance.ToString();
-        if (_strengthText != null) _strengthText.text = info.Strength.ToString();
-        if (_dexterityText != null) _dexterityText.text = info.Dexterity.ToString();
+        if (_vigorText != null) _vigorText.text = $"생명력: {model.Vigor}";
+        if (_enduranceText != null) _enduranceText.text = $"지구력: {model.Endurance}";
 
-        float maxHp = info.CalculateMaxHp();
-        float maxStamina = info.CalculateMaxStamina();
-        float maxWeight = info.CalculateMaxEquipWeight();
-        float ratio = maxWeight > 0f ? (currentWeight / maxWeight) * 100f : 0f;
+        if (_strengthText != null)
+            _strengthText.text = model.BonusStrength > 0 ? $"근력: {model.Strength} (+{model.BonusStrength})" : $"근력: {model.Strength}";
+        if (_dexterityText != null)
+            _dexterityText.text = model.BonusDexterity > 0 ? $"기량: {model.Dexterity} (+{model.BonusDexterity})" : $"기량: {model.Dexterity}";
 
-        if (_hpText != null) _hpText.text = $"{currentHp:F0} / {maxHp:F0}";
-        if (_staminaText != null) _staminaText.text = $"{currentStamina:F0} / {maxStamina:F0}";
-        if (_equipWeightText != null) _equipWeightText.text = $"{currentWeight:F1} / {maxWeight:F1}";
-        if (_weightRatioText != null) _weightRatioText.text = $"{ratio:F1}% ({rollTier})";
-        if (_poiseText != null) _poiseText.text = $"{currentPoise:F1}";
-        if (_attackPowerText != null) _attackPowerText.text = $"{currentAR:F0}";
+        float ratio = model.MaxWeight > 0f ? (model.CurrentWeight / model.MaxWeight) * 100f : 0f;
+        if (_attackPowerText != null) _attackPowerText.text = $"공격력: {model.CurrentAR:F0}";
+        if (_defenseText != null) _defenseText.text = $"물리 방어력: {model.FlatDefense:F0}";
+        if (_absorptionText != null) _absorptionText.text = $"경감률: {model.Absorption * 100f:F1}%";
+        if (_poiseText != null) _poiseText.text = $"강인도: {model.CurrentPoise:F1}";
+        if (_equipWeightText != null) _equipWeightText.text = $"장비 중량: {model.CurrentWeight:F1} / {model.MaxWeight:F1}";
+        if (_weightRatioText != null) _weightRatioText.text = $"{ratio:F1}% ({model.CurrentRollTier})";
     }
 }

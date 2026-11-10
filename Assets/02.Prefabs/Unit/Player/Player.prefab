@@ -222,14 +222,7 @@ Animator:
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
-  m_WarningMessage: "\nBinding warning: Some generic clip(s) animate transforms that
-    are already bound by a Humanoid avatar. These transforms can only be changed
-    by Humanoid clips.\n\tTransform 'mixamorig:Hips'\n\tTransform 'mixamorig:LeftFoot'\n\tTransform
-    'mixamorig:LeftHandThumb2'\n\tTransform 'mixamorig:LeftHandIndex1'\n\tTransform
-    'mixamorig:LeftHandPinky2'\n\tTransform 'mixamorig:RightHandRing2'\n\tTransform
-    'mixamorig:Spine1'\n\tTransform 'mixamorig:LeftToeBase'\n\tTransform 'mixamorig:LeftHandThumb3'\n\tTransform
-    'mixamorig:RightArm'\n\tand more ...\n\tFrom animation clip 'Knockback'\n\tFrom
-    animation clip 'WakeUp'\n\tFrom animation clip 'Stun'"
+  m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -332,9 +325,20 @@ MonoBehaviour:
   _maxHp: 0
   _currentPoise: 0
   _maxPoise: 0
+  _isInvincible: 0
   _currentStamina: 0
   _maxStamina: 0
   _staminaRegenRate: 20
+  _equippedArmorFlatDefense: 0
+  _equippedArmorAbsorption: 0
+  _equippedArmorPoiseBonus: 0
+  _equippedShieldStability: 0
+  _equippedShieldAbsorption: 0
+  _equippedBonusStrength: 0
+  _equippedBonusDexterity: 0
+  _equippedBonusMaxHp: 0
+  _equippedBonusMaxStamina: 0
+  _equippedBonusAttackPower: 0
 --- !u!114 &4129515568794556493
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -393,7 +397,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe9fb8439d9f4df47a57cd77f117fa3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInventoryHandler
-  _initialEquipmentSO: {fileID: 11400000, guid: 6d0f5e99e99cef14882001d3363c0936, type: 2}
+  _initialEquipmentSO: {fileID: 11400000, guid: 97057b28038d8e44180ed33831f10652, type: 2}
 --- !u!1 &751015693098662667
 GameObject:
   m_ObjectHideFlags: 0

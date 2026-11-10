@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 377b6d9f1ce7f8c498fc91b9c7f6e20f, type: 3}
+  m_Name: PlayerInitialEquipment
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInitialEquipmentSO
+  _startingWeapon: {fileID: 11400000, guid: b88dec1d46800ca4c9ff0a525325ac79, type: 2}
+  _startingShield: {fileID: 11400000, guid: 663b5d75413033345bd123da08445ab0, type: 2}
+  _startingHelmet: {fileID: 11400000, guid: f0cadfbce726dcb43ac82c6f281c8940, type: 2}
+  _startingChestArmor: {fileID: 11400000, guid: b59493632f0675e47b48778ebfdd4d0e, type: 2}
+  _startingGauntlets: {fileID: 11400000, guid: 6d24bf43b2d4eeb43a49ce00fe013d00, type: 2}
+  _startingBoots: {fileID: 11400000, guid: b9b1f98f53e68644b8589d2561fd19d2, type: 2}
+  _startingNecklace: {fileID: 11400000, guid: 04fbe9e65824f134b906fd8980a3a9a2, type: 2}
+  _startingRing: {fileID: 11400000, guid: 63d8b4ce8b6a85b4c8693a3859cc55b0, type: 2}
+  _startingConsumables:
+  - ItemData: {fileID: 11400000, guid: 29fd6dfba6388ad45bf0da1b03de2f1f, type: 2}
+    Amount: 5
+    AutoAssignQuickSlotIndex: 0
+  - ItemData: {fileID: 11400000, guid: 7e12f510c7527d94599c03081f6bee0e, type: 2}
+    Amount: 5
+    AutoAssignQuickSlotIndex: 1
+  _extraInventoryItems: []

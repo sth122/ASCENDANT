@@ -361,12 +361,19 @@ public enum PortionEffectType
 
 public enum EquipSlotType
 {
-    MainWeapon, // 무기
-    Shield,     // 방패
-    Helmet,     // 머리 투구
-    ChestArmor, // 상체 갑옷
-    Leggings,   // 하체 각반
-    Boots       // 발 신발
+    // 무기 및 방패 (2종)
+    MainWeapon,     // 한손검
+    Shield,         // 방패
+
+    // 방어구 (4종)
+    Helmet,         // 머리 투구
+    ChestArmor,     // 상체 갑옷
+    Gauntlets,      // 장갑
+    Boots,          // 신발
+
+    // 악세서리 (2종)
+    Necklace,       // 목걸이
+    Ring            // 반지
 }
 
 public enum ShieldClassification
@@ -376,10 +383,11 @@ public enum ShieldClassification
 
 public enum ItemCategory
 {
-    Consumable, 
-    Weapon,     
-    Shield,     
-    Armor       
+    Weapon,         // 무기
+    Shield,         // 방패
+    Armor,          // 방어구
+    Accessory,      // 악세서리
+    Consumable      // 소모품
 }
 
 public enum StatScalingGrade

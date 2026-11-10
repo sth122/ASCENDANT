@@ -29,11 +29,20 @@ public class PlayerStatusController : UnitStatusController
     [UnityEngine.SerializeField] private float _equippedShieldStability = 0f;
     [UnityEngine.SerializeField] private float _equippedShieldAbsorption = 0f;
 
+    [UnityEngine.SerializeField] private int _equippedBonusStrength = 0;
+    [UnityEngine.SerializeField] private int _equippedBonusDexterity = 0;
+    [UnityEngine.SerializeField] private float _equippedBonusMaxHp = 0f;
+    [UnityEngine.SerializeField] private float _equippedBonusMaxStamina = 0f;
+    [UnityEngine.SerializeField] private float _equippedBonusAttackPower = 0f;
+
     public float EquippedArmorFlatDefense => _equippedArmorFlatDefense;
     public float EquippedArmorAbsorption => _equippedArmorAbsorption;
     public float EquippedArmorPoiseBonus => _equippedArmorPoiseBonus;
     public float EquippedShieldStability => _equippedShieldStability;
     public float EquippedShieldAbsorption => _equippedShieldAbsorption;
+    public int EquippedBonusStrength => _equippedBonusStrength;
+    public int EquippedBonusDexterity => _equippedBonusDexterity;
+    public float EquippedBonusAttackPower => _equippedBonusAttackPower;
     #endregion
 
     public PlayerMotionStatusModule PlayerMotionStats => MotionStatus as PlayerMotionStatusModule;
@@ -198,6 +207,40 @@ public class PlayerStatusController : UnitStatusController
         _equippedShieldStability = stability;
         _equippedShieldAbsorption = UnityEngine.Mathf.Clamp01(physicalAbsorption);
         Util.Log($"[방패 갱신] 안정성: {_equippedShieldStability}, 커트율: {_equippedShieldAbsorption * 100f:F1}%");
+    }
+
+    public void ApplyEquipmentStats(in EquipmentTotalStats stats)
+    {
+        _equippedArmorFlatDefense = stats.TotalFlatDefense;
+        _equippedArmorAbsorption = UnityEngine.Mathf.Clamp(stats.TotalAbsorption, 0f, 0.95f);
+        _equippedArmorPoiseBonus = stats.TotalPoiseBonus;
+        _equippedShieldStability = stats.ShieldStability;
+        _equippedShieldAbsorption = UnityEngine.Mathf.Clamp01(stats.ShieldAbsorption);
+
+        _equippedBonusStrength = stats.BonusStrength;
+        _equippedBonusDexterity = stats.BonusDexterity;
+        _equippedBonusMaxHp = stats.BonusMaxHp;
+        _equippedBonusMaxStamina = stats.BonusMaxStamina;
+        _equippedBonusAttackPower = stats.BonusAttackPower;
+
+        // 베이스 스탯에 보너스 수치 반영하여 Max 값 재산출
+        if (PlayerInfoSource != null)
+        {
+            _maxHp = PlayerInfoSource.CalculateMaxHp() + _equippedBonusMaxHp;
+            _currentHp = UnityEngine.Mathf.Min(_currentHp, _maxHp);
+
+            _maxStamina = PlayerInfoSource.CalculateMaxStamina() + _equippedBonusMaxStamina;
+            _currentStamina = UnityEngine.Mathf.Min(_currentStamina, _maxStamina);
+
+            _maxPoise = PlayerInfoSource.Poise + _equippedArmorPoiseBonus;
+            _currentPoise = UnityEngine.Mathf.Min(_currentPoise, _maxPoise);
+        }
+
+        PlayerMotionStats?.UpdateWeight(stats.TotalWeight);
+
+        InvokeChangeHPEvent(_currentHp, _maxHp);
+        InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
+        InvokeChangePoiseEvent(_currentPoise, _maxPoise);
     }
 
     private void InvokeChangeStatminaEvent(float current, float max)

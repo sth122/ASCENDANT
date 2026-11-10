@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccf927d932245fd4596e1c9a7fc40da8, type: 3}
   m_Name: HealPortion
   m_EditorClassIdentifier: Assembly-CSharp::PortionItemData
-  _id: 101
+  _id: 4001
   _itemName: Item_EstusPotion
   _icon: {fileID: 21300000, guid: 512e544c7a250f148a374402c76baa95, type: 3}
   _description: 111

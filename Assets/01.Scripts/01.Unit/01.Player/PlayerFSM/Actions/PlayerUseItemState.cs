@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 /// <summary>
 /// 에스트 병 음용 및 투척 아이템 사용 애니메이션과 후딜레이를 제어하는 FSM 액션 상태
@@ -6,10 +7,10 @@
 public class PlayerUseItemState : PlayerActionState
 {
     private PortionItem _targetItem;
-    private int _targetSlotIndex;
-    private const float ItemEffectTriggerNormalized = 0.50f; // 포션 음용/투척 발동 정규화 시점
-    private const float MovementCancelNormalized = 0.85f;   // 후딜레이 캔슬 가능 시점
-    private bool _hasExecutedEffect = false;
+    private int _targetSlotIndex = -1;
+    private const float EffectTriggerNormalized = 0.50f;
+    private const float CancelWindowNormalized = 0.85f;
+    private bool _hasExecuted = false;
 
     public PlayerUseItemState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
@@ -26,7 +27,7 @@ public class PlayerUseItemState : PlayerActionState
 
         CanMove = false;
         CanRotate = false;
-        _hasExecutedEffect = false;
+        _hasExecuted = false;
         owner.StopMovementAPI();
 
         if (_targetItem == null || _targetItem.CurrentAmount <= 0)
@@ -35,8 +36,9 @@ public class PlayerUseItemState : PlayerActionState
             return;
         }
 
-        // 아이템 사용 애니메이션 트리거 격발 (투척/음용 구분)
-        // _playerAnimController.SetTrigger(AnimParamType.UseItem);
+        // 아이템 사용 애니메이션 트리거
+        //bool isBomb = _targetItem.PortionData.Effects.Exists(e => e is ThrowFireBombEffectSO);
+        //_playerAnimController.PlayState(isBomb ? AnimStateType.ThrowBomb : AnimStateType.UsePotion, force: true);
 
         System.Threading.CancellationToken token = CreateActionToken();
         ExecuteItemUseTimelineAsync(token).Forget();
@@ -44,31 +46,29 @@ public class PlayerUseItemState : PlayerActionState
 
     private async UniTaskVoid ExecuteItemUseTimelineAsync(System.Threading.CancellationToken token)
     {
-        float totalDuration = 1.6f; // 소울라이크 에스트 음용 평균 모션 시간
-        float effectTime = totalDuration * ItemEffectTriggerNormalized;
-        float cancelWindowTime = totalDuration * MovementCancelNormalized;
+        float duration = _playerAnimController.GetStateDuration(_playerAnimController.CurrentStateType);
+        float effectDelay = duration * EffectTriggerNormalized;
+        float cancelDelay = duration * CancelWindowNormalized;
 
-        // 1. 발동 시점까지 대기 (선딜레이)
-        bool canceledBeforeEffect = await UniTask.Delay(System.TimeSpan.FromSeconds(effectTime), cancellationToken: token).SuppressCancellationThrow();
-        if (canceledBeforeEffect) return;
+        // 1. 발동 프레임 대기
+        bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(effectDelay), cancellationToken: token).SuppressCancellationThrow();
+        if (canceled) return;
 
-        // 2. 실제 아이템 효과 적용 및 퀵슬롯 차감
-        if (!_hasExecutedEffect && _targetItem != null && _targetItem.CurrentAmount > 0)
+        // 2. 정식 퀵슬롯 소비 호출
+        if (!_hasExecuted && owner.TryGetComponent(out PlayerInventoryHandler handler))
         {
-            _hasExecutedEffect = true;
-            _targetItem.Use(owner);
+            _hasExecuted = true;
+            handler.InventoryInstance.QuickSlots.TryUseSlot(_targetSlotIndex, owner);
         }
 
-        // 3. 후딜레이 캔슬 가능 시점까지 대기
-        float remainToCancel = cancelWindowTime - effectTime;
-        bool canceledBeforeCancelWindow = await UniTask.Delay(System.TimeSpan.FromSeconds(remainToCancel), cancellationToken: token).SuppressCancellationThrow();
-        if (canceledBeforeCancelWindow) return;
+        // 3. 후딜레이 캔슬 가능 구간 대기
+        canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(cancelDelay - effectDelay), cancellationToken: token).SuppressCancellationThrow();
+        if (canceled) return;
 
-        // 4. 후딜레이 구간: 구르기 선입력 시 즉시 회피 캔슬 허용
-        float remainingDuration = totalDuration - cancelWindowTime;
+        // 4. 구르기 선입력 캔슬 루프
+        float remain = duration - cancelDelay;
         float elapsed = 0f;
-
-        while (elapsed < remainingDuration)
+        while (elapsed < remain)
         {
             if (token.IsCancellationRequested) return;
 
@@ -78,7 +78,7 @@ public class PlayerUseItemState : PlayerActionState
                 return;
             }
 
-            elapsed += UnityEngine.Time.deltaTime;
+            elapsed += Time.deltaTime;
             await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
         }
 
@@ -89,6 +89,7 @@ public class PlayerUseItemState : PlayerActionState
     {
         base.Exit();
         _targetItem = null;
-        _hasExecutedEffect = false;
+        _targetSlotIndex = -1;
+        _hasExecuted = false;
     }
 }

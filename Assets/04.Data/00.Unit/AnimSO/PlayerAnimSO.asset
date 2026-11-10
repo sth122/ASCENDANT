@@ -35,7 +35,6 @@ MonoBehaviour:
   - ParamType: 19
   - ParamType: 20
   - ParamType: 21
-  - ParamType: 22
   _states:
   - StateType: 9
     Clip: {fileID: -203655887218126122, guid: 407d26d7ac3c87f45b8e126ffd4ee95c, type: 3}
@@ -43,5 +42,13 @@ MonoBehaviour:
     CrossFadeDuration: 0.1
   - StateType: 10
     Clip: {fileID: -203655887218126122, guid: 1a4879f5bcf334549818eb3ce6550e77, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.1
+  - StateType: 12
+    Clip: {fileID: -203655887218126122, guid: 3afbbab0ae8ced046be6a3c241f07f0c, type: 3}
+    SpeedMultiplier: 1
+    CrossFadeDuration: 0.1
+  - StateType: 11
+    Clip: {fileID: -203655887218126122, guid: 330c3d8e0a320a142b23b9d89511105d, type: 3}
     SpeedMultiplier: 1
     CrossFadeDuration: 0.1

@@ -55,6 +55,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3b27493784282a438c6f8cb6cdedb9c
+    m_Address: InventoryUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0599bb9ff9eed6449328a1a8d096c6a
+    m_Address: QuickSlotHUD
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c7713a1ecfa840e44989a99a5355a548
     m_Address: ConfirmPopupUI
     m_ReadOnly: 0

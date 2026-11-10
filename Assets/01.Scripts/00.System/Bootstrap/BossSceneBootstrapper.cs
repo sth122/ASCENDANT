@@ -121,18 +121,7 @@ public class BossSceneBootstrapper : SceneBootstrapper, IPlayerProvider
             GameManager.Instance.SetState(GameState.Playing);
         }
 
-        if (UIManager.Instance != null && UIManager.Instance.InputReader != null)
-        {
-            UIManager.Instance.InputReader.EnablePlayerInput();
-        }
-
-        if (_spawnedPlayer != null && _spawnedPlayer.InputReader != null)
-        {
-            _spawnedPlayer.InputReader.EnablePlayerInput();
-        }
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        InputSystemHandler.SetMode(InputMode.Gameplay);
 
         // 카메라 즉시 스냅 (2초간 날아가는 현상 차단)
         if (CameraManager.Instance != null)
