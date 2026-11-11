@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using Util = DebugLogger<PlayerController>;
 
 /// <summary>
 /// Player 메인 컨트롤러 컴포넌트
@@ -265,6 +264,9 @@ public class PlayerController : UnitController, IDamageable
         {
             _inputReader.OnLockOnEvent -= HandleLockOnInput;
             _inputReader.OnLockOnEvent += HandleLockOnInput;
+
+            _inputReader.OnInventoryOpenEvent -= HandleInventoryOpenInput;
+            _inputReader.OnInventoryOpenEvent += HandleInventoryOpenInput;
         }
     }
 
@@ -273,6 +275,7 @@ public class PlayerController : UnitController, IDamageable
         if (_inputReader != null)
         {
             _inputReader.OnLockOnEvent -= HandleLockOnInput;
+            _inputReader.OnInventoryOpenEvent -= HandleInventoryOpenInput;
         }
     }
 
@@ -384,6 +387,13 @@ public class PlayerController : UnitController, IDamageable
         else if (evt.NewState == GameState.Playing)
         {
             _inputReader?.EnablePlayerInput();
+        }
+    }
+    private void HandleInventoryOpenInput()
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.RequestOpenInventory();
         }
     }
 

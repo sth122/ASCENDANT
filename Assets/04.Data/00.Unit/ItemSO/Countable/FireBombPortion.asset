@@ -17,9 +17,9 @@ MonoBehaviour:
   _icon: {fileID: 21300000, guid: 5a5abc798b2c73e40b0ceef9f091aa4c, type: 3}
   _description: ggg
   _weight: 0
-  _category: 0
+  _category: 4
   _maxStorageCount: 99
   _maxStack: 99
   _effects:
   - {fileID: 11400000, guid: 14d30f5bbee191e46a7c716a20fd10d5, type: 2}
-  _cooldown: 1.5
+  _cooldown: 2

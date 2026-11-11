@@ -33,9 +33,17 @@
 
         if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
         {
-            float airSpeed = _playerStatusController.MotionStatus.WalkSpeed.Value * 0.35f;
-            UnityEngine.Vector3 airVelocity = owner.CurrentMoveDirection * airSpeed;
+            bool isSprint = owner.InputReader.IsSprinting;
+            float speed = isSprint ? _playerStatusController.PlayerMotionStats.SprintSpeed.Value
+                : _playerStatusController.PlayerMotionStats.WalkSpeed.Value;
+
+            UnityEngine.Vector3 airVelocity = owner.CurrentMoveDirection * speed;
             owner.Rigidbody.linearVelocity = new UnityEngine.Vector3(airVelocity.x, owner.Rigidbody.linearVelocity.y, airVelocity.z);
+
+            float rotSpeed = (_playerStatusController != null && _playerStatusController.PlayerInfoSource != null)
+                ? _playerStatusController.PlayerInfoSource.RotationSpeed : 16f;
+
+            owner.RotateTowardsAPI(owner.CurrentMoveDirection, rotSpeed, UnityEngine.Time.fixedDeltaTime);
         }
     }
 

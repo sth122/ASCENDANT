@@ -26,9 +26,9 @@ public class PlayerCombatConfigSO : ScriptableObject
     [SerializeField] private float _guardBlockAngle = 120.0f;
 
     [Header("중량비 구르기 티어별 타이밍 테이블 (Data-Driven)")]
-    [SerializeField] private RollTierConfig _fastRollConfig = new RollTierConfig(14f / 60f, 22f / 60f, 18f / 60f);
-    [SerializeField] private RollTierConfig _midRollConfig = new RollTierConfig(12f / 60f, 25f / 60f, 21f / 60f);
-    [SerializeField] private RollTierConfig _fatRollConfig = new RollTierConfig(8f / 60f, 32f / 60f, 28f / 60f);
+    [SerializeField] private RollTierConfig _fastRollConfig = new RollTierConfig(0.38f, 0.78f, 0.65f);
+    [SerializeField] private RollTierConfig _midRollConfig = new RollTierConfig(0.32f, 0.85f, 0.72f);
+    [SerializeField] private RollTierConfig _fatRollConfig = new RollTierConfig(0.22f, 1.05f, 0.95f);
 
     #region Properties
     public float AttackStaminaCost => _attackStaminaCost;

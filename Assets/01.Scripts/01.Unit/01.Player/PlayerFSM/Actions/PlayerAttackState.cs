@@ -7,6 +7,7 @@ public class PlayerAttackState : PlayerActionState
     private const int MaxComboStep = 3;
     private bool _hasAdvancedThisStep = false;
     private bool _isHitboxCurrentlyOpen = false;
+    private bool _hasOpenedHitboxThisStep = false;
     private float _stepTimer = 0f;
     private const float StepLockoutDuration = 0.18f;
     private const float SafetyTimeout = 2.5f;
@@ -38,6 +39,7 @@ public class PlayerAttackState : PlayerActionState
         _comboStep = 1;
         _hasAdvancedThisStep = false;
         _isHitboxCurrentlyOpen = false;
+        _hasOpenedHitboxThisStep = false;
         _stepTimer = 0f;
 
         // 3.자동 타깃 이동 입력 방향 대신 최근접/타겟팅 적을 향해 자동 스냅
@@ -87,11 +89,19 @@ public class PlayerAttackState : PlayerActionState
         // 3. 긴급 회피 및 가드 캔슬 판정
         if (normalizedTime >= _currentTiming.EmergencyCancelNormalized)
         {
-            if (owner.InputReader.TryConsumeCommand(InputCommandType.Roll))
+            float rollCost = owner.CombatConfig != null ? owner.CombatConfig.RollStaminaCost : 18.0f;
+            if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(rollCost))
             {
-                CloseHitboxInternal();
-                _playerStateMachine.ChangeState(UnitState.Roll);
-                return;
+                if (owner.InputReader.TryConsumeCommand(InputCommandType.Roll))
+                {
+                    CloseHitboxInternal();
+                    _playerStateMachine.ChangeState(UnitState.Roll);
+                    return;
+                }
+            }
+            else
+            {
+                owner.InputReader.ClearCommand(InputCommandType.Roll);
             }
 
             if (owner.InputReader.TryConsumeCommand(InputCommandType.Guard))
@@ -148,6 +158,7 @@ public class PlayerAttackState : PlayerActionState
 
         _hasAdvancedThisStep = false;
         _isHitboxCurrentlyOpen = false;
+        _hasOpenedHitboxThisStep = false;
         _comboStep = 0;
         _stepTimer = 0f;
     }
@@ -158,10 +169,10 @@ public class PlayerAttackState : PlayerActionState
     private void ExecuteAttackStep()
     {
         _isHitboxCurrentlyOpen = false;
+        _hasOpenedHitboxThisStep = false;
 
         WeaponItemData weapon = owner.CombatModule.CurrentWeaponData;
-        _currentTiming = (weapon != null)
-            ? weapon.GetComboTiming(_comboStep) : new WeaponItemData.ComboTiming(0.35f, 0.55f, 0.30f, 0.65f, 0.80f);
+        _currentTiming = (weapon != null) ? weapon.GetComboTiming(_comboStep) : new WeaponItemData.ComboTiming(0.35f, 0.55f, 0.30f, 0.65f, 0.80f);
 
         float staminaCost = GetAttackStaminaCost();
         _playerStatusController?.ConsumeStamina(staminaCost);
@@ -208,8 +219,9 @@ public class PlayerAttackState : PlayerActionState
             return;
         }
 
-        if (!_isHitboxCurrentlyOpen && normalizedTime >= _currentTiming.HitboxStartNormalized && normalizedTime < _currentTiming.HitboxEndNormalized)
+        if (!_hasOpenedHitboxThisStep && normalizedTime >= _currentTiming.HitboxStartNormalized && normalizedTime < _currentTiming.HitboxEndNormalized)
         {
+            _hasOpenedHitboxThisStep = true;
             OpenHitboxInternal();
         }
         else if (_isHitboxCurrentlyOpen && normalizedTime >= _currentTiming.HitboxEndNormalized)

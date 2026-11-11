@@ -41,7 +41,7 @@ public class UIBase : MonoBehaviour, IPoolable
     /// <summary>
     /// UniTask 기반의 부드러운 화면 출력
     /// </summary>
-    public virtual async UniTask ShowAsync(float duration = 0.2f, System.Threading.CancellationToken ct = default)
+    public virtual async UniTask ShowAsync(float duration = 0.1f, System.Threading.CancellationToken ct = default)
     {
         CreateActionToken(ct);
 

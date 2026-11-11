@@ -12,6 +12,8 @@ public class ConfirmPopupView : UIPopupView<bool>
     {
         base.Awake();
 
+        SetMessage(string.Empty);
+
         if (_confirmButton != null)
         {
             _confirmButton.onClick.AddListener(HandleConfirmClicked);
@@ -31,8 +33,16 @@ public class ConfirmPopupView : UIPopupView<bool>
         }
     }
 
-    public override void CancelPopup() => SetResult(false);
+    protected override void SetResult(bool result)
+    {
+        SetMessage(string.Empty);
+        base.SetResult(result);
+    }
 
+    public override void CancelPopup()
+    {
+        SetResult(false);
+    }
     private void HandleConfirmClicked() => SetResult(true);
 
     private void HandleCancelClicked() => SetResult(false);

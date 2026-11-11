@@ -15,42 +15,14 @@ public static class InputSystemHandler
 
     public static InputMode CurrentMode { get; private set; } = InputMode.Title;
 
-    public static event Action OnInventoryToggleRequested;
-    public static event Action OnCancelRequested;
-    public static event Action OnTitleQuitRequested;
-
     public static void Initialize()
     {
         if (_actions == null)
         {
             _actions = new PlayerInput();
-            _actions.Player.Inventory.performed += ctx => HandleInventoryInput();
-            _actions.UI.Inventory.performed += ctx => HandleInventoryInput();
-            _actions.UI.Cancel.performed += ctx => HandleCancelInput();
         }
 
         SetMode(CurrentMode);
-    }
-
-    private static void HandleInventoryInput()
-    {
-        // 타이틀 화면이거나 인게임 플레이 상태가 아닐 때는 인벤토리 개폐 불가
-        if (CurrentMode == InputMode.Title) return;
-        if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
-
-        OnInventoryToggleRequested?.Invoke();
-    }
-
-    private static void HandleCancelInput()
-    {
-        // 타이틀 화면에서 ESC를 누르면 창이 꺼지는 대신 게임 종료 확인 팝업 실행
-        if (CurrentMode == InputMode.Title)
-        {
-            OnTitleQuitRequested?.Invoke();
-            return;
-        }
-
-        OnCancelRequested?.Invoke();
     }
 
     public static void SetMode(InputMode mode)
@@ -71,6 +43,7 @@ public static class InputSystemHandler
                 Time.timeScale = 1f;
                 Actions.UI.Disable();
                 Actions.Player.Enable();
+                Actions.UI.Cancel.Enable();
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
                 break;

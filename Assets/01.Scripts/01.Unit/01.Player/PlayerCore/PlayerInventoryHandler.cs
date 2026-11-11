@@ -24,9 +24,7 @@ public class PlayerInventoryHandler : MonoBehaviour
         if (_player != null && _player.InputReader != null)
         {
             _player.InputReader.OnQuickSlotDirectEvent -= HandleQuickSlotDirect;
-            _player.InputReader.OnInventoryToggleEvent -= HandleInventoryToggle;
             _player.InputReader.OnQuickSlotDirectEvent += HandleQuickSlotDirect;
-            _player.InputReader.OnInventoryToggleEvent += HandleInventoryToggle;
         }
     }
 
@@ -35,7 +33,6 @@ public class PlayerInventoryHandler : MonoBehaviour
         if (_player != null && _player.InputReader != null)
         {
             _player.InputReader.OnQuickSlotDirectEvent -= HandleQuickSlotDirect;
-            _player.InputReader.OnInventoryToggleEvent -= HandleInventoryToggle;
         }
     }
 
@@ -128,16 +125,6 @@ public class PlayerInventoryHandler : MonoBehaviour
                 _player.StateMachineInstance.ChangeState(UnitState.UseItem);
             }
         }
-    }
-
-    private void HandleInventoryToggle()
-    {
-        if (UIManager.Instance == null) return;
-
-        InventoryModel model = new InventoryModel();
-        UIManager.Instance.OpenUIAsync<InventoryView, InventoryPresenter, InventoryModel>(
-            UIId.InventoryUI, model
-        ).Forget();
     }
     #endregion
 }

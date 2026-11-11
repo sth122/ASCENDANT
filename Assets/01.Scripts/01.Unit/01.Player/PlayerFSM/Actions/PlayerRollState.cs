@@ -36,7 +36,6 @@ public class PlayerRollState : PlayerActionState
 
         // 2. 스태미나 차감
         _playerStatusController?.ConsumeStamina(staminaCost);
-
         _playerAnimController.SetTrigger(AnimParamType.Roll);
 
         _elapsedRollTime = 0f;
@@ -80,25 +79,24 @@ public class PlayerRollState : PlayerActionState
             return;
         }
 
-        RollTierConfig tierConfig = owner.CombatConfig != null ? owner.CombatConfig.GetRollTierConfig(tier)
-            : new RollTierConfig(12f / 60f, 25f / 60f, 21f / 60f);
+        RollTierConfig tierConfig 
+            = owner.CombatConfig != null ? owner.CombatConfig.GetRollTierConfig(tier) : new RollTierConfig(0.35f, 0.85f, 0.72f);
 
         _currentRollDuration = tierConfig.TotalDuration;
         IsInvincible = true;
 
         // 1. 무적 시간 대기
         bool canceledAtIFrame = await Cysharp.Threading.Tasks.UniTask.Delay(System.TimeSpan.FromSeconds(tierConfig.InvincibleDuration),
-            delayTiming: Cysharp.Threading.Tasks.PlayerLoopTiming.Update,
-            cancellationToken: token).SuppressCancellationThrow();
+            delayTiming: Cysharp.Threading.Tasks.PlayerLoopTiming.Update, cancellationToken: token).SuppressCancellationThrow();
         if (canceledAtIFrame) return;
 
         IsInvincible = false;
 
         // 2. 캔슬 윈도우 대기 
         float lockoutDuration = UnityEngine.Mathf.Max(0f, tierConfig.CancelWindow - tierConfig.InvincibleDuration);
+
         bool canceledAtLockout = await Cysharp.Threading.Tasks.UniTask.Delay(System.TimeSpan.FromSeconds(lockoutDuration),
-            delayTiming: Cysharp.Threading.Tasks.PlayerLoopTiming.Update,
-            cancellationToken: token).SuppressCancellationThrow();
+            delayTiming: Cysharp.Threading.Tasks.PlayerLoopTiming.Update, cancellationToken: token).SuppressCancellationThrow();
         if (canceledAtLockout) return;
 
         // 3. 캔슬 윈도우 도달
@@ -109,7 +107,7 @@ public class PlayerRollState : PlayerActionState
         {
             if (token.IsCancellationRequested) return;
 
-            // 이동 입력이 들어오면 후딜레이를 즉시 캔슬하고 이동 상태로 전이
+            // 이동 입력이 들어오면 후딜레이 캔슬
             if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
             {
                 CompleteActionAndEvaluateTransition();

@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using ConstStrings;
 using Util = DebugLogger<TitleMenuPresenter>;
 /// <summary>
 /// 타이틀 화면의 버튼 액션과 씬 전환을 중계하는 프리젠터
@@ -15,8 +16,6 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
 
         // 버튼 이벤트 등록
         OnBindHandler();
-
-        Util.Log("[타이틀 메뉴 Presenter 바인딩 완료]");
     }
 
     protected override void OnUnbind()
@@ -25,8 +24,6 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
 
         // 버튼 이벤트 해제
         OnUnbindHandler();
-
-        Util.Log("[타이틀 메뉴 Presenter 해제 완료]");
     }
 
     #region 이벤트 Bind & Unbind
@@ -42,10 +39,6 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
         {
             View.ContinueButton.onClick.AddListener(HandleContinueClicked);
         }
-        if (View.QuitButton != null)
-        {
-            View.QuitButton.onClick.AddListener(HandleQuitClicked);
-        }
     }
 
     protected override void OnUnbindHandler()
@@ -58,25 +51,20 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
         {
             View.ContinueButton.onClick.RemoveListener(HandleContinueClicked);
         }
-        if (View.QuitButton != null)
-        {
-            View.QuitButton.onClick.RemoveListener(HandleQuitClicked);
-        }
     }
     #endregion
 
-    private void HandleNewGameClicked()
-    {
-        ExecuteNewGameFlowAsync().Forget();
-    }
-    private void HandleContinueClicked()
-    {
-        ExecuteContinueFlowAsync().Forget();
-    }
+    private void HandleNewGameClicked() => ExecuteNewGameFlowAsync().Forget();
+    private void HandleContinueClicked() => ExecuteContinueFlowAsync().Forget();
 
-    private void HandleQuitClicked()
+    public void PromptQuitGame() => ExecuteQuitConfirmFlowAsync().Forget();
+
+    private async UniTaskVoid ExecuteQuitConfirmFlowAsync()
     {
-        Util.Log("게임 종료 요청");
+        bool isConfirmed = await OpenConfirmDialogAsync(ConstString.GameQuitPrompt);
+        if (!isConfirmed) return;
+
+        Util.Log("게임 종료 승인");
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
@@ -88,9 +76,7 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
     {
         bool hasSave = SaveManager.Instance != null && SaveManager.Instance.HasSaveData(0);
 
-        string promptMessage = hasSave
-            ? "이전 데이터를 삭제하고 새로 시작하시겠습니까?"
-            : "게임을 시작하시겠습니까?";
+        string promptMessage = hasSave ? ConstString.NewGameOverwritePrompt : ConstString.GameStartPrompt;
 
         bool isConfirmed = await OpenConfirmDialogAsync(promptMessage);
         if (!isConfirmed) return;
@@ -116,7 +102,7 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
             return;
         }
 
-        bool isConfirmed = await OpenConfirmDialogAsync("게임을 불러오시겠습니까?");
+        bool isConfirmed = await OpenConfirmDialogAsync(ConstString.LoadGamePrompt);
         if (!isConfirmed) return;
 
         Util.Log("[이어하기] 세이브 데이터 로드 후 씬 이동");

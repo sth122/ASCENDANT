@@ -20,7 +20,7 @@ public class ItemDetailPaneUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _consumableDescText;
 
     [Header("Equipment Sub-Panel (image_c62819.jpg)")]
-    [SerializeField] private TextMeshProUGUI _equipWeightText; // [점검] 내구도 텍스트 제거, 중량만 표시
+    [SerializeField] private TextMeshProUGUI _equipWeightText;
     [SerializeField] private TextMeshProUGUI _attackPowerText;
     [SerializeField] private TextMeshProUGUI _guardAbsorptionText;
     [SerializeField] private TextMeshProUGUI _scalingGradeText;

@@ -16,17 +16,14 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     #endregion
 
     #region Input Action Events
-    // 단발성 Action 키 이벤트 ( 공격, 구르기, 점프 등)
-    public event System.Action<InputCommandType> OnCommandInputEvent;
-
-    // 지속 입력 상태 변화 이벤트
-    public event System.Action<UnityEngine.Vector2> OnMoveInputChanged;
+    public event System.Action<InputCommandType> OnCommandInputEvent;       // 단발성 Action 키 이벤트 ( 공격, 구르기, 점프 등)
+    public event System.Action<UnityEngine.Vector2> OnMoveInputChanged;     // 지속 입력 상태 변화 이벤트
     public event System.Action<bool> OnSprintChanged;
     public event System.Action OnGuardReleased;
     public event System.Action OnInteractEvent;
     public event System.Action OnLockOnEvent;
     public event System.Action<int> OnQuickSlotDirectEvent;
-    public event System.Action OnInventoryToggleEvent;
+    public event System.Action OnInventoryOpenEvent;
     #endregion
 
     public PlayerInputReader(float bufferDuration = 0.25f)
@@ -41,24 +38,11 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     public void EnableUIInput() => InputSystemHandler.SetMode(InputMode.RealtimeUI);
 
     #region Input Buffer Control
-    public bool TryConsumeCommand(InputCommandType commandtype)
-    {
-        return _bufferQueue.TryConsumeCommand(commandtype);
-    }
-    public bool TryConsumePriorityCommand(out InputCommandType consunmedCommand)
-    {
-        return _bufferQueue.TryConsumePriorityCommand(out consunmedCommand);
-    }
+    public bool TryConsumeCommand(InputCommandType commandtype) => _bufferQueue.TryConsumeCommand(commandtype);
+    public bool TryConsumePriorityCommand(out InputCommandType consunmedCommand) => _bufferQueue.TryConsumePriorityCommand(out consunmedCommand);
+    public void ClearCommand(InputCommandType commandType) => _bufferQueue.ClearCommand(commandType);
 
-    public void ClearCommand(InputCommandType commandType)
-    {
-        _bufferQueue.ClearCommand(commandType);
-    }
-
-    public void ClearAllCommands()
-    {
-        _bufferQueue.ClearAll();
-    }
+    public void ClearAllCommands() => _bufferQueue.ClearAll();
     #endregion
 
     #region IPlayerActions 인터페이스 구현부
@@ -197,13 +181,13 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     }
 
     /// <summary>
-    /// I 키 입력 시 인벤토리 창 열기/닫기 토글
+    /// I 키 입력 시 인벤토리 창 열기 토글
     /// </summary>
     public void OnInventory(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
         if (context.performed)
         {
-            OnInventoryToggleEvent?.Invoke();
+            OnInventoryOpenEvent?.Invoke();
         }
     }
     #endregion
