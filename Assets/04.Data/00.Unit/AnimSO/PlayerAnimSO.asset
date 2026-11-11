@@ -35,6 +35,8 @@ MonoBehaviour:
   - ParamType: 19
   - ParamType: 20
   - ParamType: 21
+  - ParamType: 22
+  - ParamType: 23
   _states:
   - StateType: 9
     Clip: {fileID: -203655887218126122, guid: 407d26d7ac3c87f45b8e126ffd4ee95c, type: 3}

@@ -22,4 +22,5 @@ MonoBehaviour:
   _maxStack: 99
   _effects:
   - {fileID: 11400000, guid: 14d30f5bbee191e46a7c716a20fd10d5, type: 2}
-  _cooldown: 2
+  _cooldown: 4
+  AnimParamType: 23

@@ -7,7 +7,7 @@ public class PlayerInitialEquipmentSO : ScriptableObject
     [System.Serializable]
     public struct ConsumableLoadout
     {
-        public PortionItemData ItemData;
+        public ConsumableItemData ItemData;
         public int Amount;
         [Range(-1, 3)] public int AutoAssignQuickSlotIndex;
     }

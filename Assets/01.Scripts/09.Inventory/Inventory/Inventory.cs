@@ -248,7 +248,7 @@ public class Inventory
             {
                 for (int slotIdx = 0; slotIdx < DefaultCapacity; slotIdx++)
                 {
-                    if (_slots[slotIdx] is PortionItem portion && portion.Data.Id == entry.ItemData.Id)
+                    if (_slots[slotIdx] is ConsumableItem portion && portion.Data.Id == entry.ItemData.Id)
                     {
                         QuickSlots.RegisterItem(entry.AutoAssignQuickSlotIndex, portion);
                         break;
@@ -358,7 +358,7 @@ public class Inventory
             var entry = sourceData.QuickSlots[q];
             for (int s = 0; s < DefaultCapacity; s++)
             {
-                if (_slots[s] is PortionItem portion && portion.Data.Id == entry.ItemId)
+                if (_slots[s] is ConsumableItem portion && portion.Data.Id == entry.ItemId)
                 {
                     QuickSlots.RegisterItem(entry.SlotIndex, portion);
                     break;

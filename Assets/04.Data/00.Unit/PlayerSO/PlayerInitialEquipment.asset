@@ -23,8 +23,8 @@ MonoBehaviour:
   _startingConsumables:
   - ItemData: {fileID: 11400000, guid: 29fd6dfba6388ad45bf0da1b03de2f1f, type: 2}
     Amount: 5
-    AutoAssignQuickSlotIndex: 0
+    AutoAssignQuickSlotIndex: -1
   - ItemData: {fileID: 11400000, guid: 7e12f510c7527d94599c03081f6bee0e, type: 2}
     Amount: 5
-    AutoAssignQuickSlotIndex: 1
+    AutoAssignQuickSlotIndex: -1
   _extraInventoryItems: []

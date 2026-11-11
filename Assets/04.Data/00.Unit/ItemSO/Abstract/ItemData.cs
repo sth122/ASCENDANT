@@ -21,7 +21,6 @@ public abstract class ItemData : UnityEngine.ScriptableObject
     public float Weight => _weight;
     public ItemCategory Category => _category;
     public int MaxStorageCount => _maxStorageCount;
-    public abstract ItemType Type { get; }
 
     /// <summary>
     /// 인벤토리 슬롯에 담길 런타임 인스턴스를 생성하는 팩토리 메서드

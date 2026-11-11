@@ -4,12 +4,16 @@
 /// </summary>
 public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
 {
+    private PlayerController _cachedPlayer;
     protected override void OnBind()
     {
-        // EventSystem 이벤트 명시적 메서드 구독 (무명 메서드 지양 원칙 준수)
+        ResolvePlayerReference();
+
+        // EventSystem 이벤트 명시적 메서드 구독
         EventBusSystem.Subscribe<UnitHpChangedEvent>(HandleHpChanged);
         EventBusSystem.Subscribe<PlayerStaminaChangedEvent>(HandleStaminaChanged);
         EventBusSystem.Subscribe<UnitPoiseChangedEvent>(HandlePoiseChanged);
+        EventBusSystem.Subscribe<PlayerMaxStatsCalculatedEvent>(HandleMaxStatsCalculated);
         EventBusSystem.Subscribe<InteractionPromptEvent>(HandleInteractionPrompt);
         EventBusSystem.Subscribe<GameSceneReadyEvent>(HandleGameSceneReady);
         SynchronizeInitialStats();
@@ -22,14 +26,28 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
         EventBusSystem.Unsubscribe<UnitHpChangedEvent>(HandleHpChanged);
         EventBusSystem.Unsubscribe<PlayerStaminaChangedEvent>(HandleStaminaChanged);
         EventBusSystem.Unsubscribe<UnitPoiseChangedEvent>(HandlePoiseChanged);
+        EventBusSystem.Unsubscribe<PlayerMaxStatsCalculatedEvent>(HandleMaxStatsCalculated);
         EventBusSystem.Unsubscribe<InteractionPromptEvent>(HandleInteractionPrompt);
         EventBusSystem.Unsubscribe<GameSceneReadyEvent>(HandleGameSceneReady);
 
+        _cachedPlayer = null;
         DebugLogger.LogWithTag("PlayerHUDPresetner", "[Presenter 해제 및 이벤트 구독 취소]");
     }
 
+    private void ResolvePlayerReference()
+    {
+        if (ServiceLocator.TryGet<IPlayerProvider>(out var provider) && provider.IsPlayerSpawned && provider.Player != null)
+        {
+            _cachedPlayer = provider.Player;
+        }
+    }
+
     #region Handle
-    private void HandleGameSceneReady(GameSceneReadyEvent eventData) => SynchronizeInitialStats();
+    private void HandleGameSceneReady(GameSceneReadyEvent eventData)
+    {
+        ResolvePlayerReference();
+        SynchronizeInitialStats();
+    }
 
     private void HandleHpChanged(UnitHpChangedEvent eventData)
     {
@@ -43,7 +61,7 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
                 Model.CurrentHp = eventData.CurrentHp;
                 Model.MaxHp = eventData.MaxHp;
             }
-            View.UpdateHpBar(eventData.CurrentHp, eventData.MaxHp);
+            View.UpdateHp(eventData.CurrentHp, eventData.MaxHp);
         }
     }
 
@@ -57,8 +75,15 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
             Model.MaxStamina = eventData.MaxStamina;
         }
 
-        View.UpdateStaminaBar(eventData.CurrentStamina, eventData.MaxStamina);
+        View.UpdateStamina(eventData.CurrentStamina, eventData.MaxStamina);
     }
+
+    private void HandleMaxStatsCalculated(PlayerMaxStatsCalculatedEvent eventData)
+    {
+        if (View == null) return;
+        View.SetBarWidths(eventData.MaxHp, eventData.MaxStamina, eventData.MaxPoise);
+    }
+
     private void HandlePoiseChanged(UnitPoiseChangedEvent eventData)
     {
         if (View == null) return;
@@ -71,7 +96,7 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
                 Model.CurrentPoise = eventData.CurrentPoise;
                 Model.MaxPoise = eventData.MaxPoise;
             }
-            View.UpdatePoiseBar(eventData.CurrentPoise, eventData.MaxPoise);
+            View.UpdatePoise(eventData.CurrentPoise, eventData.MaxPoise);
         }
     }
     private void HandleInteractionPrompt(InteractionPromptEvent eventData)
@@ -86,40 +111,40 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
 
     private void SynchronizeInitialStats()
     {
-        if (ServiceLocator.TryGet<IPlayerProvider>(out var provider) && provider.IsPlayerSpawned && provider.Player != null)
+        if (_cachedPlayer == null) ResolvePlayerReference();
+        if (_cachedPlayer == null || _cachedPlayer.StatusController == null || View == null) return;
+
+        UnitStatusController stat = _cachedPlayer.StatusController;
+
+        float curHp = stat.CurrentHp;
+        float maxHp = stat.MaxHp;
+        float curPoise = stat.CurrentPoise;
+        float maxPoise = stat.MaxPoise;
+
+        float curStamina = 100f;
+        float maxStamina = 100f;
+        if (stat is PlayerStatusController playerStat)
         {
-            PlayerController player = provider.Player;
-            UnitStatusController stat = player.StatusController;
-
-            if (stat != null && View != null)
-            {
-                float curHp = stat.CurrentHp;
-                float maxHp = stat.MaxHp;
-                float curPoise = stat.CurrentPoise;
-                float maxPoise = stat.MaxPoise;
-
-                float curStamina = 100f;
-                float maxStamina = 100f;
-                if (stat is PlayerStatusController playerStat)
-                {
-                    curStamina = playerStat.CurrentStamina;
-                    maxStamina = playerStat.MaxStamina;
-                }
-
-                if (Model != null)
-                {
-                    Model.CurrentHp = curHp;
-                    Model.MaxHp = maxHp;
-                    Model.CurrentStamina = curStamina;
-                    Model.MaxStamina = maxStamina;
-                    Model.CurrentPoise = curPoise;
-                    Model.MaxPoise = maxPoise;
-                }
-
-                View.UpdateHpBar(curHp, maxHp);
-                View.UpdateStaminaBar(curStamina, maxStamina);
-                View.UpdatePoiseBar(curPoise, maxPoise);
-            }
+            curStamina = playerStat.CurrentStamina;
+            maxStamina = playerStat.MaxStamina;
         }
+
+        if (Model != null)
+        {
+            Model.CurrentHp = curHp;
+            Model.MaxHp = maxHp;
+            Model.CurrentStamina = curStamina;
+            Model.MaxStamina = maxStamina;
+            Model.CurrentPoise = curPoise;
+            Model.MaxPoise = maxPoise;
+        }
+
+        // 1. 최대 스탯 기반 가로폭 1회 설정
+        View.SetBarWidths(maxHp, maxStamina, maxPoise);
+
+        // 2. 현재 게이지 비율 동기화
+        View.UpdateHp(curHp, maxHp);
+        View.UpdateStamina(curStamina, maxStamina);
+        View.UpdatePoise(curPoise, maxPoise);
     }
 }

@@ -197,3 +197,20 @@ public readonly struct UnitInvincibleChangedEvent : IEventType
         IsInvincible = isInvincible;
     }
 }
+
+/// <summary>
+/// 장비 장착/해제 및 스탯 계산이 완료되어 최대 능력치가 확정되었을 때 1회 발행되는 이벤트
+/// </summary>
+public readonly struct PlayerMaxStatsCalculatedEvent : IEventType
+{
+    public readonly float MaxHp;
+    public readonly float MaxStamina;
+    public readonly float MaxPoise;
+
+    public PlayerMaxStatsCalculatedEvent(float maxHp, float maxStamina, float maxPoise)
+    {
+        MaxHp = maxHp;
+        MaxStamina = maxStamina;
+        MaxPoise = maxPoise;
+    }
+}

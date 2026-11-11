@@ -19,6 +19,7 @@
         public const string GameQuitPrompt = "게임을 종료하시겠습니까?";
         public const string NewGameOverwritePrompt = "이전 데이터를 삭제하고 새로 시작하시겠습니까?";
         public const string LoadGamePrompt = "게임을 불러오시겠습니까?";
+        public const string BossEntryPrompt = "보스 방에 진입하시겠습니까?";
         #endregion
 
         #region UI Addressable Keys

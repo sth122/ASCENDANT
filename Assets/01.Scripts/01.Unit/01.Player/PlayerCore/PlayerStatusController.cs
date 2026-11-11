@@ -76,6 +76,8 @@ public class PlayerStatusController : UnitStatusController
             StartStaminaRegenLoop();
 
             InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
+
+            PublishMaxStatsCalculated();
         }
         else
         {
@@ -103,6 +105,8 @@ public class PlayerStatusController : UnitStatusController
 
         PlayerMotionStats.SyncBaseValues(updatedStat);
 
+        PublishMaxStatsCalculated();
+
         InvokeChangeHPEvent(_currentHp, _maxHp);
         InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
@@ -113,14 +117,12 @@ public class PlayerStatusController : UnitStatusController
     {
         _currentStamina = UnityEngine.Mathf.Max(0f, _currentStamina - cost);
         _staminaRecoveryTimer = StaminaRegenDelay;
-
         InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
 
     public void RestoreStamina(float amount)
     {
         if (_isDead || amount <= 0f) return;
-
         _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + amount);
         InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
@@ -137,7 +139,6 @@ public class PlayerStatusController : UnitStatusController
         ConsumeStamina(staminaCost);
 
         // 가드 피격 시에도 스태미나 회복 지연 타이머 갱신 ( 무한 가드 방어 )
-
         if (_currentStamina <= 0f)
         {
             _currentStamina = 0f;
@@ -195,8 +196,8 @@ public class PlayerStatusController : UnitStatusController
             _currentPoise = UnityEngine.Mathf.Min(_currentPoise, _maxPoise);
         }
 
+        PublishMaxStatsCalculated();
         InvokeChangePoiseEvent(_currentPoise, _maxPoise);
-        Util.Log($"[방어구 갱신] 추가 DEF: {_equippedArmorFlatDefense}, 경감률: {_equippedArmorAbsorption * 100f:F1}%, 강인도 보너스: {_equippedArmorPoiseBonus}");
     }
 
     /// <summary>
@@ -206,7 +207,6 @@ public class PlayerStatusController : UnitStatusController
     {
         _equippedShieldStability = stability;
         _equippedShieldAbsorption = UnityEngine.Mathf.Clamp01(physicalAbsorption);
-        Util.Log($"[방패 갱신] 안정성: {_equippedShieldStability}, 커트율: {_equippedShieldAbsorption * 100f:F1}%");
     }
 
     public void ApplyEquipmentStats(in EquipmentTotalStats stats)
@@ -238,10 +238,14 @@ public class PlayerStatusController : UnitStatusController
 
         PlayerMotionStats?.UpdateWeight(stats.TotalWeight);
 
+        PublishMaxStatsCalculated();
+
         InvokeChangeHPEvent(_currentHp, _maxHp);
         InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
         InvokeChangePoiseEvent(_currentPoise, _maxPoise);
     }
+
+    private void PublishMaxStatsCalculated() => EventBusSystem.Publish(new PlayerMaxStatsCalculatedEvent(_maxHp, _maxStamina, _maxPoise));
 
     private void InvokeChangeStatminaEvent(float current, float max)
     {

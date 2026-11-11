@@ -44,7 +44,7 @@
         }
     }
 
-    private void HandleQuickSlotChanged(int slotIndex, PortionItem item)
+    private void HandleQuickSlotChanged(int slotIndex, ConsumableItem item)
     {
         if (Model == null || View == null || slotIndex < 0 || slotIndex >= QuickSlotSystem.MaxQuickSlots) return;
 

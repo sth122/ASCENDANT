@@ -4,17 +4,17 @@
 public class QuickSlotSystem
 {
     public const int MaxQuickSlots = 4;
-    private readonly PortionItem[] _slots = new PortionItem[MaxQuickSlots];
+    private readonly ConsumableItem[] _slots = new ConsumableItem[MaxQuickSlots];
     private int _selectedSlotIndex = 0;
     private float _nextAvailableUseTime = 0f;
 
     public int SelectedSlotIndex => _selectedSlotIndex;
-    public PortionItem CurrentItem => _slots[_selectedSlotIndex];
+    public ConsumableItem CurrentItem => _slots[_selectedSlotIndex];
 
-    public event System.Action<int, PortionItem> OnQuickSlotChanged;
+    public event System.Action<int, ConsumableItem> OnQuickSlotChanged;
     public event System.Action<int> OnSelectedSlotChanged;
 
-    public void RegisterItem(int slotIndex, PortionItem portion)
+    public void RegisterItem(int slotIndex, ConsumableItem portion)
     {
         if (slotIndex < 0 || slotIndex >= MaxQuickSlots) return;
 
@@ -30,14 +30,14 @@ public class QuickSlotSystem
 
     public bool TryUseCurrentItem(PlayerController player)
     {
-        PortionItem current = CurrentItem;
+        ConsumableItem current = CurrentItem;
         if (current == null || current.CurrentAmount <= 0) return false;
         if (UnityEngine.Time.time < _nextAvailableUseTime) return false;
 
         bool success = current.Use(player);
         if (success)
         {
-            _nextAvailableUseTime = UnityEngine.Time.time + current.PortionData.Cooldown;
+            _nextAvailableUseTime = UnityEngine.Time.time + current.ItemData.Cooldown;
             OnQuickSlotChanged?.Invoke(_selectedSlotIndex, current);
 
             if (current.CurrentAmount <= 0)
@@ -58,14 +58,14 @@ public class QuickSlotSystem
     {
         if (slotIndex < 0 || slotIndex >= MaxQuickSlots || player == null) return false;
 
-        PortionItem targetItem = _slots[slotIndex];
+        ConsumableItem targetItem = _slots[slotIndex];
         if (targetItem == null || targetItem.CurrentAmount <= 0) return false;
         if (UnityEngine.Time.time < _nextAvailableUseTime) return false;
 
         bool success = targetItem.Use(player);
         if (success)
         {
-            _nextAvailableUseTime = UnityEngine.Time.time + targetItem.PortionData.Cooldown;
+            _nextAvailableUseTime = UnityEngine.Time.time + targetItem.ItemData.Cooldown;
             OnQuickSlotChanged?.Invoke(slotIndex, targetItem);
 
             // 수량 소진 시 퀵슬롯 비우기 및 인벤토리 가방 슬롯 연계 소거

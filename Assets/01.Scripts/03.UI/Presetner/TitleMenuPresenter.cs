@@ -39,6 +39,10 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
         {
             View.ContinueButton.onClick.AddListener(HandleContinueClicked);
         }
+        if (View.QuitButton != null)
+        {
+            View.QuitButton.onClick.AddListener(PromptQuitGame);
+        }
     }
 
     protected override void OnUnbindHandler()
@@ -50,6 +54,10 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
         if (View.ContinueButton != null)
         {
             View.ContinueButton.onClick.RemoveListener(HandleContinueClicked);
+        }
+        if (View.QuitButton != null)
+        {
+            View.QuitButton.onClick.RemoveListener(PromptQuitGame);
         }
     }
     #endregion

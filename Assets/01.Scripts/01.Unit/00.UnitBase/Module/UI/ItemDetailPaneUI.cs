@@ -47,7 +47,7 @@ public class ItemDetailPaneUI : MonoBehaviour
         if (_itemNameText != null) _itemNameText.text = data.ItemName;
         if (_categoryText != null) _categoryText.text = data.Category.ToString();
 
-        // 1. 소모품 계열 (image_945d19.jpg 구조)
+        // 1. 소모품 계열
         if (data is CountableItemData countableData)
         {
             if (_consumablePanel != null) _consumablePanel.SetActive(true);
@@ -59,13 +59,12 @@ public class ItemDetailPaneUI : MonoBehaviour
             if (_effectSummaryText != null) _effectSummaryText.text = data.GetEffectSummaryText();
             if (_consumableDescText != null) _consumableDescText.text = data.Description;
         }
-        // 2. 장비 계열 (image_c62819.jpg 구조)
+        // 2. 장비 계열
         else if (data is EquipmentItemData equipData)
         {
             if (_consumablePanel != null) _consumablePanel.SetActive(false);
             if (_equipmentPanel != null) _equipmentPanel.SetActive(true);
 
-            // [점검 완료] 미구현된 내구도(Durability) 텍스트를 제거하고 중량만 표기
             if (_equipWeightText != null)
             {
                 _equipWeightText.text = $"중량 {data.Weight:F1}";

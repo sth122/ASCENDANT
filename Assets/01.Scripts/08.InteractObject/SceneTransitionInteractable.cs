@@ -9,7 +9,6 @@ public class SceneTransitionInteractable : BaseInteractable
     [Header("Transition Settings")]
     [SerializeField] private SceneId _targetScene;
     private bool _isTransitioning = false;
-    private string _confirmPromptMessage = "보스 방에 진입하겠습니까?";
 
     private void Awake() => _interactType = InteractType.BossDoor;
 
@@ -26,7 +25,7 @@ public class SceneTransitionInteractable : BaseInteractable
         try
         {
             // 간소화된 OpenUIAsync 호출 (어드레서블 키 문자열 생략)
-            ConfirmPopupModel model = new ConfirmPopupModel(_confirmPromptMessage);
+            ConfirmPopupModel model = new ConfirmPopupModel(BossEntryPrompt);
             ConfirmPopupView popup = await UIManager.Instance.OpenUIAsync<ConfirmPopupView, ConfirmPopupPresenter, ConfirmPopupModel>(
                 UIId.ConfirmPopup, model
             );

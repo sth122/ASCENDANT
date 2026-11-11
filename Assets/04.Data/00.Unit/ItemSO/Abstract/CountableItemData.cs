@@ -4,5 +4,6 @@
     [UnityEngine.SerializeField] private int _maxStack = 99;
 
     public int MaxStack => _maxStack;
-    public override ItemType Type => ItemType.Countable;
+    public ItemType Type { get; }
 }
+

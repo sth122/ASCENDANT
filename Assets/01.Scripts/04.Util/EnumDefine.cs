@@ -163,7 +163,8 @@ public enum AnimParamType
     Roll,           // Trigger: 전방/방향 구르기
     Fall,           // Trigger: 공중 낙하 체공 모션
     HardLanding,    // Trigger: 하드 랜딩 착지 경직 모션
-    UseItem         // Trigger: 소모품 사용 모션
+    UsePortion,     // Trigger: 소모품 사용 모션
+    ThrowItem,      // Trigger: 투척 아이템 모션
 }
 
 public enum AnimStateType
@@ -349,8 +350,9 @@ public enum InteractType
 #region Inventory + Item
 public enum ItemType
 {
-    Countable,   // 소모품, 재료 등 수량성 아이템
-    Equipment    // 무기, 방패, 방어구 등 장비 아이템
+    Consumable,     // 소모품
+    Material,       // 재료
+    Bomb,           // 소모품 - 투척
 }
 
 public enum PortionEffectType

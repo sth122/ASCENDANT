@@ -8,5 +8,4 @@
     public EquipSlotType EquipSlot => _equipSlot;
     public int RequiredStrength => _requiredStrength;
     public int RequiredDexterity => _requiredDexterity;
-    public override ItemType Type => ItemType.Equipment;
 }

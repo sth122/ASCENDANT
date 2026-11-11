@@ -115,7 +115,7 @@ public class PlayerInventoryHandler : MonoBehaviour
         // 지상 이동 상태군(Idle, Move, Sprint)에서 사용 허용
         if (curState is PlayerIdleState || curState is PlayerMoveState || curState is PlayerSprintState)
         {
-            PortionItem item = InventoryInstance.QuickSlots.GetItem(slotIndex) as PortionItem;
+            ConsumableItem item = InventoryInstance.QuickSlots.GetItem(slotIndex) as ConsumableItem;
             if (item == null || item.CurrentAmount <= 0) return;
 
             // PlayerUseItemState로 전이하여 실제 애니메이션 모션과 함께 소비

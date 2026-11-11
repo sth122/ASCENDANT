@@ -185,7 +185,7 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
             _inventory.EquipItem(slot.SlotIndex, _player);
             UpdateFullModel();
         }
-        else if (button == PointerEventData.InputButton.Right && slot.BoundItem is PortionItem portion)
+        else if (button == PointerEventData.InputButton.Right && slot.BoundItem is ConsumableItem portion)
         {
             _inventory.QuickSlots.RegisterItem(0, portion);
         }

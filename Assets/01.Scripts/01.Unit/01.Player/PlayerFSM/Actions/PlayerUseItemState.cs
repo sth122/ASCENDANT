@@ -6,16 +6,17 @@ using UnityEngine;
 /// </summary>
 public class PlayerUseItemState : PlayerActionState
 {
-    private PortionItem _targetItem;
+    private ConsumableItem _targetItem;
     private int _targetSlotIndex = -1;
     private const float EffectTriggerNormalized = 0.50f;
     private const float CancelWindowNormalized = 0.85f;
     private bool _hasExecuted = false;
+    private ItemType _itemType;
 
     public PlayerUseItemState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
 
-    public void SetupItemToUse(int slotIndex, PortionItem item)
+    public void SetupItemToUse(int slotIndex, ConsumableItem item)
     {
         _targetSlotIndex = slotIndex;
         _targetItem = item;
@@ -36,9 +37,8 @@ public class PlayerUseItemState : PlayerActionState
             return;
         }
 
-        // 아이템 사용 애니메이션 트리거
-        //bool isBomb = _targetItem.PortionData.Effects.Exists(e => e is ThrowFireBombEffectSO);
-        //_playerAnimController.PlayState(isBomb ? AnimStateType.ThrowBomb : AnimStateType.UsePotion, force: true);
+        //아이템 사용 애니메이션 트리거
+        _playerAnimController.SetTrigger(_targetItem.ItemData.AnimParamType);
 
         System.Threading.CancellationToken token = CreateActionToken();
         ExecuteItemUseTimelineAsync(token).Forget();
@@ -88,6 +88,7 @@ public class PlayerUseItemState : PlayerActionState
     public override void Exit()
     {
         base.Exit();
+        _playerAnimController.ResetTrigger(_targetItem.ItemData.AnimParamType);
         _targetItem = null;
         _targetSlotIndex = -1;
         _hasExecuted = false;

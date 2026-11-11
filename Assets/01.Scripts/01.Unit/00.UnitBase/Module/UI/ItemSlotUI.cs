@@ -223,7 +223,7 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         // 2. 퀵슬롯 등록 바 드롭 판정
         if (QuickSlotAssignIndex >= 0)
         {
-            if (sourceItem.Data is IQuickSlotUsable && sourceItem is PortionItem portion)
+            if (sourceItem.Data is IQuickSlotUsable && sourceItem is ConsumableItem portion)
             {
                 inventory.QuickSlots.RegisterItem(QuickSlotAssignIndex, portion);
             }
