@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
 /// 화면 중앙 하단에 표시되는 보스 전용 대형 HUD 뷰
@@ -7,7 +6,7 @@ using UnityEngine.UI;
 public class BossHUDView : UIBase
 {
     [Header("Boss Identity")]
-    [SerializeField] private UnityEngine.UI.Text _bossNameText;
+    [SerializeField] private TMPro.TextMeshProUGUI _bossNameText;
     [SerializeField] private UnityEngine.UI.Image _bossPortraitImage;
 
     [Header("HP Sliders")]
@@ -26,7 +25,7 @@ public class BossHUDView : UIBase
     [SerializeField] private float _ghostDrainSpeed = 0.4f;
 
     [Header("HP Fill Visuals")]
-    [SerializeField] private Image _hpFillImage;
+    [SerializeField] private UnityEngine.UI.Image _hpFillImage;
     [SerializeField] private Color _normalHpColor = new Color(0.85f, 0.12f, 0.12f, 1f); // 기본 붉은색
     [SerializeField] private Color _invincibleHpColor = new Color(0.85f, 0.85f, 0.85f, 1f); // 무적 은백색
 
@@ -38,7 +37,7 @@ public class BossHUDView : UIBase
         base.InitializeView();
         Layer = UILayer.HUD;
 
-        SetupLayout();
+        //SetupLayout();
 
         // 시작 시 화면에서 보이지 않도록 숨김 대기
         if (_canvasGroup != null)
@@ -67,7 +66,7 @@ public class BossHUDView : UIBase
         }
 
         // 3. 자식 요소들을 하단 중앙 기준으로 정렬
-        if (TryGetComponent<VerticalLayoutGroup>(out var vlg))
+        if (TryGetComponent<UnityEngine.UI.VerticalLayoutGroup>(out var vlg))
         {
             vlg.childAlignment = TextAnchor.LowerCenter;
             vlg.childControlWidth = true;

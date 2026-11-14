@@ -1,38 +1,49 @@
 ﻿using Cysharp.Threading.Tasks;
+using System.Threading;
 using UnityEngine;
 
 /// <summary>
 /// 플레이어가 보스 방에 진입했을 때 컷신 연출을 트리거하고 보스를 초기화/전투 개시시키는 컴포넌트
 /// </summary>
 [RequireComponent(typeof(Collider))]
-public class BossRoomTrigger : MonoBehaviour
+public class BossRoomTrigger : MonoBehaviour, ISceneLoadable
 {
     [Header("Target Boss Reference")]
     [SerializeField] private BossBTController _bossController;
+    [SerializeField] private int _sceneLoadOrder = 20;
 
     private Collider _triggerCollider;
     private bool _hasTriggered = false;
 
+    public int SceneLoadOrder => _sceneLoadOrder;
+
     private void Awake()
     {
         _triggerCollider = GetComponent<Collider>();
-        if (_triggerCollider != null)
+        if (_triggerCollider != null) _triggerCollider.isTrigger = true;
+    }
+
+    public UniTask OnSceneObjectLoadAsync(SceneId scene, CancellationToken ct)
+    {
+        if (_bossController == null)
         {
-            _triggerCollider.isTrigger = true;
+            _bossController = FindAnyObjectByType<BossBTController>();
         }
+        return UniTask.CompletedTask;
+    }
+
+    public void OnSceneObjectReady(SceneId scene)
+    {
+        ResetTrigger();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (_hasTriggered) return;
+        if (_hasTriggered || !other.CompareTag("Player")) return;
 
-        if (other.CompareTag("Player"))
-        {
-            _hasTriggered = true;
-            if (_triggerCollider != null) _triggerCollider.enabled = false; // 중복 물리 판정 즉시 차단
-
-            HandleBossEncounterFlowAsync(other.transform).Forget();
-        }
+        _hasTriggered = true;
+        if (_triggerCollider != null) _triggerCollider.enabled = false;
+        HandleBossEncounterFlowAsync(other.transform).Forget();
     }
 
     private async UniTaskVoid HandleBossEncounterFlowAsync(Transform playerTransform)
@@ -43,6 +54,11 @@ public class BossRoomTrigger : MonoBehaviour
             await UIManager.Instance.OpenUIAsync<BossHUDView, BossHUDPresenter, BossHUDModel>(
                 UIId.BossHUD, ct: this.destroyCancellationToken
             );
+        }
+
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayBGM(SoundId.BGM_Boss_Phase1, fadeDuration: 1.0f);
         }
 
         // 2. 보스 조우 시퀀스 격발 (내부 SetBossEncounterEvent() 호출 -> BossHUDPresenter가 수신하여 페이드인)

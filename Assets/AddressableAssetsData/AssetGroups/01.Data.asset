@@ -22,7 +22,7 @@ MonoBehaviour:
     - Static_Data
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2723aa284ae59f440b9a68b0a41df536
-    m_Address: EnemyStatusSO
+    m_Address: EnemyInfoSO
     m_ReadOnly: 0
     m_SerializedLabels:
     - Static_Data
@@ -41,6 +41,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b4893bb1ef4430246b8b67af2f4842ea
     m_Address: BossInfoSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Static_Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eff6c5bd9b99d3e47aef7048f63011fd
+    m_Address: SoundDatabaseSO
     m_ReadOnly: 0
     m_SerializedLabels:
     - Static_Data

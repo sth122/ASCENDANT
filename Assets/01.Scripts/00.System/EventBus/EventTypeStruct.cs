@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-public interface IEventType { }
+﻿public interface IEventType { }
 
 /// <summary>
 /// Unit 체력 변동 이벤트 (HUD UI 바인딩용)
@@ -188,10 +186,10 @@ public readonly struct SceneLoadingProgressEvent : IEventType
 /// </summary>
 public readonly struct UnitInvincibleChangedEvent : IEventType
 {
-    public readonly GameObject TargetUnit;
+    public readonly UnityEngine.GameObject TargetUnit;
     public readonly bool IsInvincible;
 
-    public UnitInvincibleChangedEvent(GameObject targetUnit, bool isInvincible)
+    public UnitInvincibleChangedEvent(UnityEngine.GameObject targetUnit, bool isInvincible)
     {
         TargetUnit = targetUnit;
         IsInvincible = isInvincible;
@@ -213,4 +211,60 @@ public readonly struct PlayerMaxStatsCalculatedEvent : IEventType
         MaxStamina = maxStamina;
         MaxPoise = maxPoise;
     }
+}
+
+/// <summary>
+/// 플레이어가 달리기(Sprint) 중 발소리를 냈을 때 발행되는 청각 감지 이벤트
+/// </summary>
+public readonly struct FootstepNoiseEvent : IEventType
+{
+    public readonly UnityEngine.GameObject SourceUnit;
+    public readonly UnityEngine.Vector3 NoisePosition;
+
+    public FootstepNoiseEvent(UnityEngine.GameObject sourceUnit, UnityEngine.Vector3 noisePosition)
+    {
+        SourceUnit = sourceUnit;
+        NoisePosition = noisePosition;
+    }
+}
+
+/// <summary>
+/// 플레이어 소지 소울 변동 이벤트 (HUD 및 인벤토리 실시간 동기화용)
+/// </summary>
+public readonly struct SoulChangedEvent : IEventType
+{
+    public readonly int CurrentSouls;
+    public readonly int DeltaAmount;
+
+    public SoulChangedEvent(int currentSouls, int deltaAmount)
+    {
+        CurrentSouls = currentSouls;
+        DeltaAmount = deltaAmount;
+    }
+}
+
+/// <summary>
+/// 세이브 파일 기록 진행 시 우측 하단에 텍스트 출력 이벤트
+/// </summary>
+public readonly struct GameSavingEvent : IEventType
+{
+    public readonly int SlotIndex;
+    public GameSavingEvent(int slotIndex) => SlotIndex = slotIndex;
+}
+/// <summary>
+/// 세이브 파일 기록 완료 시 우측 하단에 텍스트 출력 이벤트
+/// </summary>
+public readonly struct GameSavedEvent : IEventType
+{
+    public readonly int SlotIndex;
+    public GameSavedEvent(int slotIndex) => SlotIndex = slotIndex;
+}
+
+/// <summary>
+/// 타이틀 인트로 UI 표시 여부 제어 이벤트
+/// </summary>
+public readonly struct TitleIntroVisibilityEvent : IEventType
+{
+    public readonly bool IsVisible;
+    public TitleIntroVisibilityEvent(bool isVisible) => IsVisible = isVisible;
 }

@@ -6,9 +6,8 @@ public class QuickSlotItemUI : UnityEngine.MonoBehaviour
     [UnityEngine.SerializeField] private UnityEngine.UI.Image _iconImage;
     [UnityEngine.SerializeField] private TMPro.TextMeshProUGUI _amountText;
     [UnityEngine.SerializeField] private UnityEngine.UI.Image _cooldownRadialImage;
-    [UnityEngine.SerializeField] private UnityEngine.GameObject _selectionOutline;
 
-    public void UpdateSlotUI(UnityEngine.Sprite icon, int amount, float cooldownRatio, bool isSelected)
+    public void UpdateSlotUI(UnityEngine.Sprite icon, int amount, float cooldownRatio)
     {
         if (icon != null && amount > 0)
         {
@@ -26,11 +25,6 @@ public class QuickSlotItemUI : UnityEngine.MonoBehaviour
         if (_cooldownRadialImage != null)
         {
             _cooldownRadialImage.fillAmount = UnityEngine.Mathf.Clamp01(cooldownRatio);
-        }
-
-        if (_selectionOutline != null)
-        {
-            _selectionOutline.SetActive(isSelected);
         }
     }
 }

@@ -27,7 +27,8 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     private static ItemSlotUI _draggingSlot;
 
     public int QuickSlotAssignIndex { get; private set; } = -1;
-    public int SlotIndex { get; private set; } = -1;
+    public int SlotIndex { get; private set; } = -1;             // UI 그리드 슬롯 인덱스
+    public int InventorySlotIndex { get; private set; } = -1;    // 실제 Inventory._slots 배열 원본 인덱스
     public EquipSlotType? EquipmentSlotType { get; private set; } = null;
     public Item BoundItem { get; private set; }
 
@@ -58,9 +59,10 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         ClearSlot();
     }
 
-    public void BindItem(Item item, bool isEquipped = false)
+    public void BindItem(Item item, bool isEquipped = false, int inventorySlotIndex = -1)
     {
         BoundItem = item;
+        InventorySlotIndex = inventorySlotIndex >= 0 ? inventorySlotIndex : SlotIndex;
 
         if (item == null || item.Data == null)
         {
@@ -95,42 +97,35 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             }
         }
 
-        if (_equipMarker != null)
-        {
-            _equipMarker.SetActive(isEquipped);
-        }
+        if (_equipMarker != null) _equipMarker.SetActive(isEquipped);
     }
 
     public void ClearSlot()
     {
         BoundItem = null;
+        InventorySlotIndex = -1;
 
         if (_activeFrame != null)
         {
             _activeFrame.SetActive(false);
         }
-
         if (_iconImage != null)
         {
             _iconImage.gameObject.SetActive(false);
             _iconImage.sprite = null;
         }
-
         if (_placeholderIcon != null)
         {
             _placeholderIcon.gameObject.SetActive(true);
         }
-
         if (_amountText != null)
         {
             _amountText.gameObject.SetActive(false);
         }
-
         if (_equipMarker != null)
         {
             _equipMarker.SetActive(false);
         }
-
         if (_highlightOutline != null)
         {
             _highlightOutline.SetActive(false);
@@ -194,7 +189,7 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         if (!player.TryGetComponent(out PlayerInventoryHandler handler)) return;
         Inventory inventory = handler.InventoryInstance;
 
-        // 1. 8대 장비 슬롯 드롭 판정
+        // 1. 8대 장비 슬롯 드롭 판정 (실제 InventorySlotIndex 사용)
         if (EquipmentSlotType.HasValue)
         {
             if (sourceItem is EquipmentItem equipItem)
@@ -212,15 +207,16 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
                     return;
                 }
 
-                if (_draggingSlot.SlotIndex >= 0)
+                int realInvIndex = _draggingSlot.InventorySlotIndex;
+                if (realInvIndex >= 0)
                 {
-                    inventory.EquipItem(_draggingSlot.SlotIndex, player);
+                    inventory.EquipItem(realInvIndex, player);
                 }
             }
             return;
         }
 
-        // 2. 퀵슬롯 등록 바 드롭 판정
+        // 2. 퀵슬롯 등록 바 드롭 판정 (가방 -> 퀵슬롯, 또는 2번 퀵슬롯 -> 3번 퀵슬롯 이동 모두 지원)
         if (QuickSlotAssignIndex >= 0)
         {
             if (sourceItem.Data is IQuickSlotUsable && sourceItem is ConsumableItem portion)
@@ -230,7 +226,7 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             return;
         }
 
-        // 3. 장비창 -> 가방 드롭 해제
+        // 3. 장비창 -> 가방 드롭 해제 (무기/방패는 Inventory.UnequipItem 내부에서 해제 차단)
         if (_draggingSlot.EquipmentSlotType.HasValue && SlotIndex >= 0)
         {
             inventory.UnequipItem(_draggingSlot.EquipmentSlotType.Value, player);

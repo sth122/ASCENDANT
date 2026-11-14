@@ -31,13 +31,22 @@ public class PlayerUseItemState : PlayerActionState
         _hasExecuted = false;
         owner.StopMovementAPI();
 
+        if (owner.TryGetComponent(out PlayerInventoryHandler handler) && handler.InventoryInstance != null)
+        {
+            if (handler.InventoryInstance.QuickSlots.IsOnGlobalCooldown)
+            {
+                CompleteActionAndEvaluateTransition();
+                return;
+            }
+            handler.InventoryInstance.QuickSlots.IsUsingItemLock = true;
+        }
+
         if (_targetItem == null || _targetItem.CurrentAmount <= 0)
         {
             CompleteActionAndEvaluateTransition();
             return;
         }
 
-        //아이템 사용 애니메이션 트리거
         _playerAnimController.SetTrigger(_targetItem.ItemData.AnimParamType);
 
         System.Threading.CancellationToken token = CreateActionToken();
@@ -88,7 +97,16 @@ public class PlayerUseItemState : PlayerActionState
     public override void Exit()
     {
         base.Exit();
-        _playerAnimController.ResetTrigger(_targetItem.ItemData.AnimParamType);
+        if (_targetItem != null && _targetItem.ItemData != null)
+        {
+            _playerAnimController.ResetTrigger(_targetItem.ItemData.AnimParamType);
+        }
+
+        if (owner.TryGetComponent(out PlayerInventoryHandler handler) && handler.InventoryInstance != null)
+        {
+            handler.InventoryInstance.QuickSlots.IsUsingItemLock = false;
+        }
+
         _targetItem = null;
         _targetSlotIndex = -1;
         _hasExecuted = false;

@@ -332,8 +332,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9ba842c52d2a64448494a0498ce7c57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyFloatingHUDView
-  <Identifier>k__BackingField: 0
-  <Layer>k__BackingField: 0
+  <Identifier>k__BackingField: 2002
+  <Layer>k__BackingField: 100
   <IsGlobalUI>k__BackingField: 0
   _hpSlider: {fileID: 6837810639697849030}
   _hpGhostSlider: {fileID: 1826279557164207595}

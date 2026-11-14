@@ -86,9 +86,10 @@ public class PlayerInfo : UnitBaseInfo
     /// <summary>
     /// 기량(Dexterity)에 따른 공격 속도 배율 산출 (명세서 2.4절: 10~60 구간 최대 +20%)
     /// </summary>
-    public float CalculateAttackSpeedMultiplier()
+    public float CalculateAttackSpeedMultiplier(int bonusDexterity = 0)
     {
-        return 1.0f + Mathf.Clamp((Dexterity - 10) / 50.0f * 0.20f, 0.0f, 0.20f);
+        int effectiveDex = Dexterity + bonusDexterity;
+        return 1.0f + Mathf.Clamp((effectiveDex - 10) / 50.0f * 0.20f, 0.0f, 0.20f);
     }
 
     /// <summary>
@@ -107,6 +108,27 @@ public class PlayerInfo : UnitBaseInfo
     {
         if (amount <= 0 || CurrentSouls < amount) return;
         CurrentSouls -= amount;
+    }
+
+    public static int CalculateRequiredSouls(int currentSoulLevel)
+    {
+        int lv = Mathf.Max(1, currentSoulLevel);
+        return Mathf.RoundToInt(100f + Mathf.Pow(lv - 1, 1.5f) * 85f);
+    }
+
+    public void ApplyAttributeUpgrades(int addVigor, int addEndurance, int addStrength, int addDexterity)
+    {
+        int totalAdded = addVigor + addEndurance + addStrength + addDexterity;
+        if (totalAdded <= 0) return;
+
+        SoulLevel += totalAdded;
+        Vigor += addVigor;
+        Endurance += addEndurance;
+        Strength += addStrength;
+        Dexterity += addDexterity;
+
+        MaxHp = CalculateMaxHp();
+        MaxStamina = CalculateMaxStamina();
     }
 
     /// <summary>

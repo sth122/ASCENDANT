@@ -28,14 +28,14 @@ public class SystemMenuPresenter : UIPresenterBase<SystemMenuView, SystemMenuMod
             View.ResumeButton.onClick.AddListener(HandleResumeClicked);
         }
 
-        if (View.TitleButton != null)
+        if (View.SettingButton != null)
         {
-            View.TitleButton.onClick.AddListener(HandleTitleClicked);
+            View.SettingButton.onClick.AddListener(HandleSettingsClicked);
         }
 
-        if (View.QuitButton != null)
+        if (View.LobbyButton != null)
         {
-            View.QuitButton.onClick.AddListener(HandleQuitClicked);
+            View.LobbyButton.onClick.AddListener(HandleTitleClicked);
         }
     }
 
@@ -48,14 +48,14 @@ public class SystemMenuPresenter : UIPresenterBase<SystemMenuView, SystemMenuMod
             View.ResumeButton.onClick.RemoveListener(HandleResumeClicked);
         }
 
-        if (View.TitleButton != null)
+        if (View.SettingButton != null)
         {
-            View.TitleButton.onClick.RemoveListener(HandleTitleClicked);
+            View.SettingButton.onClick.RemoveListener(HandleSettingsClicked);
         }
 
-        if (View.QuitButton != null)
+        if (View.LobbyButton != null)
         {
-            View.QuitButton.onClick.RemoveListener(HandleQuitClicked);
+            View.LobbyButton.onClick.RemoveListener(HandleTitleClicked);
         }
     }
 
@@ -93,16 +93,12 @@ public class SystemMenuPresenter : UIPresenterBase<SystemMenuView, SystemMenuMod
         }
     }
 
-    /// <summary>
-    /// 게임 종료 버튼 클릭
-    /// </summary>
-    private void HandleQuitClicked()
+    private void HandleSettingsClicked() => OpenSettingsAsync().Forget();
+    private async UniTaskVoid OpenSettingsAsync()
     {
-        Util.Log("게임 종료 실행");
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        UnityEngine.Application.Quit();
-#endif
+        if (UIManager.Instance == null) return;
+
+        await UIManager.Instance.OpenUIAsync<SettingView, SettingPresenter, SettingModel>(
+            UIId.SettingUI);
     }
 }

@@ -1,0 +1,123 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d9d25a1413c36547a625e86815ac521, type: 3}
+  m_Name: SoundDatabaseSO
+  m_EditorClassIdentifier: Assembly-CSharp::SoundDatabaseSO
+  _entries:
+  - Id: 100
+    Category: 0
+    Clip: {fileID: 8300000, guid: 382df08e1f93338479bc01f312a74147, type: 3}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 101
+    Category: 0
+    Clip: {fileID: 0}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 102
+    Category: 0
+    Clip: {fileID: 0}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 103
+    Category: 0
+    Clip: {fileID: 0}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 200
+    Category: 3
+    Clip: {fileID: 8300000, guid: 756ec0786a8f0ed45934ec28a1b03b1b, type: 3}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 201
+    Category: 3
+    Clip: {fileID: 8300000, guid: 459d962c7cfdf2845a82147173b8a79f, type: 3}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 202
+    Category: 3
+    Clip: {fileID: 8300000, guid: 322994ec6ee2db14b856aaf0d6e2f8d9, type: 3}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 203
+    Category: 3
+    Clip: {fileID: 8300000, guid: 25b56b771343eae44953d68fd7ca5b7c, type: 3}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 306
+    Category: 1
+    Clip: {fileID: 8300000, guid: 28aec2055823f0c4aab50858332fbcb1, type: 3}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 307
+    Category: 1
+    Clip: {fileID: 8300000, guid: c9c4335209593f646b1d2d8f1465f7be, type: 3}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 308
+    Category: 1
+    Clip: {fileID: 0}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0
+  - Id: 309
+    Category: 1
+    Clip: {fileID: 0}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 1
+  - Id: 400
+    Category: 1
+    Clip: {fileID: 0}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 1
+  - Id: 401
+    Category: 1
+    Clip: {fileID: 8300000, guid: 6c559e02a2e040c4eb2b1c38aaa5ec2c, type: 3}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 1
+  - Id: 402
+    Category: 1
+    Clip: {fileID: 0}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 1
+  - Id: 403
+    Category: 1
+    Clip: {fileID: 8300000, guid: 6c559e02a2e040c4eb2b1c38aaa5ec2c, type: 3}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 1
+  - Id: 404
+    Category: 1
+    Clip: {fileID: 0}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 1
+  - Id: 405
+    Category: 2
+    Clip: {fileID: 0}
+    DefaultVolume: 1
+    PitchRandomRange: 0
+    Is3DSpatial: 0

@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceProviders;
+using UnityEngine.SceneManagement;
 using Util = DebugLogger<SceneLoadManager>;
 
 /// <summary>
@@ -31,9 +32,18 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
         _isDDOL = true;
         base.Awake();
 
-        // 코어 매니저들을 ILoadable 파이프라인에 등록
+        string activeSceneName = SceneManager.GetActiveScene().name;
+        if (System.Enum.TryParse(activeSceneName, out SceneId parsedScene))
+        {
+            _currentScene = parsedScene;
+        }
+
+        // 모든 전역 ILoadable 매니저를 LoadOrder 순서 파이프라인에 명시적 등록
         RegisterLoadable(AssetsManager.Instance);
+        RegisterLoadable(DataManager.Instance);
+        RegisterLoadable(SoundManager.Instance);
         RegisterLoadable(ObjectPoolManager.Instance);
+        RegisterLoadable(VFXManager.Instance);
         RegisterLoadable(UIManager.Instance);
     }
 
@@ -57,6 +67,27 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
         if (_activeSceneBootstrap == bootstrap)
         {
             _activeSceneBootstrap = null;
+        }
+    }
+
+    /// <summary>
+    /// 콜드 스타트(TitleScene) 또는 에디터 단독 플레이 시 전역 ILoadable + 씬 부트스트랩을 단일 파이프라인으로 실행
+    /// </summary>
+    public async UniTask RunInitialOrStandaloneBootstrapAsync(SceneId scene, ISceneBootstrap bootstrap)
+    {
+        if (_isLoading) return;
+        _isLoading = true;
+        _currentScene = scene;
+        _activeSceneBootstrap = bootstrap;
+
+        try
+        {
+            await InitializeLoadablesAsync(scene);
+            await ExecuteSceneBootstrapAsync(scene);
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 
@@ -89,7 +120,7 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
                 );
             }
 
-            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.1f, "이전 씬 데이터를 정리하는 중..."));
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.1f, "Loading."));
 
             // 3. 로컬 UI 및 이전 씬 리소스 정리
             NotifySceneDestroyToLoadables(_currentScene);
@@ -103,7 +134,7 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
                 _hasActiveSceneHandle = false;
             }
 
-            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.35f, "신규 씬을 불러오는 중..."));
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.35f, "Loading.."));
 
             // 5. 신규 씬 비동기 로드
             AsyncOperationHandle<SceneInstance> sceneHandle = Addressables.LoadSceneAsync(nextScene.ToString());
@@ -112,17 +143,17 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
             _hasActiveSceneHandle = true;
             _currentScene = nextScene;
 
-            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.7f, "시스템 및 오브젝트 풀을 적재하는 중..."));
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.7f, "Loading..."));
 
             // 6. 시스템 순차 초기화 (ObjectPoolManager 씬 종속 풀 로드 등)
             await InitializeLoadablesAsync(nextScene);
 
-            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.9f, "월드 액터를 준비하는 중..."));
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(0.9f, "Loading."));
 
             // 7. 씬 부트스트랩 실행 (플레이어 스폰, 카메라 타깃 바인딩)
             await ExecuteSceneBootstrapAsync(nextScene);
 
-            EventBusSystem.Publish(new SceneLoadingProgressEvent(1.0f, "로딩 완료"));
+            EventBusSystem.Publish(new SceneLoadingProgressEvent(1.0f, "Loading.."));
 
             // 액터 위치 및 카메라 블렌드 완벽 안착을 위한 1프레임 대기
             await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellationToken: this.destroyCancellationToken);

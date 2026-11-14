@@ -9,7 +9,6 @@
     }
 
     public SlotData[] Slots = new SlotData[QuickSlotSystem.MaxQuickSlots];
-    public int SelectedIndex = 0;
 
     public void Reset()
     {
@@ -17,6 +16,5 @@
         {
             Slots[i] = new SlotData { Icon = null, Amount = 0, CooldownRatio = 0f, IsEmpty = true };
         }
-        SelectedIndex = 0;
     }
 }

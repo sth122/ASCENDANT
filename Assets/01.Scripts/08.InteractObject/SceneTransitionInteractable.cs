@@ -1,8 +1,10 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using static ConstStrings.ConstString;
+
 /// <summary>
-/// 플레이어가 닿으면 세션을 동기화하고 지정된 씬으로 전환하는 트리거(포탈)
+/// 보스방 안개 벽 등 씬 전환 상호작용 컴포넌트 (다중 선택지 프롬프트 기반)
 /// </summary>
 public class SceneTransitionInteractable : BaseInteractable
 {
@@ -10,44 +12,35 @@ public class SceneTransitionInteractable : BaseInteractable
     [SerializeField] private SceneId _targetScene;
     private bool _isTransitioning = false;
 
+    protected override bool HasMultipleChoices => !_isTransitioning;
+
     private void Awake() => _interactType = InteractType.BossDoor;
 
-    public override void OnInteract(PlayerController player)
+    protected override void BuildInteractionChoices(PlayerController player, List<InteractionChoice> outChoices)
     {
-        if (_isTransitioning || player == null) return;
-        ExecuteBossEntryFlowAsync(player).Forget();
+        if (_isTransitioning) return;
+
+        string enterLabel = string.IsNullOrEmpty(BossEntryPrompt) ? "안개 너머로 들어간다" : BossEntryPrompt;
+        outChoices.Add(new InteractionChoice(enterLabel, () => ExecuteBossEntryFlowAsync(player).Forget()));
+        outChoices.Add(new InteractionChoice("그만둔다", () => { }));
     }
 
     private async UniTaskVoid ExecuteBossEntryFlowAsync(PlayerController player)
     {
+        if (_isTransitioning || player == null) return;
         _isTransitioning = true;
 
         try
         {
-            // 간소화된 OpenUIAsync 호출 (어드레서블 키 문자열 생략)
-            ConfirmPopupModel model = new ConfirmPopupModel(BossEntryPrompt);
-            ConfirmPopupView popup = await UIManager.Instance.OpenUIAsync<ConfirmPopupView, ConfirmPopupPresenter, ConfirmPopupModel>(
-                UIId.ConfirmPopup, model
-            );
-
-            if(popup == null) return;
-
-            bool isConfirmed = await popup.WaitForResultAsync();
-            if (!isConfirmed)
-            {
-                // 취소 시 조작권은 popup.WaitForResultAsync() 내부 finally에서 자동 복구됨
-                return;
-            }
-
             DebugLogger.LogWithTag("SceneTransition", $"[{_targetScene}] 진입 승인: 세션 동기화 및 씬 전환 가동");
 
-            // 2. 현재 플레이어 상태 세션에 보존
+            // 1. 현재 플레이어 상태 세션에 보존
             if (SessionDataManager.Instance != null)
             {
                 SessionDataManager.Instance.SyncFromPlayer(player);
             }
 
-            // 3. 페이드 아웃과 함께 씬 비동기 로딩
+            // 2. 페이드 아웃과 함께 씬 비동기 로딩
             if (SceneLoadManager.Instance != null)
             {
                 await SceneLoadManager.Instance.LoadSceneFlowAsync(_targetScene);

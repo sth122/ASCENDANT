@@ -34,14 +34,32 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         if (View == null) return;
 
         if (View.CloseButton != null) View.CloseButton.onClick.AddListener(HandleCloseClicked);
-
-        if (View.WeaponTabToggle != null) View.WeaponTabToggle.onValueChanged.AddListener((isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Weapon); });
-        if (View.ShieldTabToggle != null) View.ShieldTabToggle.onValueChanged.AddListener((isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Shield); });
-        if (View.ArmorTabToggle != null) View.ArmorTabToggle.onValueChanged.AddListener((isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Armor); });
-        if (View.AccessoryTabToggle != null) View.AccessoryTabToggle.onValueChanged.AddListener((isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Accessory); });
-        if (View.ConsumableTabToggle != null) View.ConsumableTabToggle.onValueChanged.AddListener((isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Consumable); });
-
-        for (int i = 0; i < View.GridSlots.Count; i++)
+        
+        if (View.WeaponTabToggle != null) 
+{
+            View.WeaponTabToggle.onValueChanged.AddListener(
+                (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Weapon); });
+}
+        if (View.ShieldTabToggle != null)
+        {
+            View.ShieldTabToggle.onValueChanged.AddListener(
+                      (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Shield); });
+        }
+        if (View.ArmorTabToggle != null)
+        {
+            View.ArmorTabToggle.onValueChanged.AddListener(
+                      (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Armor); });
+        }
+        if (View.AccessoryTabToggle != null)
+        {
+            View.AccessoryTabToggle.onValueChanged.AddListener(
+                      (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Accessory); });
+        }
+        if (View.ConsumableTabToggle != null)
+        {
+            View.ConsumableTabToggle.onValueChanged.AddListener(
+                      (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Consumable); });
+        }      for (int i = 0; i < View.GridSlots.Count; i++)
         {
             View.GridSlots[i].OnSlotClickedEvent += HandleSlotClicked;
             View.GridSlots[i].OnSlotHoverEvent += HandleSlotHover;
@@ -65,6 +83,7 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         {
             _inventory.OnSlotUpdated += HandleDomainSlotUpdated;
             _inventory.OnEquipmentChanged += HandleDomainEquipmentChanged;
+            _inventory.QuickSlots.OnQuickSlotChanged += HandleDomainQuickSlotChanged;
         }
     }
 
@@ -74,12 +93,22 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
 
         if (View.CloseButton != null) View.CloseButton.onClick.RemoveAllListeners();
 
-        if (View.WeaponTabToggle != null) View.WeaponTabToggle.onValueChanged.RemoveAllListeners();
-        if (View.ShieldTabToggle != null) View.ShieldTabToggle.onValueChanged.RemoveAllListeners();
-        if (View.ArmorTabToggle != null) View.ArmorTabToggle.onValueChanged.RemoveAllListeners();
-        if (View.AccessoryTabToggle != null) View.AccessoryTabToggle.onValueChanged.RemoveAllListeners();
-        if (View.ConsumableTabToggle != null) View.ConsumableTabToggle.onValueChanged.RemoveAllListeners();
-
+        if (View.WeaponTabToggle != null) 
+{
+            View.WeaponTabToggle.onValueChanged.RemoveAllListeners();
+}        if (View.ShieldTabToggle != null) 
+{
+            View.ShieldTabToggle.onValueChanged.RemoveAllListeners();
+}        if (View.ArmorTabToggle != null) 
+{
+            View.ArmorTabToggle.onValueChanged.RemoveAllListeners();
+}        if (View.AccessoryTabToggle != null) 
+{
+            View.AccessoryTabToggle.onValueChanged.RemoveAllListeners();
+}        if (View.ConsumableTabToggle != null) 
+            {
+            View.ConsumableTabToggle.onValueChanged.RemoveAllListeners();
+}
         for (int i = 0; i < View.GridSlots.Count; i++)
         {
             View.GridSlots[i].OnSlotClickedEvent -= HandleSlotClicked;
@@ -99,6 +128,7 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         {
             _inventory.OnSlotUpdated -= HandleDomainSlotUpdated;
             _inventory.OnEquipmentChanged -= HandleDomainEquipmentChanged;
+            _inventory.QuickSlots.OnQuickSlotChanged -= HandleDomainQuickSlotChanged;
         }
     }
 
@@ -116,6 +146,8 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         slot.OnSlotHoverEvent -= HandleSlotHover;
     }
 
+
+
     private void ResolvePlayerReferences()
     {
         if (ServiceLocator.TryGet<IPlayerProvider>(out var provider) && provider.IsPlayerSpawned)
@@ -127,7 +159,6 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
             }
         }
     }
-
     private void FilterGridByCategory(ItemCategory category)
     {
         _currentCategory = category;
@@ -141,7 +172,7 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
             {
                 if (gridIdx < View.GridSlots.Count)
                 {
-                    View.GridSlots[gridIdx].BindItem(item);
+                    View.GridSlots[gridIdx].BindItem(item, isEquipped: false, inventorySlotIndex: i);
                     gridIdx++;
                 }
             }
@@ -153,7 +184,6 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
             gridIdx++;
         }
     }
-
     private void SynchronizeEquipAndQuickSlots()
     {
         if (_inventory == null || View == null) return;
@@ -172,25 +202,19 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
             if (View.QuickAssignSlots[i] != null) View.QuickAssignSlots[i].BindItem(_inventory.QuickSlots.GetItem(i));
         }
     }
-
     private void HandleSlotClicked(ItemSlotUI slot, PointerEventData.InputButton button)
     {
         if (_inventory == null || _player == null || slot.BoundItem == null) return;
 
         Model.FocusedItem = slot.BoundItem;
-        View?.DetailPaneUI?.ShowDetails(slot.BoundItem);
+        View?.DetailPaneUI?.ShowDetails(slot.BoundItem, _inventory, _player);
 
-        if (button == PointerEventData.InputButton.Left && slot.BoundItem is EquipmentItem)
+        if (button == PointerEventData.InputButton.Left && slot.BoundItem is EquipmentItem && slot.InventorySlotIndex >= 0)
         {
-            _inventory.EquipItem(slot.SlotIndex, _player);
+            _inventory.EquipItem(slot.InventorySlotIndex, _player);
             UpdateFullModel();
         }
-        else if (button == PointerEventData.InputButton.Right && slot.BoundItem is ConsumableItem portion)
-        {
-            _inventory.QuickSlots.RegisterItem(0, portion);
-        }
     }
-
     private void HandleEquipSlotClicked(ItemSlotUI slot, PointerEventData.InputButton button)
     {
         if (_inventory == null || _player == null || !slot.EquipmentSlotType.HasValue) return;
@@ -198,26 +222,35 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         _inventory.UnequipItem(slot.EquipmentSlotType.Value, _player);
         UpdateFullModel();
     }
-
     private void HandleSlotHover(ItemSlotUI slot, bool isEnter)
     {
         if (View?.DetailPaneUI == null) return;
 
         if (isEnter && slot.BoundItem != null)
         {
-            View.DetailPaneUI.ShowDetails(slot.BoundItem);
+            Inventory compareInv = slot.EquipmentSlotType.HasValue ? null : _inventory;
+            View.DetailPaneUI.ShowDetails(slot.BoundItem, compareInv, _player);
         }
-        else if (!isEnter && Model.FocusedItem == null)
+        else if (!isEnter)
         {
-            View.DetailPaneUI.ClearDetails();
+            if (Model.FocusedItem != null)
+                View.DetailPaneUI.ShowDetails(Model.FocusedItem, _inventory, _player);
+            else
+                View.DetailPaneUI.ClearDetails();
         }
     }
-
     private void HandleDomainSlotUpdated(int slotIndex, Item item) => FilterGridByCategory(_currentCategory);
     private void HandleDomainEquipmentChanged(EquipSlotType slotType, EquipmentItem item)
     {
         SynchronizeEquipAndQuickSlots();
         UpdateFullModel();
+    }
+    private void HandleDomainQuickSlotChanged(int slotIndex, ConsumableItem item)
+    {
+        if (View != null && slotIndex >= 0 && slotIndex < View.QuickAssignSlots.Count && View.QuickAssignSlots[slotIndex] != null)
+        {
+            View.QuickAssignSlots[slotIndex].BindItem(item);
+        }
     }
 
     private void UpdateFullModel()

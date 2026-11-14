@@ -24,6 +24,9 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
     private UIInputReader _uiInputReader;
     public UIInputReader InputReader => _uiInputReader;
 
+    private bool _isOpeningSaveToast;
+    private bool _pendingSaveToastCompleted;
+
     protected override void Awake()
     {
         _isDDOL = true;
@@ -37,6 +40,9 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
 
         _uiInputReader.OnCancelEvent += HandleCancelInput;
         _uiInputReader.OnInventoryCloseEvent += RequestCloseInventory;
+
+        EventBusSystem.Subscribe<GameSavingEvent>(HandleGameSaving);
+        EventBusSystem.Subscribe<GameSavedEvent>(HandleGameSaved);
     }
 
     #region Root Canvas & Layer Containers 자동 구축
@@ -118,6 +124,11 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         where TPresenter : IUIPresenter, new()
         where TModel : IUIModel
     {
+        if (id == UIId.LoadingScreenUI)
+        {
+            EventBusSystem.Publish(new TitleIntroVisibilityEvent(false));
+        }
+
         // 1. 이미 비동기 로딩 중인 경우 중복 생성 방지
         if (_loadingViews.Contains(id))
         {
@@ -195,17 +206,7 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
                 _windowStack.Push(windowView);
             }
 
-            if (windowView.PausePolicy == WindowPausePolicy.PauseTime)
-            {
-                // 시스템 메뉴: 시간 정지 + 조작 차단
-                if (GameManager.Instance != null) GameManager.Instance.PauseGame();
-                InputSystemHandler.SetMode(InputMode.PausedUI);
-            }
-            else
-            {
-                // 실시간 인게임 창: 마우스 커서만 활성화
-                InputSystemHandler.SetMode(InputMode.RealtimeUI);
-            }
+            ApplyTopInputPolicy();
         }
         else if (targetLayer == UILayer.Popup)
         {
@@ -213,7 +214,8 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
             {
                 _popupStack.Push(view);
             }
-            InputSystemHandler.SetMode(InputMode.RealtimeUI);
+
+            ApplyTopInputPolicy();
         }
 
         // 5. 시각적 페이드 연출 실행
@@ -221,6 +223,20 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
 
         Util.Log($"[UI 오픈 완료] ID: {id} (Layer: {targetLayer}, Prefab: {id.GetAddressableKey()})");
         return view;
+    }
+
+    /// <summary>
+    /// 현재 활성화된 특정 UI 뷰를 타입 안전하게 조회
+    /// </summary>
+    public bool TryGetActiveView<TView>(UIId id, out TView view) where TView : UIBase
+    {
+        if (_activeViews.TryGetValue(id, out UIBase baseView) && baseView is TView typedView && typedView != null)
+        {
+            view = typedView;
+            return true;
+        }
+        view = null;
+        return false;
     }
 
     public RectTransform GetLayerContainer(UILayer layer)
@@ -294,7 +310,14 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
 
     public void RestoreInputMode()
     {
-        if (_popupStack.Count > 0 || _windowStack.Count > 0) return;
+        if (_popupStack.Count > 0 || _windowStack.Count > 0)
+        {
+            ApplyTopInputPolicy();
+            return;
+        }
+
+        // 모든 창/팝업이 닫혔으므로 상호작용 힌트 억제 해제
+        SyncHudPromptSuppression(isSuppressed: false);
 
         if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Title)
         {
@@ -303,6 +326,46 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         else
         {
             InputSystemHandler.SetMode(InputMode.Gameplay);
+        }
+    }
+
+    private void ApplyTopInputPolicy()
+    {
+        // 열린 창이나 팝업이 하나라도 있으면 PlayerHUD의 SingleHintText를 즉시 숨김
+        SyncHudPromptSuppression(isSuppressed: HasActiveModalOrWindow());
+
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Title)
+        {
+            InputSystemHandler.SetMode(InputMode.Title);
+            return;
+        }
+
+        bool requiresPause = false;
+        foreach (UIWindowView win in _windowStack)
+        {
+            if (win != null && win.PausePolicy == WindowPausePolicy.PauseTime)
+            {
+                requiresPause = true;
+                break;
+            }
+        }
+
+        if (requiresPause)
+        {
+            if (GameManager.Instance != null && !GameManager.Instance.IsPaused) GameManager.Instance.PauseGame();
+            InputSystemHandler.SetMode(InputMode.PausedUI);
+        }
+        else
+        {
+            InputSystemHandler.SetMode(InputMode.RealtimeUI);
+        }
+    }
+
+    private void SyncHudPromptSuppression(bool isSuppressed)
+    {
+        if (TryGetActiveView<PlayerHUDView>(UIId.PlayerHUD, out PlayerHUDView hudView))
+        {
+            hudView.SetInteractionPromptSuppressed(isSuppressed);
         }
     }
 
@@ -343,6 +406,16 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
 
     private void HandleCancelInput()
     {
+        // 0. 하단 상호작용 다중 선택지 메뉴가 열려 있는 경우 최우선으로 닫고 종료
+        if (TryGetActiveView<PlayerHUDView>(UIId.PlayerHUD, out PlayerHUDView hudView) &&
+            hudView.InteractionPrompt != null &&
+            hudView.InteractionPrompt.IsChoiceMenuOpen)
+        {
+            SoundManager.Instance?.PlaySFX(SoundId.UI_Cancel);
+            hudView.InteractionPrompt.CloseChoiceMenu(restoreGameplayInput: true);
+            return;
+        }
+
         // 1. 팝업이 떠 있는 경우 최상단 팝업 취소
         if (_popupStack.Count > 0)
         {
@@ -365,6 +438,7 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         {
             UIWindowView topWindow = _windowStack.Peek();
             topWindow.CloseWindowAsync().Forget();
+            return;
         }
 
         // 3. 타이틀 화면인 경우 메뉴창을 닫지 않고 종료 확인 팝업 요청
@@ -409,7 +483,45 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         _popupStack.Clear();
         _loadingViews.Clear();
     }
+    #endregion
+    private void HandleGameSaving(GameSavingEvent evt)
+    {
+        _pendingSaveToastCompleted = false;
+        ShowSaveToastStageAsync().Forget();
+    }
 
+    private void HandleGameSaved(GameSavedEvent evt)
+    {
+        _pendingSaveToastCompleted = true;
+        ShowSaveToastStageAsync().Forget();
+    }
+    private async UniTaskVoid ShowSaveToastStageAsync()
+    {
+        if (_activeViews.TryGetValue(UIId.SaveToastUI, out UIBase existing) && existing is SaveToastView cached)
+        {
+            if (_pendingSaveToastCompleted) cached.ShowSavedAndHideAfterDelay("게임 저장 완료");
+            else cached.ShowSavingState("게임 저장 중..");
+            return;
+        }
+
+        if (_isOpeningSaveToast) return;
+        _isOpeningSaveToast = true;
+
+        try
+        {
+            SaveToastView toast = await OpenUIAsync<SaveToastView, FadeCurtainPresenter, FadeCurtainModel>(
+                UIId.SaveToastUI, ct: this.destroyCancellationToken);
+            if (toast == null) return;
+
+            // 비동기 로드 도중 저장이 이미 완료되었으면 최신 상태(_pendingSaveToastCompleted) 즉시 반영
+            if (_pendingSaveToastCompleted) toast.ShowSavedAndHideAfterDelay("게임 저장 완료");
+            else toast.ShowSavingState("게임 저장 중..");
+        }
+        finally
+        {
+            _isOpeningSaveToast = false;
+        }
+    }
 
     protected override void OnDestroy()
     {
@@ -419,8 +531,9 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
             _uiInputReader.OnInventoryCloseEvent -= RequestCloseInventory;
             _uiInputReader.Dispose();
         }
+        EventBusSystem.Unsubscribe<GameSavingEvent>(HandleGameSaving);
+        EventBusSystem.Unsubscribe<GameSavedEvent>(HandleGameSaved);
         InputSystemHandler.Dispose();
         base.OnDestroy();
     }
-    #endregion
 }

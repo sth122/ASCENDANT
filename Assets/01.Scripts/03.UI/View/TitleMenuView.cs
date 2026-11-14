@@ -6,13 +6,11 @@
 public class TitleMenuView : UIWindowView
 {
     [UnityEngine.Header("Title Buttons")]
-    [UnityEngine.SerializeField] private UnityEngine.UI.Button _newGameButton;
-    [UnityEngine.SerializeField] private UnityEngine.UI.Button _continueButton;
+    [UnityEngine.SerializeField] private UnityEngine.UI.Button _startButton;
     [UnityEngine.SerializeField] private UnityEngine.UI.Button _settingsButton;
     [UnityEngine.SerializeField] private UnityEngine.UI.Button _quitButton;
 
-    public UnityEngine.UI.Button NewGameButton => _newGameButton;
-    public UnityEngine.UI.Button ContinueButton => _continueButton;
+    public UnityEngine.UI.Button StartButton => _startButton;
     public UnityEngine.UI.Button SettingsButton => _settingsButton;
     public UnityEngine.UI.Button QuitButton => _quitButton;
 
@@ -22,15 +20,6 @@ public class TitleMenuView : UIWindowView
         Layer = UILayer.Window;
     }
 
-
-
-    public void SetContinueInteractable(bool interactable)
-    {
-        if (_continueButton != null)
-        {
-            _continueButton.interactable = interactable;
-        }
-    }
     public override async UniTask CloseWindowAsync(float duration = 0.15f)
     {
         if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Title)

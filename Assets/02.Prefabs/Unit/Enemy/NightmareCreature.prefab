@@ -1425,9 +1425,12 @@ MonoBehaviour:
   _maxHp: 0
   _currentPoise: 0
   _maxPoise: 0
+  _isInvincible: 0
   _runtimeEnemyInfo:
     rid: -2
   _dropSouls: 0
+  _poiseDecayDelay: 4
+  _poiseDecayRate: 12
   references:
     version: 2
     RefIds:
@@ -1457,7 +1460,7 @@ MonoBehaviour:
     CastOriginOffsetY: 0.4
     CastDistance: 0.15
     MaxSlopeAngle: 45
-  _groggyRecoveryDuration: 8
+  _groggyRecoveryDuration: 5
   _riposteSocket: {fileID: 0}
   _spawnWaitDuration: 3
   _callAlliesRadius: 8

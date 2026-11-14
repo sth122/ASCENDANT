@@ -1,5 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
-using ConstStrings;
+﻿using ConstStrings;
+using Cysharp.Threading.Tasks;
 using Util = DebugLogger<TitleMenuPresenter>;
 /// <summary>
 /// 타이틀 화면의 버튼 액션과 씬 전환을 중계하는 프리젠터
@@ -9,10 +9,6 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
     protected override void OnBind()
     {
         if (View == null) return;
-
-        // 세이브 데이터 존재 여부 갱신
-        Model.RefreshSaveState();
-        View.SetContinueInteractable(Model.CanContinueGame);
 
         // 버튼 이벤트 등록
         OnBindHandler();
@@ -31,13 +27,13 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
     {
         OnUnbindHandler();
 
-        if (View.NewGameButton != null)
+        if (View.StartButton != null)
         {
-            View.NewGameButton.onClick.AddListener(HandleNewGameClicked);
+            View.StartButton.onClick.AddListener(HandleStartClicked);
         }
-        if (View.ContinueButton != null)
+        if (View.SettingsButton != null)
         {
-            View.ContinueButton.onClick.AddListener(HandleContinueClicked);
+            View.SettingsButton.onClick.AddListener(HandleSettingsClicked);
         }
         if (View.QuitButton != null)
         {
@@ -47,13 +43,13 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
 
     protected override void OnUnbindHandler()
     {
-        if (View.NewGameButton != null)
+        if (View.StartButton != null)
         {
-            View.NewGameButton.onClick.RemoveListener(HandleNewGameClicked);
+            View.StartButton.onClick.RemoveListener(HandleStartClicked);
         }
-        if (View.ContinueButton != null)
+        if (View.SettingsButton != null)
         {
-            View.ContinueButton.onClick.RemoveListener(HandleContinueClicked);
+            View.SettingsButton.onClick.RemoveListener(HandleSettingsClicked);
         }
         if (View.QuitButton != null)
         {
@@ -62,10 +58,25 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
     }
     #endregion
 
-    private void HandleNewGameClicked() => ExecuteNewGameFlowAsync().Forget();
-    private void HandleContinueClicked() => ExecuteContinueFlowAsync().Forget();
-
+    private void HandleStartClicked() => OpenCharacterSelectAsync().Forget(); 
+    private void HandleSettingsClicked() => OpenSettingsAsync().Forget();
     public void PromptQuitGame() => ExecuteQuitConfirmFlowAsync().Forget();
+
+    private async UniTaskVoid OpenCharacterSelectAsync()
+    {
+        if (UIManager.Instance == null) return;
+
+        await UIManager.Instance.OpenUIAsync<CharacterSelectView, CharacterSelectPresenter, CharacterSelectModel>(
+            UIId.CharacterSelectUI);
+    }
+
+    private async UniTaskVoid OpenSettingsAsync()
+    {
+        if (UIManager.Instance == null) return;
+
+        await UIManager.Instance.OpenUIAsync<SettingView, SettingPresenter, SettingModel>(
+            UIId.SettingUI);
+    }
 
     private async UniTaskVoid ExecuteQuitConfirmFlowAsync()
     {
@@ -78,53 +89,6 @@ public class TitleMenuPresenter : UIPresenterBase<TitleMenuView, TitleMenuModel>
 #else
         UnityEngine.Application.Quit();
 #endif
-    }
-
-    private async UniTaskVoid ExecuteNewGameFlowAsync()
-    {
-        bool hasSave = SaveManager.Instance != null && SaveManager.Instance.HasSaveData(0);
-
-        string promptMessage = hasSave ? ConstString.NewGameOverwritePrompt : ConstString.GameStartPrompt;
-
-        bool isConfirmed = await OpenConfirmDialogAsync(promptMessage);
-        if (!isConfirmed) return;
-
-        Util.Log("[새 게임 확정] 세이브 파일 생성 및 GameScene 이동");
-
-        if (SaveManager.Instance != null)
-        {
-            SaveManager.Instance.CreateNewGameSave(0);
-        }
-
-        if (SceneLoadManager.Instance != null)
-        {
-            SceneLoadManager.Instance.LoadSceneFlowAsync(SceneId.GameScene).Forget();
-        }
-    }
-
-    private async UniTaskVoid ExecuteContinueFlowAsync()
-    {
-        if (SaveManager.Instance == null || !SaveManager.Instance.HasSaveData(0))
-        {
-            Util.LogWarning("불러올 세이브 데이터가 없습니다.");
-            return;
-        }
-
-        bool isConfirmed = await OpenConfirmDialogAsync(ConstString.LoadGamePrompt);
-        if (!isConfirmed) return;
-
-        Util.Log("[이어하기] 세이브 데이터 로드 후 씬 이동");
-
-        bool loadSuccess = SaveManager.Instance.LoadGame(0);
-        if (loadSuccess && SaveManager.Instance.CurrentSaveData != null)
-        {
-            SceneId targetScene = SaveManager.Instance.CurrentSaveData.LastSavedScene;
-
-            if (SceneLoadManager.Instance != null)
-            {
-                SceneLoadManager.Instance.LoadSceneFlowAsync(targetScene).Forget();
-            }
-        }
     }
 
     private async UniTask<bool> OpenConfirmDialogAsync(string message)

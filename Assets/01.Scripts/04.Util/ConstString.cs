@@ -25,21 +25,32 @@
         #region UI Addressable Keys
         public const string TitleBackgroundUI = "TitleBackgroundUI";
         public const string GameOverBackgroundUI = "GameOverBackgroundUI";
+
+
         public const string PlayerHUD = "PlayerHUD";
         public const string EnemyFloatingHUD = "EnemyFloatingHUD";
         public const string BossHUD = "BossHUD";
         public const string QuickSlotHUD = "QuickSlotHUD";
+
+
         public const string TitleMenuUI = "TitleMenuUI";
         public const string SystemMenuUI = "SystemMenuUI";
         public const string InventoryUI = "InventoryUI";
         public const string EquipmentUI = "EquipmentUI";
         public const string StatusUI = "StatusUI";
         public const string GameOverUI = "GameOverUI";
+        public const string SettingUI = "SettingUI";
+        public const string CharacterSelectUI = "CharacterSelectUI";
+        public const string BonfireUI = "BonfireUI";
+
         public const string ConfirmPopupUI = "ConfirmPopupUI";
         public const string NoticePopupUI = "NoticePopupUI";
         public const string KeyBindingPopupUI = "KeyBindingPopupUI";
+
+
         public const string FadeCurtainUI = "FadeCurtainUI";
         public const string LoadingScreenUI = "LoadingScreenUI";
+        public const string SaveToastUI = "SaveToastUI";
         #endregion
     }
 }

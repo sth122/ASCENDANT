@@ -38,6 +38,11 @@ public class PlayerRollState : PlayerActionState
         _playerStatusController?.ConsumeStamina(staminaCost);
         _playerAnimController.SetTrigger(AnimParamType.Roll);
 
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(SoundId.Player_Roll);
+        }
+
         _elapsedRollTime = 0f;
         System.Threading.CancellationToken token = CreateActionToken();
         ExecuteRollAsync(token).Forget();

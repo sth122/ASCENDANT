@@ -395,14 +395,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.46323532, g: 0.46323532, b: 0.46323532, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5befffb806f573b469f4e04e09a86b75, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -439,7 +439,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8771882599596666828}
   - component: {fileID: 1135155020858848165}
-  - component: {fileID: 122351416865615810}
   m_Layer: 5
   m_Name: slider
   m_TagString: Untagged
@@ -515,25 +514,10 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 100
   m_WholeNumbers: 0
-  m_Value: 20.2
+  m_Value: 0
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &122351416865615810
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7546896043282923926}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9f5b0c2f6055e84ba73564f8d3c11f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  openWindowAfterLoading: {fileID: 0}
-  closeWindowAfterLoading: {fileID: 5101100676144143287}
-  loadingSpeed: 1
 --- !u!1 &7636353154925853740
 GameObject:
   m_ObjectHideFlags: 0

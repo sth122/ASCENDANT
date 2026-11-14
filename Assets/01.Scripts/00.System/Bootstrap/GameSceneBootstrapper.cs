@@ -35,16 +35,22 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
         UnityEngine.Quaternion spawnRot;
 
         SaveData save = SaveManager.Instance != null ? SaveManager.Instance.CurrentSaveData : null;
-        // 1-1. 새 게임이거나 체크 포인트(화톳불)에 들르지 않은 경우
+
+        // 새 게임이거나 체크 포인트(화톳불)에 들르지 않은 경우
         if (save == null || !save.HasCheckpoint)
         {
             spawnPos = _playerSpawnPoint != null ? _playerSpawnPoint.position : UnityEngine.Vector3.zero;
             spawnRot = _playerSpawnPoint != null ? _playerSpawnPoint.rotation : UnityEngine.Quaternion.identity;
         }
-        // 1-2. 체크 포인트가 존재하는 경우
+        else if (SavePointManager.Instance.TryGetSpawnTransform(save.LastBonfireId, out UnityEngine.Vector3 registeredPos, out UnityEngine.Quaternion registeredRot))
+        {
+            // 이어하기: SavePointManager에 등록된 해당 BonfireId의 최신 Transform 위치로 소환
+            spawnPos = registeredPos;
+            spawnRot = registeredRot;
+        }
         else
         {
-            // SaveData의 SerializableVector3와 Y축 회전각 복원
+            // 저장된 raw 좌표 복원
             spawnPos = save.LastBonfirePosition.ToVector3();
             spawnRot = UnityEngine.Quaternion.Euler(0f, save.LastBonfireRotationY, 0f);
         }

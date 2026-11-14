@@ -11,6 +11,7 @@ public class PlayerAttackState : PlayerActionState
     private float _stepTimer = 0f;
     private const float StepLockoutDuration = 0.18f;
     private const float SafetyTimeout = 2.5f;
+    private float _currentAttackSpeedMult = 1.0f;
 
     private UnityEngine.LayerMask searchLayer = UnityEngine.LayerMask.GetMask("Enemy", "EnemyHurtbox");
     private readonly UnityEngine.Collider[] _softLockBuffer = new UnityEngine.Collider[8];
@@ -69,13 +70,14 @@ public class PlayerAttackState : PlayerActionState
         UnityEngine.Animator animator = _playerAnimController.AnimatorInstance;
         if (animator.IsInTransition(0)) return;
 
-        // 2. 타수 전환 중일 때는 히트박스 갱신 및 캔슬 판정을 전면 보류 (히트박스 조기 오픈 차단 핵심)
+
+        // 2. 공격 속도 배율에 맞춰 콤보 전환 락아웃 시간 비례 보정
+        float scaledLockout = StepLockoutDuration / UnityEngine.Mathf.Max(1.0f, _currentAttackSpeedMult);
+        // 타수 전환 중일 때는 히트박스 갱신 및 캔슬 판정을 전면 보류
         if (_hasAdvancedThisStep)
         {
             CloseHitboxInternal();
-
-            // 트랜지션이 완전히 끝나고 최소 락아웃 시간이 지났을 때만 잠금 해제
-            if (_stepTimer >= StepLockoutDuration && !animator.IsInTransition(0))
+            if (_stepTimer >= scaledLockout && !animator.IsInTransition(0))
             {
                 _hasAdvancedThisStep = false;
             }
@@ -83,7 +85,6 @@ public class PlayerAttackState : PlayerActionState
         }
 
         float normalizedTime = _playerAnimController.GetCurrentNormalizedTime(0);
-
         UpdateHitboxWindow(normalizedTime);
 
         // 3. 긴급 회피 및 가드 캔슬 판정
@@ -146,6 +147,12 @@ public class PlayerAttackState : PlayerActionState
     {
         base.Exit();
 
+        // 타 상태(이동, 구르기 등)에 공격 배속이 잔류하지 않도록 1.0f 원복
+        if (_playerAnimController.AnimatorInstance != null)
+        {
+            _playerAnimController.AnimatorInstance.speed = 1.0f;
+        }
+
         // 공격이 종료되면 Root Motion을 회수하여 일반 이동 제어권 복원
         _playerAnimController.SetRootMotion(false);
         CloseHitboxInternal();
@@ -153,7 +160,6 @@ public class PlayerAttackState : PlayerActionState
         // 상태 탈출 시 잔여 트리거 및 콤보 스텝 초기화
         _playerAnimController.ResetTrigger(AnimParamType.Attack);
         _playerAnimController.SetInteger(AnimParamType.ComboStep, 0);
-
         owner.InputReader.ClearCommand(InputCommandType.Attack);
 
         _hasAdvancedThisStep = false;
@@ -173,6 +179,19 @@ public class PlayerAttackState : PlayerActionState
 
         WeaponItemData weapon = owner.CombatModule.CurrentWeaponData;
         _currentTiming = (weapon != null) ? weapon.GetComboTiming(_comboStep) : new WeaponItemData.ComboTiming(0.35f, 0.55f, 0.30f, 0.65f, 0.80f);
+
+        // 기량(Dexterity) 기반 공격 속도 배율 산출 및 Animator 배속 적용
+        _currentAttackSpeedMult = 1.0f;
+        if (_playerStatusController != null && _playerStatusController.PlayerInfoSource != null)
+        {
+            _currentAttackSpeedMult = _playerStatusController.PlayerInfoSource
+                .CalculateAttackSpeedMultiplier(_playerStatusController.EquippedBonusDexterity);
+        }
+
+        if (_playerAnimController.AnimatorInstance != null)
+        {
+            _playerAnimController.AnimatorInstance.speed = _currentAttackSpeedMult;
+        }
 
         float staminaCost = GetAttackStaminaCost();
         _playerStatusController?.ConsumeStamina(staminaCost);

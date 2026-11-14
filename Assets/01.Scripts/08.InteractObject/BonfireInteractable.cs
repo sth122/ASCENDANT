@@ -1,21 +1,48 @@
-﻿using Cysharp.Threading.Tasks;
-using static ConstStrings.ConstString;
+﻿using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
+
 /// <summary>
-/// 소울라이크 화톳불 상호작용 컴포넌트
+/// 소울라이크 화톳불 상호작용 컴포넌트 (휴식한다 / 레벨 업 / 떠난다 선택지 제공)
 /// </summary>
-public class BonfireInteractable : BaseInteractable
+public class BonfireInteractable : BaseInteractable, ISceneLoadable
 {
-    [UnityEngine.SerializeField] private UnityEngine.Transform _respawnPoint;
-    [UnityEngine.SerializeField] private SceneId _currentScene;
+    [SerializeField] private BonfireId _bonfireId = BonfireId.GameScene_Start;
+    [SerializeField] private Transform _respawnPoint;
+    [SerializeField] private SceneId _currentScene;
+    private int _sceneLoadOrder = 15;
+
+    public int SceneLoadOrder => _sceneLoadOrder;
+    public BonfireId Id => _bonfireId;
+
+    protected override bool HasMultipleChoices => true;
 
     private void Awake() => _interactType = InteractType.Bonfire;
 
-    public override void OnInteract(PlayerController player)
+    #region ISceneLoadable
+    public UniTask OnSceneObjectLoadAsync(SceneId scene, CancellationToken ct)
+    {
+        Transform targetPoint = _respawnPoint != null ? _respawnPoint : transform;
+        SavePointManager.Instance.RegisterSavePoint(_bonfireId, targetPoint);
+        return UniTask.CompletedTask;
+    }
+
+    public void OnSceneObjectReady(SceneId scene) { }
+    #endregion
+
+    protected override void BuildInteractionChoices(PlayerController player, List<InteractionChoice> outChoices)
+    {
+        outChoices.Add(new InteractionChoice("휴식한다", () => ExecuteRest(player)));
+        outChoices.Add(new InteractionChoice("레벨 업", () => OpenBonfireLevelUpUIAsync().Forget()));
+        outChoices.Add(new InteractionChoice("떠난다", () => { }));
+    }
+
+    private void ExecuteRest(PlayerController player)
     {
         if (player == null) return;
 
-        UnityEngine.Vector3 spawnPos = _respawnPoint != null ? _respawnPoint.position : transform.position;
-        float rotY = _respawnPoint != null ? _respawnPoint.eulerAngles.y : transform.eulerAngles.y;
+        Transform spawnTr = _respawnPoint != null ? _respawnPoint : transform;
 
         // 1. 플레이어 상태 완전 회복
         player.StatusController.HealHp(player.StatusController.MaxHp);
@@ -25,20 +52,20 @@ public class BonfireInteractable : BaseInteractable
             playerStat.RestoreStamina(playerStat.MaxStamina);
         }
 
-        // 2. 세이브 매니저 영속 파일 기록
+        // 2. 세이브 매니저 영속 파일 기록 (저장 중.. -> 저장 완료 토스트 출력)
         if (SaveManager.Instance != null)
         {
-            SaveManager.Instance.UpdateCheckpoint(spawnPos, rotY, _currentScene, player, slotIndex: 0);
-
-            if (player.TryGetComponent(out PlayerInventoryHandler invHandler) && SaveManager.Instance.CurrentSaveData != null)
-            {
-                invHandler.ExportToSaveData(SaveManager.Instance.CurrentSaveData.PlayerData);
-                SaveManager.Instance.SaveCurrentGameAsync(0).Forget();
-            }
+            SaveManager.Instance.UpdateCheckpoint(_bonfireId, spawnTr.position, spawnTr.eulerAngles.y, _currentScene, player);
         }
 
-        // 3. 월드 리셋 이벤트 발행 (EnemyManager 등이 수신하여 몬스터 리스폰)
-        EventBusSystem.Publish(new BonfireRestedEvent(spawnPos));
-        DebugLogger.LogWithTag("Bonfire", "화톳불 휴식 완료: 상태 회복, 세이브 갱신 및 월드 리셋");
+        // 3. 휴식 SFX 재생 및 월드 리셋 이벤트 발행
+        SoundManager.Instance?.PlaySFX(SoundId.Bonfire_Rest, transform.position);
+        EventBusSystem.Publish(new BonfireRestedEvent(spawnTr.position));
+    }
+
+    private async UniTaskVoid OpenBonfireLevelUpUIAsync()
+    {
+        if (UIManager.Instance == null) return;
+        await UIManager.Instance.OpenUIAsync<BonfireWindowView, BonfirePresenter, BonfireModel>(UIId.BonfireUI);
     }
 }

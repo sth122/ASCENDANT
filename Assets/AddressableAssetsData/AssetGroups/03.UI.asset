@@ -15,8 +15,18 @@ MonoBehaviour:
   m_GroupName: 03.UI
   m_GUID: 34322189bbc1b104dbcb524459a6b6b4
   m_SerializeEntries:
+  - m_GUID: 02d52d88d3bb610488e9a22fb2f4c71e
+    m_Address: SaveToastUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1410ed52fbfd361438e2e2bb3b63ea39
     m_Address: BossHUD
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 176f86d667a79fd499f0f38eee490430
+    m_Address: CharacterSelectUI
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -40,6 +50,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 640d39394595bbb47a9e40b5e79080d0
+    m_Address: BonfireUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 723d0f05f068d964fa024d2038c4ecd4
     m_Address: EnemyFloatingHpBar
     m_ReadOnly: 0
@@ -50,8 +65,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 93a4762f249d986409321f63f0186a1d
-    m_Address: SystemMenuUI
+  - m_GUID: 93b75258dbb03d7438522bf1a29d1bd0
+    m_Address: SettingUI
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -60,8 +75,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a846eac2643513542b6e12c2546d5c8e
+    m_Address: TitleBackgroundUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c0599bb9ff9eed6449328a1a8d096c6a
     m_Address: QuickSlotHUD
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c5cac2446c7908447a3e32f5ea4f7bde
+    m_Address: SystemMenuUI
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

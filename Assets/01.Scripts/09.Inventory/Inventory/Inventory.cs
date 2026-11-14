@@ -101,6 +101,12 @@ public class Inventory
     /// </summary>
     public bool UnequipItem(EquipSlotType slot, PlayerController player)
     {
+        if (slot == EquipSlotType.MainWeapon || slot == EquipSlotType.Shield)
+        {
+            DebugLogger.LogWarningWithTag("Inventory", "무기와 방패는 장착 해제할 수 없습니다. 다른 장비로 교체해 주세요.");
+            return false;
+        }
+
         if (!_equipmentSlots.TryGetValue(slot, out EquipmentItem equipped) || equipped == null) return false;
 
         int emptyIndex = FindEmptySlotIndex();
@@ -111,12 +117,6 @@ public class Inventory
 
         OnEquipmentChanged?.Invoke(slot, null);
         OnSlotUpdated?.Invoke(emptyIndex, equipped);
-
-        // 메인 무기 해제 시 CombatModule의 무기 데이터를 반드시 null로 소거 (유령 무기 버그 차단)
-        if (slot == EquipSlotType.MainWeapon)
-        {
-            player.CombatModule.SetWeaponData(null);
-        }
 
         RecalculateEquipStats(player);
         return true;
@@ -223,18 +223,17 @@ public class Inventory
     {
         if (loadout == null || player == null) return;
 
-        // 1. 초기 무기 및 방패 장착
+        // 1. 초기 무기 및 방패만 직접 장착
         if (loadout.StartingWeapon != null) EquipDirect(loadout.StartingWeapon, player);
         if (loadout.StartingShield != null) EquipDirect(loadout.StartingShield, player);
 
-        // 2. 4부위 방어구 장착
-        if (loadout.StartingHelmet != null) EquipDirect(loadout.StartingHelmet, player);
-        if (loadout.StartingChestArmor != null) EquipDirect(loadout.StartingChestArmor, player);
-        if (loadout.StartingGauntlets != null) EquipDirect(loadout.StartingGauntlets, player);
-        if (loadout.StartingBoots != null) EquipDirect(loadout.StartingBoots, player);
-
-        if(loadout.StartingNecklace != null) EquipDirect(loadout.StartingNecklace, player);
-        if(loadout.StartingRing != null) EquipDirect(loadout.StartingRing, player);
+        // 2. 방어구 4부위 및 장신구 2부위는 미장착 상태로 인벤토리(가방)에 지급
+        if (loadout.StartingHelmet != null) AddItem(loadout.StartingHelmet, 1);
+        if (loadout.StartingChestArmor != null) AddItem(loadout.StartingChestArmor, 1);
+        if (loadout.StartingGauntlets != null) AddItem(loadout.StartingGauntlets, 1);
+        if (loadout.StartingBoots != null) AddItem(loadout.StartingBoots, 1);
+        if (loadout.StartingNecklace != null) AddItem(loadout.StartingNecklace, 1);
+        if (loadout.StartingRing != null) AddItem(loadout.StartingRing, 1);
 
         // 3. 소모품 인벤토리 추가 및 지정된 퀵슬롯 등록
         for (int i = 0; i < loadout.StartingConsumables.Count; i++)
@@ -266,7 +265,7 @@ public class Inventory
             }
         }
 
-        DebugLogger.LogWithTag("Inventory", "[초기 무기/방패 및 4부위 방어구 로드아웃 지급 완결]");
+        DebugLogger.LogWithTag("Inventory", "[초기 무기/방패 장착 및 전체 아이템 가방 지급 완료]");
     }
     #endregion
 
@@ -324,13 +323,13 @@ public class Inventory
         for (int i = 0; i < DefaultCapacity; i++) _slots[i] = null;
         _equipmentSlots.Clear();
 
-        // 1. 가방 슬롯 복원
         for (int i = 0; i < sourceData.InventorySlots.Count; i++)
         {
             var entry = sourceData.InventorySlots[i];
             if (dataManager.TryGetItemDataById(entry.ItemId, out ItemData itemData))
             {
                 Item restoredItem = itemData.CreateItem();
+                restoredItem.RestoreGuid(entry.InstanceGuid);
                 if (restoredItem is CountableItem countable)
                 {
                     countable.SetAmount(entry.Amount);
@@ -340,7 +339,6 @@ public class Inventory
             }
         }
 
-        // 2. 착용 슬롯 복원
         for (int i = 0; i < sourceData.EquippedSlots.Count; i++)
         {
             var entry = sourceData.EquippedSlots[i];
@@ -352,21 +350,81 @@ public class Inventory
             }
         }
 
-        // 3. 퀵슬롯 복원
+        // GUID 우선 매칭 후 아이템 ID 폴백으로 퀵슬롯 복원
         for (int q = 0; q < sourceData.QuickSlots.Count; q++)
         {
             var entry = sourceData.QuickSlots[q];
+            ConsumableItem matched = null;
+
             for (int s = 0; s < DefaultCapacity; s++)
             {
-                if (_slots[s] is ConsumableItem portion && portion.Data.Id == entry.ItemId)
+                if (_slots[s] is ConsumableItem portion &&
+                    ((!string.IsNullOrEmpty(entry.InstanceGuid) && portion.InstanceGuid == entry.InstanceGuid) ||
+                     portion.Data.Id == entry.ItemId))
                 {
-                    QuickSlots.RegisterItem(entry.SlotIndex, portion);
+                    matched = portion;
                     break;
                 }
+            }
+
+            if (matched != null)
+            {
+                QuickSlots.RegisterItem(entry.SlotIndex, matched);
             }
         }
 
         RecalculateEquipStats(player);
+    }
+    #endregion
+
+    #region 아이템 사용
+    public bool HasItem(int itemId, int minAmount = 1)
+    {
+        int total = 0;
+        for (int i = 0; i < DefaultCapacity; i++)
+        {
+            if (_slots[i] != null && _slots[i].Data != null && _slots[i].Data.Id == itemId)
+            {
+                total += (_slots[i] is CountableItem countable) ? countable.CurrentAmount : 1;
+                if (total >= minAmount) return true;
+            }
+        }
+        return false;
+    }
+
+    public bool ConsumeItemById(int itemId, int amount = 1)
+    {
+        if (!HasItem(itemId, amount)) return false;
+
+        int remaining = amount;
+        for (int i = 0; i < DefaultCapacity && remaining > 0; i++)
+        {
+            if (_slots[i] == null || _slots[i].Data == null || _slots[i].Data.Id != itemId) continue;
+
+            if (_slots[i] is CountableItem countable)
+            {
+                int take = Mathf.Min(remaining, countable.CurrentAmount);
+                countable.TryConsume(take);
+                remaining -= take;
+
+                if (countable.CurrentAmount <= 0)
+                {
+                    _slots[i] = null;
+                    OnSlotUpdated?.Invoke(i, null);
+                }
+                else
+                {
+                    OnSlotUpdated?.Invoke(i, countable);
+                }
+            }
+            else
+            {
+                _slots[i] = null;
+                OnSlotUpdated?.Invoke(i, null);
+                remaining--;
+            }
+        }
+        return true;
     }
     #endregion
 }

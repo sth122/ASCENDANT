@@ -1,9 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+
 public static class ActionTimelineRunner
 {
+    private readonly struct BoundVfxEntry
+    {
+        public readonly PoolType VfxType;
+        public readonly GameObject Instance;
+
+        public BoundVfxEntry(PoolType vfxType, GameObject instance)
+        {
+            VfxType = vfxType;
+            Instance = instance;
+        }
+    }
+
     public struct ExecutionContext
     {
         public UnitAnimController AnimController;
@@ -17,6 +31,7 @@ public static class ActionTimelineRunner
         public Action<HitboxSlot> OnCloseHitbox;
         public Action OnCloseAllHitboxes;
 
+        public Func<HitboxSlot, Transform> ResolveSocket;
         public Func<CancellationToken, UniTask> OnCustomEventTrigger;
 
         public float BaseDamage;
@@ -46,14 +61,12 @@ public static class ActionTimelineRunner
             ctx.AnimController?.SetRootMotion(false);
             ctx.Movement?.EndRootMotionMovement();
 
-            // 1. 물리 돌진 속도 완전 리셋 (미끄러짐 버그 원천 차단)
             if (ctx.Rigidbody != null && !ctx.Rigidbody.isKinematic)
             {
                 ctx.Rigidbody.linearVelocity = Vector3.zero;
                 ctx.Rigidbody.angularVelocity = Vector3.zero;
             }
 
-            // 2. 공중 상태에서 캔슬된 경우 지면 레이캐스트 안전 착지
             if (wasAirborne && ctx.OwnerTransform != null)
             {
                 Vector3 currentPos = ctx.OwnerTransform.position;
@@ -104,73 +117,119 @@ public static class ActionTimelineRunner
         bool dashActive = false;
         Vector3 dashDirection = ctx.OwnerTransform != null ? ctx.OwnerTransform.forward : Vector3.forward;
 
-        while (elapsed < totalDuration)
+        int cueCount = step.CueEvents != null ? step.CueEvents.Length : 0;
+        bool[] cueTriggered = cueCount > 0 ? new bool[cueCount] : null;
+        List<BoundVfxEntry> stepBoundVfx = cueCount > 0 ? new List<BoundVfxEntry>(cueCount) : null;
+
+        try
         {
-            ct.ThrowIfCancellationRequested();
-
-            float norm = Mathf.Clamp01(elapsed / totalDuration);
-
-            // 특수 비동기 이벤트 발동
-            if (step.HasCustomEvent && !eventFired && norm >= step.EventTriggerNormalized)
+            while (elapsed < totalDuration)
             {
-                eventFired = true;
-                if (ctx.OnCustomEventTrigger != null)
-                {
-                    ctx.OnCustomEventTrigger.Invoke(ct).Forget();
-                }
-            }
+                ct.ThrowIfCancellationRequested();
 
-            // 히트박스 오픈 / 클로즈
-            if (step.HasHitbox)
-            {
-                if (!hitboxOpened && norm >= step.HitboxStartNormalized && norm < step.HitboxEndNormalized)
-                {
-                    hitboxOpened = true;
-                    ctx.OnOpenHitbox?.Invoke(step.TargetHitboxSlot, ctx.BaseDamage, ctx.BasePoiseDamage,
-                        ctx.IsParryable, ctx.ImpactType, ctx.KnockbackForce);
-                }
-                else if (hitboxOpened && norm >= step.HitboxEndNormalized)
-                {
-                    hitboxOpened = false;
-                    ctx.OnCloseAllHitboxes?.Invoke();
-                }
-            }
+                float norm = Mathf.Clamp01(elapsed / totalDuration);
 
-            // 물리 돌진
-            if (step.EnablePhysicalDash)
-            {
-                if (!dashActive && norm >= step.DashStartNormalized && norm < step.DashEndNormalized)
+                // 1. 다중 VFX / SFX 연출 큐 발동
+                for (int c = 0; c < cueCount; c++)
                 {
-                    dashActive = true;
-                    if (ctx.Target != null && ctx.OwnerTransform != null)
+                    if (cueTriggered[c]) continue;
+                    TimelineCueEvent cue = step.CueEvents[c];
+                    if (norm < cue.TriggerNormalized) continue;
+
+                    cueTriggered[c] = true;
+                    Transform socket = ctx.ResolveSocket != null ? ctx.ResolveSocket(cue.SpawnSocket) : ctx.OwnerTransform;
+                    if (socket == null) socket = ctx.OwnerTransform;
+
+                    Vector3 worldPos = socket != null ? socket.TransformPoint(cue.LocalOffset) : Vector3.zero;
+                    Quaternion worldRot = socket != null ? socket.rotation : Quaternion.identity;
+
+                    if (cue.VfxType != PoolType.None && VFXManager.Instance != null)
                     {
-                        dashDirection = (ctx.Target.position - ctx.OwnerTransform.position).normalized;
-                        dashDirection.y = 0f;
-                        ctx.OwnerTransform.rotation = Quaternion.LookRotation(dashDirection);
+                        Transform parent = cue.AttachToSocket ? socket : null;
+                        GameObject vfx = VFXManager.Instance.PlayVFX(cue.VfxType, worldPos, worldRot, parent);
+                        if (vfx != null && cue.DespawnOnStepExit)
+                        {
+                            stepBoundVfx.Add(new BoundVfxEntry(cue.VfxType, vfx));
+                        }
                     }
-                }
-                else if (dashActive && norm >= step.DashEndNormalized)
-                {
-                    dashActive = false;
-                    if (ctx.Rigidbody != null && !ctx.Rigidbody.isKinematic)
+
+                    if (cue.SfxId != SoundId.None && SoundManager.Instance != null)
                     {
-                        ctx.Rigidbody.linearVelocity = Vector3.zero;
+                        float vol = cue.VolumeMultiplier > 0f ? cue.VolumeMultiplier : 1.0f;
+                        SoundManager.Instance.PlaySFX(cue.SfxId, worldPos, vol);
                     }
                 }
 
-                if (dashActive && ctx.Rigidbody != null && !ctx.Rigidbody.isKinematic)
+                // 2. 특수 비동기 이벤트 발동
+                if (step.HasCustomEvent && !eventFired && norm >= step.EventTriggerNormalized)
                 {
-                    ctx.Rigidbody.linearVelocity = dashDirection * step.DashSpeed;
+                    eventFired = true;
+                    if (ctx.OnCustomEventTrigger != null)
+                    {
+                        ctx.OnCustomEventTrigger.Invoke(ct).Forget();
+                    }
                 }
-            }
 
-            elapsed += Time.deltaTime;
-            await UniTask.Yield(PlayerLoopTiming.Update, ct);
+                // 3. 히트박스 오픈 / 클로즈
+                if (step.HasHitbox)
+                {
+                    if (!hitboxOpened && norm >= step.HitboxStartNormalized && norm < step.HitboxEndNormalized)
+                    {
+                        hitboxOpened = true;
+                        ctx.OnOpenHitbox?.Invoke(step.TargetHitboxSlot, ctx.BaseDamage, ctx.BasePoiseDamage,
+                            ctx.IsParryable, ctx.ImpactType, ctx.KnockbackForce);
+                    }
+                    else if (hitboxOpened && norm >= step.HitboxEndNormalized)
+                    {
+                        hitboxOpened = false;
+                        ctx.OnCloseAllHitboxes?.Invoke();
+                    }
+                }
+
+                // 4. 물리 돌진
+                if (step.EnablePhysicalDash)
+                {
+                    if (!dashActive && norm >= step.DashStartNormalized && norm < step.DashEndNormalized)
+                    {
+                        dashActive = true;
+                        if (ctx.Target != null && ctx.OwnerTransform != null)
+                        {
+                            dashDirection = (ctx.Target.position - ctx.OwnerTransform.position).normalized;
+                            dashDirection.y = 0f;
+                            ctx.OwnerTransform.rotation = Quaternion.LookRotation(dashDirection);
+                        }
+                    }
+                    else if (dashActive && norm >= step.DashEndNormalized)
+                    {
+                        dashActive = false;
+                        if (ctx.Rigidbody != null && !ctx.Rigidbody.isKinematic)
+                        {
+                            ctx.Rigidbody.linearVelocity = Vector3.zero;
+                        }
+                    }
+
+                    if (dashActive && ctx.Rigidbody != null && !ctx.Rigidbody.isKinematic)
+                    {
+                        ctx.Rigidbody.linearVelocity = dashDirection * step.DashSpeed;
+                    }
+                }
+
+                elapsed += Time.deltaTime;
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
+            }
         }
-
-        if (hitboxOpened)
+        finally
         {
-            ctx.OnCloseAllHitboxes?.Invoke();
+            if (hitboxOpened) ctx.OnCloseAllHitboxes?.Invoke();
+
+            if (stepBoundVfx != null && VFXManager.Instance != null)
+            {
+                for (int i = 0; i < stepBoundVfx.Count; i++)
+                {
+                    BoundVfxEntry entry = stepBoundVfx[i];
+                    VFXManager.Instance.DespawnVFX(entry.VfxType, entry.Instance);
+                }
+            }
         }
     }
 }

@@ -39,17 +39,48 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     {
         UnsubscribeEvents();
         EventBusSystem.Subscribe<BonfireRestedEvent>(HandleBonfireRested);
+        EventBusSystem.Subscribe<UnitDiedEvent>(HandleUnitDied);
     }
 
     private void UnsubscribeEvents()
     {
         EventBusSystem.Unsubscribe<BonfireRestedEvent>(HandleBonfireRested);
+        EventBusSystem.Unsubscribe<UnitDiedEvent>(HandleUnitDied);
     }
 
     private void HandleBonfireRested(BonfireRestedEvent eventData)
     {
         Util.Log($"[화톳불 상호작용 감지] {eventData.BonfirePosition}");
         ResetAllEnemies();
+    }
+
+    private void HandleUnitDied(UnitDiedEvent evt)
+    {
+        if (evt.Identifier == UnitId.Player) return;
+
+        int dropSouls = ResolveDropSouls(evt.Identifier);
+        if (dropSouls <= 0) return;
+
+        if (ServiceLocator.TryGet<IPlayerProvider>(out var provider) && provider.IsPlayerSpawned && provider.Player != null)
+        {
+            provider.Player.StatusController.AddSouls(dropSouls);
+            Util.Log($"[소울 획득] {evt.Identifier} 처치 보상: +{dropSouls} Souls");
+        }
+    }
+
+    private int ResolveDropSouls(UnitId unitId)
+    {
+        if (DataManager.Instance == null) return 0;
+
+        if (DataManager.Instance.TryGetSingle<BossInfoSO>(out var bossSO) && bossSO.TryGetData(unitId, out var bossInfo))
+        {
+            return bossInfo.DropSouls;
+        }
+        if (DataManager.Instance.TryGetSingle<EnemyInfoSO>(out var enemySO) && enemySO.TryGetData(unitId, out var enemyInfo))
+        {
+            return enemyInfo.DropSouls;
+        }
+        return 0;
     }
     #endregion
 

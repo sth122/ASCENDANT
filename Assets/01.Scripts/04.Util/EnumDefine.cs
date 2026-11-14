@@ -260,7 +260,10 @@ public enum UIId
     InventoryUI             = 3003,     // 인벤토리 창 (Tab/I 토글)
     EquipmentUI             = 3004,     // 장비 장착/변경 창
     StatusUI                = 3005,     // 캐릭터 상세 스탯 정보 창
-    GameOverUI              = 3006,
+    GameOverUI              = 3006,     // 게임오버 후 재시작/타이틀 선택 창
+    SettingUI               = 3007,     // 설정 메뉴 창
+    CharacterSelectUI       = 3008,     // 캐릭터 선택/생성/삭제 통합 메뉴
+    BonfireUI               = 3009,     // 화톳불 휴식 및 소울 레벨업 창
 
     // 4000 ~ 4999 : Popup (비동기 결과 대기 및 확인/경고 모달 다이얼로그)
     ConfirmPopup            = 4001,     // 확인/취소 모달 팝업
@@ -271,6 +274,7 @@ public enum UIId
     // 5000 ~ 5999 : System (최상위 화면 제어, 화면 전환 및 시스템 인디케이터)
     FadeCurtainUI           = 5001,     // 씬 전환 암전용 페이드 디머
     LoadingScreenUI         = 5002,     // 비동기 씬 로딩 스크린 프로그레스바
+    SaveToastUI             = 5003,     // 우측 하단 '게임 저장' 시스템 토스트
 }
 
 /// <summary>
@@ -345,6 +349,18 @@ public enum InteractType
     Chest,        // 보물상자 열기
     Lever         // 기믹 레버 조작
 }
+
+/// <summary>
+/// 씬별 세이브 포인트(화톳불) 고유 식별자
+/// </summary>
+public enum BonfireId
+{
+    None = 0,
+    GameScene_Start = 101,
+    GameScene_Mid = 102,
+    GameScene_BossGate = 103,
+    BossScene_Entrance = 201 
+}
 #endregion
 
 #region Inventory + Item
@@ -409,3 +425,52 @@ public enum RollTier
 {
     Fast, Mid, Fat, Overburdened
 }
+
+#region Sound
+public enum SoundCategory
+{
+    BGM,
+    CombatSFX,
+    EnvironmentSFX,
+    UISFX
+}
+
+public enum SoundId
+{
+    None = 0,
+
+    // BGM (100 ~)
+    BGM_Title = 100,
+    BGM_Field = 101,
+    BGM_Boss_Phase1 = 102,
+    BGM_Boss_Phase2 = 103,
+
+    // UI SFX (200 ~)
+    UI_Hover = 200,
+    UI_Click = 201,
+    UI_Confirm = 202,
+    UI_Cancel = 203,
+    UI_WindowOpen = 204,
+    UI_WindowClose = 205,
+
+    // 전투 및 액션 SFX (300 ~)
+    Sword_Swing_Light = 300,
+    Sword_Swing_Heavy = 301,
+    Hit_Flesh_Slash = 302,
+    Hit_Armor_Blunt = 303,
+    Shield_Guard_Impact = 304,
+    Shield_Parry_Success = 305,
+    Player_Roll = 306,
+    Player_Footstep = 307,
+    Potion_Drink = 308,
+    FireBomb_Explode = 309,
+
+    // 보스 및 상호작용 SFX (400 ~)
+    Dragon_Roar = 400,
+    Dragon_Breath_Fire = 401,
+    Dragon_EarthShatter = 402,
+    Dragon_Meteor_Impact = 403,
+    Bonfire_Rest = 404,
+    BossDoor_Open = 405
+}
+#endregion

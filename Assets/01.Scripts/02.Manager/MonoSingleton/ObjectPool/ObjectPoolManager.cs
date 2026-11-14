@@ -11,9 +11,11 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
 
     private readonly Dictionary<PoolType, GameObjectPool> _pools = new Dictionary<PoolType, GameObjectPool>();
     private readonly HashSet<PoolType> _sceneDependentPoolTypes = new HashSet<PoolType>();
+    private readonly HashSet<PoolType> _globalGameplayPoolTypes = new HashSet<PoolType>();
     private Transform _poolRoot;
 
     private bool _isPoolReady = false;
+    private bool _isGlobalGameplayLoaded = false;
     public bool IsPoolReady => _isPoolReady;
 
     protected override void Awake()
@@ -44,22 +46,39 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
     public async Cysharp.Threading.Tasks.UniTask OnSceneLoadCreate(SceneId scene)
     {
         _isPoolReady = false;
-        _sceneDependentPoolTypes.Clear();
 
         try
         {
-            // 1. DataManager로부터 ScenePoolConfigSO 획득 (인스펙터 바인딩 완전 배제)
-            if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<ScenePoolConfigSO>(out var configSO))
+            if (DataManager.Instance == null || !DataManager.Instance.TryGetSingle<ScenePoolConfigSO>(out var configSO))
             {
-                if (configSO.TryGetPoolItemsForScene(scene, out List<ScenePoolConfigSO.PoolItem> items))
+                return;
+            }
+
+            // 1. 인게임 씬(TitleScene 제외) 진입 시 플레이어 공용 전역 풀 최초 1회 적재
+            if (scene != SceneId.TitleScene && scene != SceneId.None && !_isGlobalGameplayLoaded)
+            {
+                var globalItems = configSO.GlobalGameplayItems;
+                for (int i = 0; i < globalItems.Count; i++)
                 {
-                    for (int i = 0; i < items.Count; i++)
-                    {
-                        ScenePoolConfigSO.PoolItem item = items[i]; ;
-                        await PreloadPoolAsync(item.Type, item.Type.ToString(), item.PreloadCount, this.destroyCancellationToken, isSceneDependent: true);
-                    }
-                    Util.Log($"[{scene}] ScenePoolConfigSO 기반 오브젝트 풀 {items.Count}종 자동 적재 완료");
+                    var item = globalItems[i];
+                    await PreloadPoolAsync(item.Type, item.GetAddressableKey(), item.PreloadCount,
+                        this.destroyCancellationToken, isSceneDependent: false);
+                    _globalGameplayPoolTypes.Add(item.Type);
                 }
+                _isGlobalGameplayLoaded = true;
+                Util.Log($"인게임 전역 공용 풀 {globalItems.Count}종 최초 적재 완료");
+            }
+
+            // 2. 현재 진입하는 씬 전용 풀 적재
+            if (configSO.TryGetPoolItemsForScene(scene, out List<ScenePoolConfigSO.PoolItem> sceneItems))
+            {
+                for (int i = 0; i < sceneItems.Count; i++)
+                {
+                    var item = sceneItems[i];
+                    await PreloadPoolAsync(item.Type, item.GetAddressableKey(), item.PreloadCount,
+                        this.destroyCancellationToken, isSceneDependent: true);
+                }
+                Util.Log($"[{scene}] 씬 전용 오브젝트 풀 {sceneItems.Count}종 적재 완료");
             }
         }
         catch (System.Exception ex)
@@ -75,7 +94,18 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
     public void OnSceneDestroy(SceneId scene)
     {
         _isPoolReady = false;
+
+        // 1. 씬 전용 풀은 완전 파괴
         ClearSceneDependentPools();
+
+        // 2. 인게임 전역 풀은 파괴하지 않고 미반환 활성 인스턴스만 회수
+        foreach (PoolType globalType in _globalGameplayPoolTypes)
+        {
+            if (_pools.TryGetValue(globalType, out GameObjectPool pool))
+            {
+                pool.RecallAllActive();
+            }
+        }
     }
     #endregion
 
@@ -86,17 +116,17 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
 
         EnsureRoot();
 
-        Transform folder = new GameObject($"(Pool_{poolType}").transform;
+        Transform folder = new GameObject($"(Pool_{poolType})").transform;
         folder.SetParent(_poolRoot);
 
         _pools[poolType] = new GameObjectPool(poolType, prefab, folder, initialCount);
-       
+
         if (isSceneDependent)
         {
             _sceneDependentPoolTypes.Add(poolType);
         }
 
-        Util.Log($"[풀 등록 완료] {poolType} (초기 수량: {initialCount})");
+        Util.Log($"[풀 등록 완료] {poolType} (초기 수량: {initialCount}, 씬 종속: {isSceneDependent})");
     }
     #endregion
 
@@ -199,6 +229,7 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
             pool.Clear();
             _pools.Remove(poolType);
             _sceneDependentPoolTypes.Remove(poolType);
+            _globalGameplayPoolTypes.Remove(poolType);
             Util.Log($"[단일 풀 메모리 정리] {poolType}");
         }
     }
@@ -214,6 +245,20 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
         Util.Log("[씬 종속 오브젝트 풀 메모리 일괄 반환 완료]");
     }
 
+    /// <summary>
+    /// 타이틀 화면으로 복귀할 때 인게임 전역 풀까지 비울 때 호출
+    /// </summary>
+    public void ClearGlobalGameplayPools()
+    {
+        List<PoolType> toClear = new List<PoolType>(_globalGameplayPoolTypes);
+        for (int i = 0; i < toClear.Count; i++)
+        {
+            ClearPool(toClear[i]);
+        }
+        _globalGameplayPoolTypes.Clear();
+        _isGlobalGameplayLoaded = false;
+    }
+
     protected override void OnDestroy()
     {
         foreach (GameObjectPool pool in _pools.Values)
@@ -222,6 +267,7 @@ public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>, ILoadable
         }
         _pools.Clear();
         _sceneDependentPoolTypes.Clear();
+        _globalGameplayPoolTypes.Clear();
         base.OnDestroy();
     }
 }

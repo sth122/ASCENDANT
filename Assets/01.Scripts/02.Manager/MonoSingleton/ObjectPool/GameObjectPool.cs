@@ -121,4 +121,18 @@ public class GameObjectPool
             UnityEngine.Object.Destroy(_parent.gameObject);
         }
     }
+
+    /// <summary>
+    /// 전역 유지 풀에서 씬 전환 시 미반환 상태로 월드에 남아있는 활성 객체만 안전하게 풀로 회수
+    /// </summary>
+    public void RecallAllActive()
+    {
+        foreach (UnityEngine.GameObject obj in _allAllocatedObjects)
+        {
+            if (obj != null && !_pooledSet.Contains(obj))
+            {
+                Return(obj);
+            }
+        }
+    }
 }

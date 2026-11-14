@@ -60,9 +60,14 @@ public class MeteorProjectile : MonoBehaviour, IPoolable
         _hasImpacted = true;
 
         // 폭발 VFX 스폰
-        if (ObjectPoolManager.Instance != null)
+        if (VFXManager.Instance != null)
+        {
+            VFXManager.Instance.PlayVFX(PoolType.VFX_MeteorExplosion, _targetPos, Quaternion.identity, null, SoundId.Dragon_Meteor_Impact);
+        }
+        else if (ObjectPoolManager.Instance != null)
         {
             ObjectPoolManager.Instance.Spawn(PoolType.VFX_MeteorExplosion, _targetPos, Quaternion.identity);
+            SoundManager.Instance?.PlaySFX(SoundId.Dragon_Meteor_Impact, _targetPos);
         }
 
         // 광역 대미지 판정

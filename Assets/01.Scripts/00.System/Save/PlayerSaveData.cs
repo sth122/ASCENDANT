@@ -50,12 +50,14 @@ public struct ItemSlotSaveData
     public int SlotIndex;
     public int ItemId;
     public int Amount;
+    public string InstanceGuid;
 
-    public ItemSlotSaveData(int slotIndex, int itemId, int amount)
+    public ItemSlotSaveData(int slotIndex, int itemId, int amount, string instanceGuid = "")
     {
         SlotIndex = slotIndex;
         ItemId = itemId;
         Amount = amount;
+        InstanceGuid = instanceGuid;
     }
 }
 

@@ -10,6 +10,7 @@ public static class UIIdExtensions
     {
         { UIId.TitleBackgroundUI, ConstString.TitleBackgroundUI },
         { UIId.GameOverBackgroundUI, ConstString.GameOverBackgroundUI },
+
         { UIId.PlayerHUD, ConstString.PlayerHUD },
         { UIId.EnemyFloatingHUD, ConstString.EnemyFloatingHUD },
         { UIId.BossHUD, ConstString.BossHUD },
@@ -20,11 +21,17 @@ public static class UIIdExtensions
         { UIId.EquipmentUI, ConstString.EquipmentUI },
         { UIId.StatusUI, ConstString.StatusUI },
         { UIId.GameOverUI, ConstString.GameOverUI },
+        { UIId.SettingUI, ConstString.SettingUI },
+        { UIId.CharacterSelectUI, ConstString.CharacterSelectUI },
+        { UIId.BonfireUI, ConstString.BonfireUI },
+
         { UIId.ConfirmPopup, ConstString.ConfirmPopupUI },
         { UIId.NoticePopup, ConstString.NoticePopupUI },
         { UIId.KeyBindingPopup, ConstString.KeyBindingPopupUI },
+
         { UIId.FadeCurtainUI, ConstString.FadeCurtainUI },
         { UIId.LoadingScreenUI, ConstString.LoadingScreenUI },
+        { UIId.SaveToastUI, ConstString.SaveToastUI },
     };
 
     public static string GetAddressableKey(this UIId uiId)

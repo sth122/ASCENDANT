@@ -1,12 +1,4 @@
-﻿using System;
-using UnityEngine;
-public enum InputMode
-{
-    Title,          // 타이틀/로비 화면 (UI 조작만 허용, 인벤토리/전투 원천 차단)
-    Gameplay,       // 인게임 정상 조작 (플레이어 FSM 활성, 마우스 커서 숨김/고정)
-    RealtimeUI,     // 인벤토리, 화톳불 등 실시간 인게임 창 (마우스 커서 표시, 플레이어 이동/공격 잠금)
-    PausedUI        // 시스템 메뉴 등 일시정지 창 (TimeScale = 0)
-}
+﻿using UnityEngine;
 
 public static class InputSystemHandler
 {
@@ -37,6 +29,7 @@ public static class InputSystemHandler
                 Actions.UI.Enable();
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
+                CameraManager.Instance?.SetCameraInputEnabled(false);
                 break;
 
             case InputMode.Gameplay:
@@ -46,6 +39,7 @@ public static class InputSystemHandler
                 Actions.UI.Cancel.Enable();
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
+                CameraManager.Instance?.SetCameraInputEnabled(true);
                 break;
 
             case InputMode.RealtimeUI:
@@ -54,6 +48,7 @@ public static class InputSystemHandler
                 Actions.UI.Enable();
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
+                CameraManager.Instance?.SetCameraInputEnabled(false);
                 break;
 
             case InputMode.PausedUI:
@@ -62,6 +57,7 @@ public static class InputSystemHandler
                 Actions.UI.Enable();
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
+                CameraManager.Instance?.SetCameraInputEnabled(false);
                 break;
         }
 

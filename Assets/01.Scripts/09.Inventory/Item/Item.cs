@@ -3,6 +3,20 @@
 /// </summary>
 public abstract class Item
 {
+    public string InstanceGuid { get; private set; }
     public ItemData Data { get; }
-    public Item(ItemData data) => Data = data;
+
+    public Item(ItemData data)
+    {
+        Data = data;
+        InstanceGuid = System.Guid.NewGuid().ToString("N");
+    }
+
+    public void RestoreGuid(string savedGuid)
+    {
+        if (!string.IsNullOrEmpty(savedGuid))
+        {
+            InstanceGuid = savedGuid;
+        }
+    }
 }

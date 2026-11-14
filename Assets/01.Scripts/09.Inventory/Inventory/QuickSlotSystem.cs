@@ -1,74 +1,83 @@
-﻿/// <summary>
-/// 소모 아이템(포션, 화염병)을 슬롯에 등록하고 단축키(R키 등)로 즉각 소비하는 시스템
+﻿using UnityEngine;
+
+/// <summary>
+/// 소모 아이템(포션, 화염병)을 4개 퀵슬롯(1~4번 키)에 등록하고 소비하는 시스템
+/// - 동일 GUID 아이템 중복 등록 불가 (기존 슬롯에서 새 슬롯으로 이동)
+/// - 아이템 사용 시 전체 퀵슬롯에 공용 쿨타임 적용 (쿨타임 중 모든 아이템 사용/상태 전환 차단)
 /// </summary>
 public class QuickSlotSystem
 {
     public const int MaxQuickSlots = 4;
     private readonly ConsumableItem[] _slots = new ConsumableItem[MaxQuickSlots];
-    private int _selectedSlotIndex = 0;
-    private float _nextAvailableUseTime = 0f;
 
-    public int SelectedSlotIndex => _selectedSlotIndex;
-    public ConsumableItem CurrentItem => _slots[_selectedSlotIndex];
-
-    public event System.Action<int, ConsumableItem> OnQuickSlotChanged;
-    public event System.Action<int> OnSelectedSlotChanged;
-
-    public void RegisterItem(int slotIndex, ConsumableItem portion)
-    {
-        if (slotIndex < 0 || slotIndex >= MaxQuickSlots) return;
-
-        _slots[slotIndex] = portion;
-        OnQuickSlotChanged?.Invoke(slotIndex, portion);
-    }
-
-    public void SelectNextSlot()
-    {
-        _selectedSlotIndex = (_selectedSlotIndex + 1) % MaxQuickSlots;
-        OnSelectedSlotChanged?.Invoke(_selectedSlotIndex);
-    }
-
-    public bool TryUseCurrentItem(PlayerController player)
-    {
-        ConsumableItem current = CurrentItem;
-        if (current == null || current.CurrentAmount <= 0) return false;
-        if (UnityEngine.Time.time < _nextAvailableUseTime) return false;
-
-        bool success = current.Use(player);
-        if (success)
-        {
-            _nextAvailableUseTime = UnityEngine.Time.time + current.ItemData.Cooldown;
-            OnQuickSlotChanged?.Invoke(_selectedSlotIndex, current);
-
-            if (current.CurrentAmount <= 0)
-            {
-                _slots[_selectedSlotIndex] = null;
-                OnQuickSlotChanged?.Invoke(_selectedSlotIndex, null);
-            }
-        }
-        return success;
-    }
+    private float _cooldownStartTime = 0f;
+    private float _cooldownEndTime = 0f;
 
     /// <summary>
-    /// 지정된 인덱스(0~3)의 퀵슬롯 아이템을 즉각 소비
+    /// 아이템 사용 애니메이션(PlayerUseItemState) 진행 중 락
     /// </summary>
-    /// <param name="slotIndex">0부터 시작하는 퀵슬롯 번호</param>
-    /// <param name="player">사용 주체 플레이어</param>
+    public bool IsUsingItemLock { get; set; } = false;
+
+    /// <summary>
+    /// 공용 쿨타임 진행 여부 (true일 때 모든 퀵슬롯 아이템 사용 및 UseItem 상태 전이 불가)
+    /// </summary>
+    public bool IsOnGlobalCooldown => Time.time < _cooldownEndTime;
+
+    /// <summary>
+    /// 남은 쿨타임 비율 (1.0 = 막 시작, 0.0 = 종료)
+    /// </summary>
+    public float RemainingCooldownRatio
+    {
+        get
+        {
+            if (!IsOnGlobalCooldown) return 0f;
+            float duration = _cooldownEndTime - _cooldownStartTime;
+            if (duration <= 0.0001f) return 0f;
+            return Mathf.Clamp01((_cooldownEndTime - Time.time) / duration);
+        }
+    }
+
+    public event System.Action<int, ConsumableItem> OnQuickSlotChanged;
+
+    public void RegisterItem(int targetSlotIndex, ConsumableItem portion)
+    {
+        if (targetSlotIndex < 0 || targetSlotIndex >= MaxQuickSlots) return;
+
+        if (portion != null)
+        {
+            for (int i = 0; i < MaxQuickSlots; i++)
+            {
+                if (_slots[i] != null && _slots[i].InstanceGuid == portion.InstanceGuid)
+                {
+                    if (i == targetSlotIndex) return;
+
+                    _slots[i] = null;
+                    OnQuickSlotChanged?.Invoke(i, null);
+                }
+            }
+        }
+
+        _slots[targetSlotIndex] = portion;
+        OnQuickSlotChanged?.Invoke(targetSlotIndex, portion);
+    }
+
     public bool TryUseSlot(int slotIndex, PlayerController player)
     {
         if (slotIndex < 0 || slotIndex >= MaxQuickSlots || player == null) return false;
+        if (IsOnGlobalCooldown) return false;
 
         ConsumableItem targetItem = _slots[slotIndex];
         if (targetItem == null || targetItem.CurrentAmount <= 0) return false;
-        if (UnityEngine.Time.time < _nextAvailableUseTime) return false;
 
         bool success = targetItem.Use(player);
         if (success)
         {
-            _nextAvailableUseTime = UnityEngine.Time.time + targetItem.ItemData.Cooldown;
+            float cd = Mathf.Max(0.1f, targetItem.ItemData.Cooldown);
+            _cooldownStartTime = Time.time;
+            _cooldownEndTime = Time.time + cd;
+
             OnQuickSlotChanged?.Invoke(slotIndex, targetItem);
 
-            // 수량 소진 시 퀵슬롯 비우기 및 인벤토리 가방 슬롯 연계 소거
             if (targetItem.CurrentAmount <= 0)
             {
                 _slots[slotIndex] = null;

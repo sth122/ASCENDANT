@@ -1,24 +1,24 @@
 ﻿/// <summary>
 /// Player HUD의 MVP 프리젠터 클래스
-/// EventBus의 체력, 스태미나, 강인도 이벤트를 수신하여 View를 동기화합니다.
+/// EventBus의 체력, 스태미나, 강인도, 상호작용 프롬프트 이벤트를 수신하여 View를 동기화합니다.
 /// </summary>
 public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
 {
     private PlayerController _cachedPlayer;
+
     protected override void OnBind()
     {
         ResolvePlayerReference();
 
-        // EventSystem 이벤트 명시적 메서드 구독
         EventBusSystem.Subscribe<UnitHpChangedEvent>(HandleHpChanged);
         EventBusSystem.Subscribe<PlayerStaminaChangedEvent>(HandleStaminaChanged);
         EventBusSystem.Subscribe<UnitPoiseChangedEvent>(HandlePoiseChanged);
         EventBusSystem.Subscribe<PlayerMaxStatsCalculatedEvent>(HandleMaxStatsCalculated);
         EventBusSystem.Subscribe<InteractionPromptEvent>(HandleInteractionPrompt);
         EventBusSystem.Subscribe<GameSceneReadyEvent>(HandleGameSceneReady);
-        SynchronizeInitialStats();
 
-        DebugLogger.LogWithTag("PlayerHUDPresetner", "[Presenter 바인딩 및 이벤트 구독 완료]");
+        SynchronizeInitialStats();
+        DebugLogger.LogWithTag("PlayerHUDPresenter", "[Presenter 바인딩 및 이벤트 구독 완료]");
     }
 
     protected override void OnUnbind()
@@ -31,7 +31,7 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
         EventBusSystem.Unsubscribe<GameSceneReadyEvent>(HandleGameSceneReady);
 
         _cachedPlayer = null;
-        DebugLogger.LogWithTag("PlayerHUDPresetner", "[Presenter 해제 및 이벤트 구독 취소]");
+        DebugLogger.LogWithTag("PlayerHUDPresenter", "[Presenter 해제 및 이벤트 구독 취소]");
     }
 
     private void ResolvePlayerReference()
@@ -42,7 +42,7 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
         }
     }
 
-    #region Handle
+    #region Event Handlers
     private void HandleGameSceneReady(GameSceneReadyEvent eventData)
     {
         ResolvePlayerReference();
@@ -53,7 +53,6 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
     {
         if (View == null) return;
 
-        // 플레이어 본체 체력 변동일 때만 반영
         if (eventData.TargetUnit != null && eventData.TargetUnit.CompareTag("Player"))
         {
             if (Model != null)
@@ -74,22 +73,27 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
             Model.CurrentStamina = eventData.CurrentStamina;
             Model.MaxStamina = eventData.MaxStamina;
         }
-
         View.UpdateStamina(eventData.CurrentStamina, eventData.MaxStamina);
     }
 
     private void HandleMaxStatsCalculated(PlayerMaxStatsCalculatedEvent eventData)
     {
         if (View == null) return;
+
+        if (Model != null)
+        {
+            Model.MaxHp = eventData.MaxHp;
+            Model.MaxStamina = eventData.MaxStamina;
+            Model.MaxPoise = eventData.MaxPoise;
+        }
         View.SetBarWidths(eventData.MaxHp, eventData.MaxStamina, eventData.MaxPoise);
     }
 
     private void HandlePoiseChanged(UnitPoiseChangedEvent eventData)
     {
-        if (View == null) return;
+        if (View == null || eventData.TargetUnit == null) return;
 
-        // 플레이어 본체 강인도 변동일 때만 반영
-        if (eventData.TargetUnit.GetComponent<PlayerController>() != null)
+        if (eventData.TargetUnit.TryGetComponent<PlayerController>(out _))
         {
             if (Model != null)
             {
@@ -99,6 +103,7 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
             View.UpdatePoise(eventData.CurrentPoise, eventData.MaxPoise);
         }
     }
+
     private void HandleInteractionPrompt(InteractionPromptEvent eventData)
     {
         if (View != null)
@@ -106,7 +111,6 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
             View.SetInteractionPrompt(eventData.Show, eventData.PromptText);
         }
     }
-
     #endregion
 
     private void SynchronizeInitialStats()
@@ -139,10 +143,7 @@ public class PlayerHUDPresenter : UIPresenterBase<PlayerHUDView, PlayerHUDModel>
             Model.MaxPoise = maxPoise;
         }
 
-        // 1. 최대 스탯 기반 가로폭 1회 설정
         View.SetBarWidths(maxHp, maxStamina, maxPoise);
-
-        // 2. 현재 게이지 비율 동기화
         View.UpdateHp(curHp, maxHp);
         View.UpdateStamina(curStamina, maxStamina);
         View.UpdatePoise(curPoise, maxPoise);

@@ -3,6 +3,7 @@
 public class BonfirePresenter : UIPresenterBase<BonfireWindowView, BonfireModel>
 {
     private PlayerController _player;
+    private bool _isConfirming = false;
 
     protected override void OnBind()
     {
@@ -11,14 +12,20 @@ public class BonfirePresenter : UIPresenterBase<BonfireWindowView, BonfireModel>
             _player = provider.Player;
         }
 
+        if (_player != null)
+        {
+            Model.CaptureFromPlayer(_player);
+            View.RefreshDisplay(Model);
+        }
+
         OnBindHandler();
-        ResetVirtualStats();
     }
 
     protected override void OnUnbind()
     {
         OnUnbindHandler();
         _player = null;
+        Model?.Reset();
     }
 
     protected override void OnBindHandler()
@@ -26,150 +33,104 @@ public class BonfirePresenter : UIPresenterBase<BonfireWindowView, BonfireModel>
         OnUnbindHandler();
         if (View == null) return;
 
-        View.RestButton?.onClick.AddListener(HandleRestClicked);
-        View.LevelUpMenuButton?.onClick.AddListener(HandleLevelUpMenuClicked);
-        View.LeaveButton?.onClick.AddListener(HandleLeaveClicked);
+        View.VigorPlusBtn?.onClick.AddListener(HandleVigorPlus);
+        View.VigorMinusBtn?.onClick.AddListener(HandleVigorMinus);
+        View.EndurancePlusBtn?.onClick.AddListener(HandleEndurancePlus);
+        View.EnduranceMinusBtn?.onClick.AddListener(HandleEnduranceMinus);
+        View.StrengthPlusBtn?.onClick.AddListener(HandleStrengthPlus);
+        View.StrengthMinusBtn?.onClick.AddListener(HandleStrengthMinus);
+        View.DexterityPlusBtn?.onClick.AddListener(HandleDexterityPlus);
+        View.DexterityMinusBtn?.onClick.AddListener(HandleDexterityMinus);
 
-        View.VigPlusBtn?.onClick.AddListener(() => TryAllocateStat(ref Model.AddVig));
-        View.EndPlusBtn?.onClick.AddListener(() => TryAllocateStat(ref Model.AddEnd));
-        View.StrPlusBtn?.onClick.AddListener(() => TryAllocateStat(ref Model.AddStr));
-        View.DexPlusBtn?.onClick.AddListener(() => TryAllocateStat(ref Model.AddDex));
-
-        View.ConfirmLevelUpBtn?.onClick.AddListener(HandleConfirmLevelUp);
+        View.ConfirmLevelUpBtn?.onClick.AddListener(HandleConfirmLevelUpClicked);
+        View.CloseLevelUpPanelBtn?.onClick.AddListener(HandleCloseClicked);
     }
 
     protected override void OnUnbindHandler()
     {
         if (View == null) return;
-        View.RestButton?.onClick.RemoveAllListeners();
-        View.LevelUpMenuButton?.onClick.RemoveAllListeners();
-        View.LeaveButton?.onClick.RemoveAllListeners();
-        View.VigPlusBtn?.onClick.RemoveAllListeners();
-        View.EndPlusBtn?.onClick.RemoveAllListeners();
-        View.StrPlusBtn?.onClick.RemoveAllListeners();
-        View.DexPlusBtn?.onClick.RemoveAllListeners();
-        View.ConfirmLevelUpBtn?.onClick.RemoveAllListeners();
+
+        View.VigorPlusBtn?.onClick.RemoveListener(HandleVigorPlus);
+        View.VigorMinusBtn?.onClick.RemoveListener(HandleVigorMinus);
+        View.EndurancePlusBtn?.onClick.RemoveListener(HandleEndurancePlus);
+        View.EnduranceMinusBtn?.onClick.RemoveListener(HandleEnduranceMinus);
+        View.StrengthPlusBtn?.onClick.RemoveListener(HandleStrengthPlus);
+        View.StrengthMinusBtn?.onClick.RemoveListener(HandleStrengthMinus);
+        View.DexterityPlusBtn?.onClick.RemoveListener(HandleDexterityPlus);
+        View.DexterityMinusBtn?.onClick.RemoveListener(HandleDexterityMinus);
+
+        View.ConfirmLevelUpBtn?.onClick.RemoveListener(HandleConfirmLevelUpClicked);
+        View.CloseLevelUpPanelBtn?.onClick.RemoveListener(HandleCloseClicked);
     }
 
-    private void HandleRestClicked()
+    private void RecalculateAndRefresh()
     {
-        if (_player == null) return;
+        Model.RecalculatePreviewStats(_player);
+        View.RefreshDisplay(Model);
+    }
 
-        // 1. 플레이어 HP / 스태미나 완충
-        _player.StatusController.HealHp(_player.StatusController.MaxHp);
-        _player.StatusController.RestoreStamina(_player.StatusController.MaxStamina);
+    private void HandleVigorPlus() { if (Model.CanAffordNextPoint()) { Model.PendingVigor++; RecalculateAndRefresh(); } }
+    private void HandleVigorMinus() { if (Model.PendingVigor > 0) { Model.PendingVigor--; RecalculateAndRefresh(); } }
+    private void HandleEndurancePlus() { if (Model.CanAffordNextPoint()) { Model.PendingEndurance++; RecalculateAndRefresh(); } }
+    private void HandleEnduranceMinus() { if (Model.PendingEndurance > 0) { Model.PendingEndurance--; RecalculateAndRefresh(); } }
+    private void HandleStrengthPlus() { if (Model.CanAffordNextPoint()) { Model.PendingStrength++; RecalculateAndRefresh(); } }
+    private void HandleStrengthMinus() { if (Model.PendingStrength > 0) { Model.PendingStrength--; RecalculateAndRefresh(); } }
+    private void HandleDexterityPlus() { if (Model.CanAffordNextPoint()) { Model.PendingDexterity++; RecalculateAndRefresh(); } }
+    private void HandleDexterityMinus() { if (Model.PendingDexterity > 0) { Model.PendingDexterity--; RecalculateAndRefresh(); } }
 
-        // 2. 화톳불 위치 및 인벤토리 원자적 세이브
-        if (SaveManager.Instance != null)
+    private void HandleConfirmLevelUpClicked()
+    {
+        if (_isConfirming || _player == null || Model.TotalPendingPoints <= 0) return;
+        ExecuteConfirmLevelUpFlowAsync().Forget();
+    }
+
+    private async UniTaskVoid ExecuteConfirmLevelUpFlowAsync()
+    {
+        _isConfirming = true;
+        try
         {
-            SaveManager.Instance.UpdateCheckpoint(_player.transform.position, _player.transform.eulerAngles.y,
-                SceneLoadManager.Instance.CurrentScene, _player);
+            int totalCost = Model.CalculateTotalSoulCost();
+            if (UIManager.Instance == null) return;
+
+            ConfirmPopupView popup = await UIManager.Instance.OpenUIAsync<ConfirmPopupView, ConfirmPopupPresenter, ConfirmPopupModel>(
+                UIId.ConfirmPopup);
+            if (popup == null) return;
+
+            popup.SetMessage($"{totalCost:N0} 소울로 레벨업 합니까?");
+            bool isConfirmed = await popup.WaitForResultAsync();
+            if (!isConfirmed) return;
+
+            PlayerStatusController status = _player.StatusController;
+            PlayerInfo info = status.PlayerInfoSource;
+            if (info == null || !status.TryConsumeSouls(totalCost)) return;
+
+            info.ApplyAttributeUpgrades(Model.PendingVigor, Model.PendingEndurance, Model.PendingStrength, Model.PendingDexterity);
+            status.SyncRuntimeStats(info);
+            status.HealHp(status.MaxHp);
+            status.RestoreStamina(status.MaxStamina);
+
+            if (_player.TryGetComponent(out PlayerInventoryHandler invHandler) && invHandler.InventoryInstance != null)
+            {
+                invHandler.InventoryInstance.RecalculateEquipStats(_player);
+            }
+
+            if (SaveManager.Instance != null)
+            {
+                BonfireId bonfireId = SaveManager.Instance.CurrentSaveData != null ? SaveManager.Instance.CurrentSaveData.LastBonfireId : BonfireId.None;
+                SceneId sceneId = SceneLoadManager.Instance != null ? SceneLoadManager.Instance.CurrentScene : SceneId.GameScene;
+                SaveManager.Instance.UpdateCheckpoint(bonfireId, _player.transform.position, _player.transform.eulerAngles.y, sceneId, _player);
+            }
+
+            SoundManager.Instance?.PlaySFX(SoundId.UI_Confirm);
+
+            Model.CaptureFromPlayer(_player);
+            View.RefreshDisplay(Model);
         }
-
-        // 3. 월드 에너미 리셋 전역 신호 발행
-        EventBusSystem.Publish(new BonfireRestedEvent(_player.transform.position));
-        DebugLogger.LogWithTag("Bonfire", "[화톳불 휴식 완료: HP 회복 및 월드 몬스터 리셋]");
-    }
-
-    private void HandleLevelUpMenuClicked()
-    {
-        if (View == null) return;
-        bool isOpen = !View.LevelUpPanel.activeSelf;
-        View.LevelUpPanel.SetActive(isOpen);
-        if (isOpen) ResetVirtualStats();
-    }
-
-    private void ResetVirtualStats()
-    {
-        if (_player == null || Model == null) return;
-
-        PlayerInfo info = _player.StatusController.PlayerInfoSource;
-        Model.BaseLevel = info.SoulLevel;
-        Model.TargetLevel = info.SoulLevel;
-        Model.CurrentSouls = info.CurrentSouls;
-        Model.Reset();
-
-        RefreshView();
-    }
-
-    private int CalculateRequiredSouls(int level)
-    {
-        // 다크소울 표준 소울 레벨업 수식
-        return UnityEngine.Mathf.RoundToInt(0.02f * UnityEngine.Mathf.Pow(level, 3) + 3.06f * UnityEngine.Mathf.Pow(level, 2) + 105.6f * level - 52);
-    }
-
-    private void TryAllocateStat(ref int targetAddStat)
-    {
-        int nextReq = CalculateRequiredSouls(Model.TargetLevel);
-        if (Model.CurrentSouls >= Model.RequiredSouls + nextReq)
+        finally
         {
-            Model.RequiredSouls += nextReq;
-            Model.TargetLevel++;
-            targetAddStat++;
-            RefreshView();
+            _isConfirming = false;
         }
     }
 
-    private void RefreshView()
-    {
-        if (View == null || _player == null) return;
-        PlayerInfo info = _player.StatusController.PlayerInfoSource;
-
-        if (View.CurrentSoulText != null) View.CurrentSoulText.text = Model.CurrentSouls.ToString("N0");
-        if (View.RequiredSoulText != null) View.RequiredSoulText.text = Model.RequiredSouls.ToString("N0");
-        if (View.TargetLevelText != null) View.TargetLevelText.text = $"Level: {Model.BaseLevel} -> {Model.TargetLevel}";
-
-        if (View.VigValText != null) View.VigValText.text = $"{info.Vigor} (+{Model.AddVig})";
-        if (View.EndValText != null) View.EndValText.text = $"{info.Endurance} (+{Model.AddEnd})";
-        if (View.StrValText != null) View.StrValText.text = $"{info.Strength} (+{Model.AddStr})";
-        if (View.DexValText != null) View.DexValText.text = $"{info.Dexterity} (+{Model.AddDex})";
-    }
-
-    private void HandleConfirmLevelUp()
-    {
-        if (_player == null || Model.TargetLevel <= Model.BaseLevel) return;
-
-        PlayerInfo info = _player.StatusController.PlayerInfoSource;
-
-        // 소울 차감 및 베이스 스탯 영구 증강 커밋
-        info.ConsumeSouls(Model.RequiredSouls);
-
-        var upgradedStat = (PlayerInfo)info.Clone();
-        // 리플렉션 없이 세이브 데이터 포맷 활용 커밋
-        PlayerSaveData upgradeData = new PlayerSaveData(upgradedStat, _player.StatusController.CurrentHp)
-        {
-            SoulLevel = Model.TargetLevel,
-            CurrentSouls = info.CurrentSouls,
-            Vigor = info.Vigor + Model.AddVig,
-            Endurance = info.Endurance + Model.AddEnd,
-            Strength = info.Strength + Model.AddStr,
-            Dexterity = info.Dexterity + Model.AddDex
-        };
-        upgradedStat.ApplySaveData(upgradeData);
-
-        // 런타임 스탯 컨트롤러 동기화 및 HP 완충
-        _player.StatusController.SyncRuntimeStats(upgradedStat);
-        _player.StatusController.HealHp(_player.StatusController.MaxHp);
-
-        // 장비 스탯 재계산
-        if (_player.TryGetComponent(out PlayerInventoryHandler handler))
-        {
-            handler.InventoryInstance.RecalculateEquipStats(_player);
-        }
-
-        // 즉각 영속 저장
-        if (SaveManager.Instance != null)
-        {
-            SaveManager.Instance.UpdateCheckpoint(_player.transform.position, _player.transform.eulerAngles.y,
-                SceneLoadManager.Instance.CurrentScene, _player);
-        }
-
-        ResetVirtualStats();
-        DebugLogger.LogWithTag("Bonfire", $"[레벨업 완료] 달성 레벨: {Model.BaseLevel}");
-    }
-
-    private void HandleLeaveClicked()
-    {
-        View?.CloseWindowAsync().Forget();
-    }
+    private void HandleCloseClicked() => View?.CloseWindowAsync().Forget();
 }

@@ -1,4 +1,5 @@
-﻿public class QuickSlotPresenter : UIPresenterBase<QuickSlotView, QuickSlotModel>
+﻿// QuickSlotPresenter.cs 전체 교체
+public class QuickSlotPresenter : UIPresenterBase<QuickSlotView, QuickSlotModel>
 {
     private QuickSlotSystem _system;
 
@@ -7,11 +8,20 @@
         ResolveQuickSlotSystem();
         OnBindHandler();
         SynchronizeFullModel();
+
+        if (View != null)
+        {
+            View.BindSystem(_system);
+        }
     }
 
     protected override void OnUnbind()
     {
         OnUnbindHandler();
+        if (View != null)
+        {
+            View.BindSystem(null);
+        }
         _system = null;
     }
 
@@ -19,7 +29,7 @@
     {
         if (ServiceLocator.TryGet<IPlayerProvider>(out var provider) && provider.IsPlayerSpawned)
         {
-            if (provider.Player.TryGetComponent(out PlayerInventoryHandler handler))
+            if (provider.Player.TryGetComponent(out PlayerInventoryHandler handler) && handler.InventoryInstance != null)
             {
                 _system = handler.InventoryInstance.QuickSlots;
             }
@@ -28,10 +38,10 @@
 
     protected override void OnBindHandler()
     {
+        OnUnbindHandler();
         if (_system != null)
         {
             _system.OnQuickSlotChanged += HandleQuickSlotChanged;
-            _system.OnSelectedSlotChanged += HandleSelectedSlotChanged;
         }
     }
 
@@ -40,7 +50,6 @@
         if (_system != null)
         {
             _system.OnQuickSlotChanged -= HandleQuickSlotChanged;
-            _system.OnSelectedSlotChanged -= HandleSelectedSlotChanged;
         }
     }
 
@@ -64,19 +73,14 @@
         View.RefreshSlots(Model);
     }
 
-    private void HandleSelectedSlotChanged(int selectedIndex)
-    {
-        if (Model == null || View == null) return;
-
-        Model.SelectedIndex = selectedIndex;
-        View.RefreshSlots(Model);
-    }
-
     private void SynchronizeFullModel()
     {
         if (_system == null || Model == null || View == null) return;
 
-        Model.SelectedIndex = _system.SelectedSlotIndex;
-        View.RefreshSlots(Model);
+        for (int i = 0; i < QuickSlotSystem.MaxQuickSlots; i++)
+        {
+            ConsumableItem item = _system.GetItem(i) as ConsumableItem;
+            HandleQuickSlotChanged(i, item);
+        }
     }
 }

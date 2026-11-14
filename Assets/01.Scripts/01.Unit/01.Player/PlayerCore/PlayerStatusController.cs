@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using static UnityEditor.Experimental.GraphView.GraphView;
 using Util = DebugLogger<PlayerStatusController>;
 
 /// <summary>
@@ -19,6 +20,7 @@ public class PlayerStatusController : UnitStatusController
     public float StaminaRegenMultiplier { get; set; } = 1.0f;
     public float CurrentStamina => _currentStamina;
     public float MaxStamina => _maxStamina;
+    public int CurrentSouls => PlayerInfoSource != null ? PlayerInfoSource.CurrentSouls : 0;
     #endregion
 
     #region Player 장비 연동 스탯
@@ -48,6 +50,22 @@ public class PlayerStatusController : UnitStatusController
     public PlayerMotionStatusModule PlayerMotionStats => MotionStatus as PlayerMotionStatusModule;
     public PlayerInfo PlayerInfoSource { get; private set; }
     public event System.Action<float, float> OnStaminaChangedEvent;
+
+    private void Update()
+    {
+#if UNITY_EDITOR
+        if (UnityEngine.InputSystem.Keyboard.current.f1Key.wasPressedThisFrame)
+        {
+            // 테스트용 소울 50,000 지급
+            AddSouls(50000);
+        }
+        if (UnityEngine.InputSystem.Keyboard.current.f2Key.wasPressedThisFrame)
+        {
+            // 화톳불 레벨업 창 즉시 오픈
+            UIManager.Instance.OpenUIAsync<BonfireWindowView, BonfirePresenter, BonfireModel>(UIId.BonfireUI).Forget();
+        }
+#endif
+    }
 
     /// <summary>
     /// Player 전용 스탯 및 모듈 확장부
@@ -251,5 +269,20 @@ public class PlayerStatusController : UnitStatusController
     {
         OnStaminaChangedEvent?.Invoke(current, max);
         EventBusSystem.Publish(new PlayerStaminaChangedEvent(current, max));
+    }
+
+    public void AddSouls(int amount)
+    {
+        if (PlayerInfoSource == null || amount <= 0) return;
+        PlayerInfoSource.AddSouls(amount);
+        EventBusSystem.Publish(new SoulChangedEvent(PlayerInfoSource.CurrentSouls, amount));
+    }
+
+    public bool TryConsumeSouls(int amount)
+    {
+        if (PlayerInfoSource == null || amount <= 0 || PlayerInfoSource.CurrentSouls < amount) return false;
+        PlayerInfoSource.ConsumeSouls(amount);
+        EventBusSystem.Publish(new SoulChangedEvent(PlayerInfoSource.CurrentSouls, -amount));
+        return true;
     }
 }

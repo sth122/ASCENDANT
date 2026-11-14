@@ -25,19 +25,33 @@ public class PlayerCombatModule : UnitBaseModule
     /// </summary>
     public void OpenWeaponHitbox(int comboStep)
     {
-        if (_weaponHitbox == null || _currentWeaponData == null) return;
+        if (_weaponHitbox == null) return;
+
+        // _currentWeaponData가 아직 바인딩되지 않았다면 인벤토리 장착 무기에서 즉시 지연 조회
+        if (_currentWeaponData == null && _owner != null && _owner.TryGetComponent(out PlayerInventoryHandler invHandler) &&
+            invHandler.InventoryInstance != null)
+        {
+            WeaponItem equippedWeapon = invHandler.InventoryInstance.GetEquippedItem(EquipSlotType.MainWeapon) as WeaponItem;
+            if (equippedWeapon != null)
+            {
+                _currentWeaponData = equippedWeapon.WeaponData;
+            }
+        }
 
         // 1. 단일 물리 베이스 공격력 연산 (STR / DEX 보정치 결합)
         float totalAR = CalculateCurrentAR();
 
         // 2. 모션값(MV) 적용
-        float mv = _currentWeaponData.GetMotionValue(comboStep);
+        float mv = _currentWeaponData != null ? _currentWeaponData.GetMotionValue(comboStep) : 100f;
+        float basePoise = _currentWeaponData != null ? _currentWeaponData.BasePoiseDamage : 35f;
+
         float effectiveAR = totalAR * (mv / 100.0f);
-        float effectivePoiseDamage = _currentWeaponData.BasePoiseDamage * (mv / 100.0f);
+        float effectivePoiseDamage = basePoise * (mv / 100.0f);
 
         // 3. 히트박스 개방 (타격 판정에 AR_eff 주입)
-        _weaponHitbox.OpenHitBox(_owner.gameObject, effectiveAR, effectivePoiseDamage, isParryable: true,
-            impactType: AttackImpactType.Light, knockbackForce: 0f);
+        _weaponHitbox.OpenHitBox(
+        _owner.gameObject, effectiveAR,
+        effectivePoiseDamage, isParryable: true, impactType: AttackImpactType.Light, knockbackForce: 0f);
     }
 
     public void CloseWeaponHitbox() => _weaponHitbox?.CloseHitBox();
@@ -60,16 +74,38 @@ public class PlayerCombatModule : UnitBaseModule
 
     public float CalculateCurrentAR()
     {
-        if (_currentWeaponData == null) return 0f;
-
         PlayerInfo info = _owner.StatusController != null ? _owner.StatusController.PlayerInfoSource : null;
-        int str = (info != null ? info.Strength : 10) + _owner.StatusController.EquippedBonusStrength;
-        int dex = (info != null ? info.Dexterity : 10) + _owner.StatusController.EquippedBonusDexterity;
+        int str = (info != null ? info.Strength : 10) + (_owner.StatusController != null ? _owner.StatusController.EquippedBonusStrength : 0);
+        int dex = (info != null ? info.Dexterity : 10) + (_owner.StatusController != null ? _owner.StatusController.EquippedBonusDexterity : 0);
+        float bonusAtk = _owner.StatusController != null ? _owner.StatusController.EquippedBonusAttackPower : 0f;
+
+        if (_currentWeaponData == null)
+        {
+            return 100f + bonusAtk;
+        }
 
         float baseDmg = _currentWeaponData.BaseDamage;
         float strBonus = baseDmg * _currentWeaponData.StrScaling * (str / 40.0f);
         float dexBonus = baseDmg * _currentWeaponData.DexScaling * (dex / 40.0f);
 
-        return baseDmg + strBonus + dexBonus + _owner.StatusController.EquippedBonusAttackPower;
+        return baseDmg + strBonus + dexBonus + bonusAtk;
+    }
+
+    /// <summary>
+    /// 화톳불 레벨업 UI에서 근력/기량 투자 시 예상되는 물리 공격력(AR)을 사전 산출
+    /// </summary>
+    public float CalculatePreviewAR(int previewBaseStrength, int previewBaseDexterity)
+    {
+        if (_currentWeaponData == null) return 0f;
+
+        int str = previewBaseStrength + (_owner.StatusController != null ? _owner.StatusController.EquippedBonusStrength : 0);
+        int dex = previewBaseDexterity + (_owner.StatusController != null ? _owner.StatusController.EquippedBonusDexterity : 0);
+
+        float baseDmg = _currentWeaponData.BaseDamage;
+        float strBonus = baseDmg * _currentWeaponData.StrScaling * (str / 40.0f);
+        float dexBonus = baseDmg * _currentWeaponData.DexScaling * (dex / 40.0f);
+        float bonusAtk = _owner.StatusController != null ? _owner.StatusController.EquippedBonusAttackPower : 0f;
+
+        return baseDmg + strBonus + dexBonus + bonusAtk;
     }
 }

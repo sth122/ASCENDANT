@@ -7,7 +7,6 @@ public struct ActionTimelineStep
     [UnityEngine.Header("모션 설정")]
     public AnimStateType StateType;
     public float SpeedMultiplier;
-    public float ClipDurationOverride;
     public bool FaceTargetOnEnter;
 
     [UnityEngine.Header("루트 모션 및 물리 이동")]
@@ -30,15 +29,17 @@ public struct ActionTimelineStep
     public bool HasCustomEvent;
     [UnityEngine.Range(0f, 1f)] public float EventTriggerNormalized;
 
-    public static ActionTimelineStep CreateSingleAttack(AnimStateType state, HitboxSlot slot, float startNorm, float endNorm, float durationOverride = 2.4f)
+    [UnityEngine.Header("VFX / SFX 타임라인 연출 큐")]
+    public TimelineCueEvent[] CueEvents;
+
+    public static ActionTimelineStep CreateSingleAttack(AnimStateType state, HitboxSlot slot, float startNorm, float endNorm)
     {
         return new ActionTimelineStep
         {
             StateType = state,
             SpeedMultiplier = 1.0f,
-            ClipDurationOverride = durationOverride,
             FaceTargetOnEnter = true,
-            UseRootMotion = false, // 인플레이스 공격이므로 false
+            UseRootMotion = false,
             IsAirborne = false,
             EnablePhysicalDash = false,
             DashSpeed = 0f,
@@ -49,7 +50,25 @@ public struct ActionTimelineStep
             HitboxStartNormalized = startNorm,
             HitboxEndNormalized = endNorm,
             HasCustomEvent = false,
-            EventTriggerNormalized = 0f
+            EventTriggerNormalized = 0f,
+            CueEvents = null
         };
     }
+}
+
+[System.Serializable]
+public struct TimelineCueEvent
+{
+    [UnityEngine.Range(0f, 1f)] public float TriggerNormalized;
+
+    [UnityEngine.Header("VFX 연출")]
+    public PoolType VfxType;
+    public HitboxSlot SpawnSocket;
+    public UnityEngine.Vector3 LocalOffset;
+    public bool AttachToSocket;
+    public bool DespawnOnStepExit;
+
+    [UnityEngine.Header("SFX 연출")]
+    public SoundId SfxId;
+    [UnityEngine.Range(0.1f, 2f)] public float VolumeMultiplier;
 }

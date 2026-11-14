@@ -85,16 +85,4 @@ public class InventoryView : UIWindowView
             if (_quickAssignSlots[i] != null) _quickAssignSlots[i].InitializeQuickAssignSlot(i);
         }
     }
-
-    public override async UniTask ShowAsync(float duration = 0.15f, System.Threading.CancellationToken ct = default)
-    {
-        InputSystemHandler.SetMode(InputMode.PausedUI); // TimeScale = 0f 및 마우스 커서 표시
-        await base.ShowAsync(duration, ct);
-    }
-
-    public override async UniTask CloseWindowAsync(float duration = 0.15f)
-    {
-        await base.CloseWindowAsync();
-        InputSystemHandler.SetMode(InputMode.Gameplay); // TimeScale = 1 및 인게임 커서 잠금 복구
-    }
 }

@@ -155,7 +155,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         EnemyInfo runtimeStatus = null;
         if (overrideStat != null) runtimeStatus = overrideStat;
-        else if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<EnemyStatusSO>(out var statusSO))
+        else if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<EnemyInfoSO>(out var statusSO))
         {
             if (statusSO.TryGetData(_unitId, out EnemyInfo baseStatus))
             {

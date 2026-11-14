@@ -88,6 +88,24 @@ public class CameraManager : MonoSingleton<CameraManager>
     }
 
     /// <summary>
+    /// UI 오픈 시 마우스 카메라 회전을 원천 차단
+    /// </summary>
+    public void SetCameraInputEnabled(bool isEnabled)
+    {
+        SetInputAxisEnabled(_freeLookCamera, isEnabled);
+        SetInputAxisEnabled(_lockOnCamera, isEnabled);
+    }
+
+    private void SetInputAxisEnabled(CinemachineCamera cam, bool isEnabled)
+    {
+        if (cam == null) return;
+        if (cam.TryGetComponent(out CinemachineInputAxisController axisController))
+        {
+            axisController.enabled = isEnabled;
+        }
+    }
+
+    /// <summary>
     /// 적 타겟팅(Lock-On) 모드 활성화
     /// </summary>
     public void EnableLockOn(Transform targetEnemy)

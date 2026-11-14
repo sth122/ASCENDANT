@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PortionItemData
   _id: 4002
   _itemName: Item_FireBomb
-  _icon: {fileID: 21300000, guid: 5a5abc798b2c73e40b0ceef9f091aa4c, type: 3}
+  _icon: {fileID: -207422494, guid: b126439b7bdbef04ba32e1fdb7c59b9c, type: 3}
   _description: ggg
   _weight: 0
   _category: 4

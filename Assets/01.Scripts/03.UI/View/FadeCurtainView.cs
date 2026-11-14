@@ -49,4 +49,10 @@ public class FadeCurtainView : UIBase
 
         gameObject.SetActive(false);
     }
+
+    public override UniTask ShowAsync(float duration = 0.1f, System.Threading.CancellationToken ct = default)
+    {
+        gameObject.SetActive(true);
+        return UniTask.CompletedTask;
+    }
 }

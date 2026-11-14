@@ -55,8 +55,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83b5f8aaea4b11e499edbf100a5c417f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuickSlotView
-  <Identifier>k__BackingField: 0
-  <Layer>k__BackingField: 0
+  <Identifier>k__BackingField: 2004
+  <Layer>k__BackingField: 100
   <IsGlobalUI>k__BackingField: 0
   _slotUIs:
   - {fileID: 1624539519856582629}

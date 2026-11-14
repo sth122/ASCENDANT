@@ -6,11 +6,15 @@ public class SaveData
 {
     [UnityEngine.Header("Save Metadata")]
     public int SaveSlotIndex = 0;
+    public bool IsCharacterCreated = false;
+    public string CharacterName = "잿빛 기사";
+    public int PortraitIndex = 0;
     public string SaveTimestamp = string.Empty;
     public float TotalPlayTime = 0f;
 
     [UnityEngine.Header("Checkpoint Information")]
     public SceneId LastSavedScene = SceneId.GameScene;
+    public BonfireId LastBonfireId = BonfireId.None;
     public bool HasCheckpoint = false;
     public SerializableVector3 LastBonfirePosition;
     public float LastBonfireRotationY;
@@ -22,6 +26,7 @@ public class SaveData
     {
         SaveTimestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         LastSavedScene = SceneId.GameScene;
+        LastBonfireId = BonfireId.None;
         HasCheckpoint = false;
         LastBonfirePosition = new SerializableVector3(0f, 0f, 0f);
         LastBonfireRotationY = 0f;

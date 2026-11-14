@@ -1,188 +1,254 @@
-﻿using Cysharp.Threading.Tasks;
-using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
 /// <summary>
-/// Player HUD 시각 뷰 컴포넌트
-/// HP 및 스태미나의 즉각 소모와 잔상(Ghost) 감쇄 애니메이션을 처리하며,
-/// 강인도(Poise) 수치를 모니터링합니다.
+/// 인게임 플레이어 상태(HP, 스태미나, 강인도 메인/고스트 게이지 및 프레임 길이)와
+/// 하단 상호작용 프롬프트(단일 안내 + 다중 선택지)를 통합 관리하는 HUD 뷰
 /// </summary>
 public class PlayerHUDView : UIBase
 {
-    [UnityEngine.Header("Slider Components")]
-    [UnityEngine.SerializeField] private UnityEngine.UI.Slider _hpSlider;
-    [UnityEngine.SerializeField] private UnityEngine.UI.Slider _hpGhostSlider;
-    [UnityEngine.SerializeField] private UnityEngine.UI.Slider _staminaSlider;
-    [UnityEngine.SerializeField] private UnityEngine.UI.Slider _staminaGhostSlider;
-    [UnityEngine.SerializeField] private UnityEngine.UI.Slider _poiseSlider;
+    [Header("Vital Gauges - Main Sliders (HP / Stamina / Poise)")]
+    [SerializeField] private Slider _hpSlider;
+    [SerializeField] private RectTransform _hpFrameRect;
+    [SerializeField] private Slider _staminaSlider;
+    [SerializeField] private RectTransform _staminaFrameRect;
+    [SerializeField] private Slider _poiseSlider;
+    [SerializeField] private RectTransform _poiseFrameRect;
 
-    [UnityEngine.Header("Bar Root Transforms (가변 길이 대상)")]
-    [UnityEngine.SerializeField] private UnityEngine.RectTransform _hpBarRect;
-    [UnityEngine.SerializeField] private UnityEngine.RectTransform _staminaBarRect;
-    [UnityEngine.SerializeField] private UnityEngine.RectTransform _poiseBarRect;
+    [Header("Vital Gauges - Ghost Sliders (Delayed Trail)")]
+    [SerializeField] private Slider _hpGhostSlider;
+    [SerializeField] private Slider _staminaGhostSlider;
+    [SerializeField] private Slider _poiseGhostSlider;
 
-    [UnityEngine.Header("다크소울 스타일 길이 스케일링 설정")]
-    [UnityEngine.SerializeField] private float _hpBaseWidth = 160f;
-    [UnityEngine.SerializeField] private float _hpWidthPerPoint = 0.4f;
+    [Header("Ghost Slider Animation Settings")]
+    [Tooltip("게이지 감소 후 고스트 잔상이 줄어들기 시작할 때까지의 대기 시간(초)")]
+    [SerializeField] private float _ghostDelayDuration = 0.45f;
+    [Tooltip("고스트 잔상이 메인 게이지를 따라 감소하는 초당 비율 속도")]
+    [SerializeField] private float _ghostDecaySpeed = 0.85f;
 
-    [UnityEngine.SerializeField] private float _staminaBaseWidth = 120f;
-    [UnityEngine.SerializeField] private float _staminaWidthPerPoint = 2.0f;
+    [Header("Dynamic Gauge Width Settings (Dark Souls Ratio)")]
+    [SerializeField] private float _hpWidthPerPoint = 0.65f;
+    [SerializeField] private float _hpMinWidth = 160f;
+    [SerializeField] private float _hpMaxWidth = 760f;
 
-    [UnityEngine.SerializeField] private float _poiseBaseWidth = 135f;
-    [UnityEngine.SerializeField] private float _poiseWidthPerPoint = 4.0f;
+    [SerializeField] private float _staminaWidthPerPoint = 2.45f;
+    [SerializeField] private float _staminaMinWidth = 120f;
+    [SerializeField] private float _staminaMaxWidth = 460f;
 
-    [UnityEngine.Header("Ghost Slider Timings")]
-    [UnityEngine.SerializeField] private float _ghostDelayDuration = 0.45f;
-    [UnityEngine.SerializeField] private float _ghostDrainSpeed = 0.6f;
+    [SerializeField] private float _poiseWidthPerPoint = 1.35f;
+    [SerializeField] private float _poiseMinWidth = 100f;
+    [SerializeField] private float _poiseMaxWidth = 340f;
 
-    [UnityEngine.Header("Interaction Prompt")]
-    [UnityEngine.SerializeField] private UnityEngine.GameObject _promptRoot;
-    [UnityEngine.SerializeField] private TMPro.TextMeshProUGUI _promptText;
+    [Header("Interaction Prompt (단일 안내 + 다중 선택지 통합)")]
+    [SerializeField] private InteractionPromptUI _interactionPrompt;
 
-    private CancellationTokenSource _hpGhostCts;
-    private CancellationTokenSource _staminaGhostCts;
+    private GhostGaugeState _hpGhostState;
+    private GhostGaugeState _staminaGhostState;
+    private GhostGaugeState _poiseGhostState;
 
-    // 중복 연산 방지용 캐시
-    private float _cachedMaxHp = -1f;
-    private float _cachedMaxStamina = -1f;
-    private float _cachedMaxPoise = -1f;
+    private bool _isPromptSuppressedByUI = false;
+    private bool _hasActiveSingleHint = false;
+    private string _cachedSingleHintText = string.Empty;
+
+    public InteractionPromptUI InteractionPrompt => _interactionPrompt;
 
     public override void InitializeView()
     {
         base.InitializeView();
+        Identifier = UIId.PlayerHUD;
         Layer = UILayer.HUD;
+
+        _hpGhostState.Reset();
+        _staminaGhostState.Reset();
+        _poiseGhostState.Reset();
+
+        if (_interactionPrompt != null)
+        {
+            _interactionPrompt.HideAll();
+        }
     }
 
+    private void Update()
+    {
+        float dt = Time.deltaTime;
+        if (dt <= 0f) return;
+
+        _hpGhostState.Tick(_hpSlider, _hpGhostSlider, dt, _ghostDecaySpeed);
+        _staminaGhostState.Tick(_staminaSlider, _staminaGhostSlider, dt, _ghostDecaySpeed);
+        _poiseGhostState.Tick(_poiseSlider, _poiseGhostSlider, dt, _ghostDecaySpeed);
+    }
+
+    #region Vitals Update (레이아웃 크기 변경과 매 프레임 비율 갱신 완전 분리)
     /// <summary>
-    /// 플레이어 스탯 계산 완료 시 1회만 호출되어 슬라이더 바의 가로폭을 설정
+    /// 초기화, 장비 변경, 레벨업 등 최대 스탯 변동 이벤트(PlayerMaxStatsCalculatedEvent) 시에만 호출
     /// </summary>
     public void SetBarWidths(float maxHp, float maxStamina, float maxPoise)
     {
-        // 1. HP 바 가로폭 갱신
-        if (_hpBarRect != null && !UnityEngine.Mathf.Approximately(_cachedMaxHp, maxHp) && maxHp > 0f)
-        {
-            _cachedMaxHp = maxHp;
-            float targetWidth = _hpBaseWidth + (maxHp * _hpWidthPerPoint);
-            _hpBarRect.sizeDelta = new UnityEngine.Vector2(targetWidth, _hpBarRect.sizeDelta.y);
-        }
+        ResizeBarFrame(_hpFrameRect, maxHp * _hpWidthPerPoint, _hpMinWidth, _hpMaxWidth);
+        ResizeBarFrame(_staminaFrameRect, maxStamina * _staminaWidthPerPoint, _staminaMinWidth, _staminaMaxWidth);
+        ResizeBarFrame(_poiseFrameRect, maxPoise * _poiseWidthPerPoint, _poiseMinWidth, _poiseMaxWidth);
+    }
 
-        // 2. 스태미나 바 가로폭 갱신
-        if (_staminaBarRect != null && !UnityEngine.Mathf.Approximately(_cachedMaxStamina, maxStamina) && maxStamina > 0f)
-        {
-            _cachedMaxStamina = maxStamina;
-            float targetWidth = _staminaBaseWidth + (maxStamina * _staminaWidthPerPoint);
-            _staminaBarRect.sizeDelta = new UnityEngine.Vector2(targetWidth, _staminaBarRect.sizeDelta.y);
-        }
+    public void UpdateHp(float currentHp, float maxHp)
+    {
+        float ratio = maxHp > 0f ? Mathf.Clamp01(currentHp / maxHp) : 0f;
+        _hpGhostState.ApplyValue(_hpSlider, _hpGhostSlider, ratio, _ghostDelayDuration);
+    }
 
-        // 3. 강인도 바 가로폭 갱신
-        if (_poiseBarRect != null && !UnityEngine.Mathf.Approximately(_cachedMaxPoise, maxPoise) && maxPoise > 0f)
+    public void UpdateStamina(float currentStamina, float maxStamina)
+    {
+        float ratio = maxStamina > 0f ? Mathf.Clamp01(currentStamina / maxStamina) : 0f;
+        _staminaGhostState.ApplyValue(_staminaSlider, _staminaGhostSlider, ratio, _ghostDelayDuration);
+    }
+
+    public void UpdatePoise(float currentPoise, float maxPoise)
+    {
+        float ratio = maxPoise > 0f ? Mathf.Clamp01(currentPoise / maxPoise) : 0f;
+        _poiseGhostState.ApplyValue(_poiseSlider, _poiseGhostSlider, ratio, _ghostDelayDuration);
+    }
+
+    private void ResizeBarFrame(RectTransform frameRect, float rawWidth, float minWidth, float maxWidth)
+    {
+        if (frameRect == null) return;
+        Vector2 size = frameRect.sizeDelta;
+        size.x = Mathf.Clamp(rawWidth, minWidth, maxWidth);
+        frameRect.sizeDelta = size;
+    }
+    #endregion
+
+    #region Interaction Prompt Control
+    public void SetInteractionPromptSuppressed(bool isSuppressed)
+    {
+        _isPromptSuppressedByUI = isSuppressed;
+
+        if (_interactionPrompt == null) return;
+
+        if (_isPromptSuppressedByUI)
         {
-            _cachedMaxPoise = maxPoise;
-            float targetWidth = _poiseBaseWidth + (maxPoise * _poiseWidthPerPoint);
-            _poiseBarRect.sizeDelta = new UnityEngine.Vector2(targetWidth, _poiseBarRect.sizeDelta.y);
+            _interactionPrompt.HideAll();
+        }
+        else if (_hasActiveSingleHint && !string.IsNullOrEmpty(_cachedSingleHintText))
+        {
+            _interactionPrompt.ShowSingleHint(_cachedSingleHintText);
         }
     }
 
-    /// <summary>
-    /// 실시간 HP 변동 시 호출
-    /// </summary>
-    public void UpdateHp(float current, float max)
+    public void SetInteractionPrompt(bool show, string promptText)
     {
-        if (max <= 0f) return;
+        if (show) ShowInteractionPrompt(promptText);
+        else HideInteractionPrompt();
+    }
 
-        float targetRatio = UnityEngine.Mathf.Clamp01(current / max);
+    public void ShowInteractionPrompt(string promptText)
+    {
+        _hasActiveSingleHint = !string.IsNullOrEmpty(promptText);
+        _cachedSingleHintText = promptText ?? string.Empty;
 
-        if (_hpSlider != null)
+        if (_isPromptSuppressedByUI || (UIManager.Instance != null && UIManager.Instance.HasActiveModalOrWindow()))
         {
-            _hpSlider.value = targetRatio;
+            _interactionPrompt?.HideAll();
+            return;
         }
 
-        if (_hpGhostSlider != null)
+        if (_interactionPrompt != null && _hasActiveSingleHint)
         {
-            if (targetRatio < _hpGhostSlider.value)
+            _interactionPrompt.ShowSingleHint(_cachedSingleHintText);
+        }
+    }
+
+    public void HideInteractionPrompt()
+    {
+        _hasActiveSingleHint = false;
+        _cachedSingleHintText = string.Empty;
+
+        if (_interactionPrompt != null)
+        {
+            _interactionPrompt.HideAll();
+        }
+    }
+
+    public void OpenInteractionChoices(IReadOnlyList<InteractionChoice> choices, Action onClosed = null)
+    {
+        if (_interactionPrompt != null)
+        {
+            _interactionPrompt.OpenChoiceMenu(choices, onClosed);
+        }
+    }
+    #endregion
+
+    #region Zero-GC Ghost Gauge State
+    private struct GhostGaugeState
+    {
+        public float DelayTimer;
+        public bool HasInitialized;
+
+        public void Reset()
+        {
+            DelayTimer = 0f;
+            HasInitialized = false;
+        }
+
+        public void ApplyValue(Slider mainSlider, Slider ghostSlider, float targetRatio, float delayDuration)
+        {
+            targetRatio = Mathf.Clamp01(targetRatio);
+
+            if (!HasInitialized)
             {
-                TriggerGhostDrain(ref _hpGhostCts, _hpGhostSlider, targetRatio);
+                HasInitialized = true;
+                DelayTimer = 0f;
+                if (mainSlider != null) mainSlider.value = targetRatio;
+                if (ghostSlider != null) ghostSlider.value = targetRatio;
+                return;
             }
-            else
+
+            float prevMain = mainSlider != null ? mainSlider.value : targetRatio;
+            if (mainSlider != null)
             {
-                AsyncUtil.CancelAndDispose(ref _hpGhostCts);
-                _hpGhostSlider.value = targetRatio;
+                mainSlider.value = targetRatio;
             }
-        }
-    }
 
-    /// <summary>
-    /// 실시간 스태미나 변동 시 호출
-    /// </summary>
-    public void UpdateStamina(float current, float max)
-    {
-        if (max <= 0f) return;
+            if (ghostSlider == null) return;
 
-        float targetRatio = UnityEngine.Mathf.Clamp01(current / max);
-
-        if (_staminaSlider != null)
-        {
-            _staminaSlider.value = targetRatio;
-        }
-
-        if (_staminaGhostSlider != null)
-        {
-            if (targetRatio < _staminaGhostSlider.value)
+            if (targetRatio < prevMain - 0.0001f)
             {
-                TriggerGhostDrain(ref _staminaGhostCts, _staminaGhostSlider, targetRatio);
+                if (ghostSlider.value < prevMain)
+                {
+                    ghostSlider.value = prevMain;
+                }
+                DelayTimer = delayDuration;
             }
-            else
+            else if (targetRatio >= ghostSlider.value)
             {
-                AsyncUtil.CancelAndDispose(ref _staminaGhostCts);
-                _staminaGhostSlider.value = targetRatio;
+                ghostSlider.value = targetRatio;
+                DelayTimer = 0f;
             }
         }
-    }
 
-    public void UpdatePoise(float current, float max)
-    {
-        if (max <= 0f || _poiseSlider == null) return;
-        _poiseSlider.value = UnityEngine.Mathf.Clamp01(current / max);
-    }
-
-    private void TriggerGhostDrain(ref CancellationTokenSource cts, UnityEngine.UI.Slider ghostSlider, float targetRatio)
-    {
-        AsyncUtil.CancelAndDispose(ref cts);
-        cts = CancellationTokenSource.CreateLinkedTokenSource(this.destroyCancellationToken);
-        DrainGhostAsync(ghostSlider, targetRatio, cts.Token).Forget();
-    }
-
-    private async UniTaskVoid DrainGhostAsync(UnityEngine.UI.Slider ghostSlider, float targetRatio, CancellationToken token)
-    {
-        bool isCanceled = await UniTask.Delay(System.TimeSpan.FromSeconds(_ghostDelayDuration), cancellationToken: token).SuppressCancellationThrow();
-        if (isCanceled) return;
-
-        while (ghostSlider.value > targetRatio)
+        public void Tick(Slider mainSlider, Slider ghostSlider, float deltaTime, float decaySpeed)
         {
-            isCanceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
-            if (isCanceled) return;
+            if (mainSlider == null || ghostSlider == null) return;
 
-            ghostSlider.value = UnityEngine.Mathf.MoveTowards(ghostSlider.value, targetRatio, _ghostDrainSpeed * UnityEngine.Time.unscaledDeltaTime);
-        }
+            float target = mainSlider.value;
+            if (ghostSlider.value <= target)
+            {
+                if (ghostSlider.value < target)
+                {
+                    ghostSlider.value = target;
+                }
+                DelayTimer = 0f;
+                return;
+            }
 
-        ghostSlider.value = targetRatio;
-    }
+            if (DelayTimer > 0f)
+            {
+                DelayTimer -= deltaTime;
+                return;
+            }
 
-    public void SetInteractionPrompt(bool isVisible, string message = "")
-    {
-        if (_promptRoot != null)
-        {
-            _promptRoot.SetActive(isVisible);
-        }
-
-        if (_promptText != null && isVisible)
-        {
-            _promptText.text = message;
+            ghostSlider.value = Mathf.MoveTowards(ghostSlider.value, target, decaySpeed * deltaTime);
         }
     }
-
-    protected override void OnDestroy()
-    {
-        AsyncUtil.CancelAndDispose(ref _hpGhostCts);
-        AsyncUtil.CancelAndDispose(ref _staminaGhostCts);
-        base.OnDestroy();
-    }
+    #endregion
 }

@@ -6,12 +6,12 @@ public class SystemMenuView : UIWindowView
 {
     [UnityEngine.Header("System Menu Action Buttons")]
     [UnityEngine.SerializeField] private UnityEngine.UI.Button _resumeButton;
-    [UnityEngine.SerializeField] private UnityEngine.UI.Button _titleButton;
-    [UnityEngine.SerializeField] private UnityEngine.UI.Button _quitButton;
+    [UnityEngine.SerializeField] private UnityEngine.UI.Button _settingButton;
+    [UnityEngine.SerializeField] private UnityEngine.UI.Button _lobbyButton;
 
     public UnityEngine.UI.Button ResumeButton => _resumeButton;
-    public UnityEngine.UI.Button TitleButton => _titleButton;
-    public UnityEngine.UI.Button QuitButton => _quitButton;
+    public UnityEngine.UI.Button SettingButton => _settingButton;
+    public UnityEngine.UI.Button LobbyButton => _lobbyButton;
 
     public override void InitializeView()
     {
