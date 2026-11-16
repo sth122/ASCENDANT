@@ -26,7 +26,7 @@ public abstract class ItemData : UnityEngine.ScriptableObject
     /// 인벤토리 슬롯에 담길 런타임 인스턴스를 생성하는 팩토리 메서드
     /// </summary>
     public abstract Item CreateItem();
-    public virtual string GetEffectSummaryText() => string.Empty;
+    public virtual string GetEffectSummaryText() => Description;
     public virtual StatScalingGrade StrScalingGrade => StatScalingGrade.None;
     public virtual StatScalingGrade DexScalingGrade => StatScalingGrade.None;
 }

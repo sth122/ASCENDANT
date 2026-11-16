@@ -83,6 +83,10 @@ public class PlayerGroundState : PlayerBaseState
 
                 _playerStateMachine.ChangeState(UnitState.Attack);
                 break;
+
+            case InputCommandType.Guard:
+                _playerStateMachine.ChangeState(UnitState.Guard);
+                break;
         }
     }
 

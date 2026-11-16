@@ -76,11 +76,14 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         }
         if (_placeholderIcon != null)
         {
+            _placeholderIcon.enabled = false;
             _placeholderIcon.gameObject.SetActive(false);
         }
         if (_iconImage != null)
         {
             _iconImage.gameObject.SetActive(true);
+            _iconImage.enabled = true;
+            _iconImage.color = Color.white;
             _iconImage.sprite = item.Data.Icon;
         }
 
@@ -111,12 +114,13 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         }
         if (_iconImage != null)
         {
-            _iconImage.gameObject.SetActive(false);
             _iconImage.sprite = null;
+            _iconImage.gameObject.SetActive(false);
         }
         if (_placeholderIcon != null)
         {
             _placeholderIcon.gameObject.SetActive(true);
+            _placeholderIcon.enabled = true;
         }
         if (_amountText != null)
         {
@@ -138,7 +142,8 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         if (BoundItem == null || BoundItem.Data == null) return;
         _draggingSlot = this;
 
-        Canvas rootCanvas = GetComponentInParent<Canvas>();
+        Canvas parentCanvas = GetComponentInParent<Canvas>();
+        Canvas rootCanvas = parentCanvas != null ? parentCanvas.rootCanvas : null;
         if (rootCanvas != null && _dragGhostObject == null)
         {
             _dragGhostObject = new GameObject("@DragGhostIcon", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
@@ -153,8 +158,9 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             group.alpha = 0.85f;
         }
 
-        if (_dragGhostObject != null)
+        if (_dragGhostObject != null && _dragGhostImage != null)
         {
+            _dragGhostObject.transform.SetAsLastSibling();
             _dragGhostImage.sprite = BoundItem.Data.Icon;
             _dragGhostObject.SetActive(true);
             _dragGhostObject.transform.position = eventData.position;
@@ -171,10 +177,7 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (_dragGhostObject != null)
-        {
-            _dragGhostObject.SetActive(false);
-        }
+        HideDragGhost();
         _draggingSlot = null;
     }
 
@@ -183,13 +186,18 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         if (_draggingSlot == null || _draggingSlot.BoundItem == null) return;
 
         Item sourceItem = _draggingSlot.BoundItem;
+        ItemSlotUI sourceSlot = _draggingSlot;
+
+        // 드롭 처리 직후 드래그 상태 즉시 정리
+        HideDragGhost();
+        _draggingSlot = null;
 
         if (!ServiceLocator.TryGet<IPlayerProvider>(out var provider) || !provider.IsPlayerSpawned) return;
         PlayerController player = provider.Player;
-        if (!player.TryGetComponent(out PlayerInventoryHandler handler)) return;
+        if (!player.TryGetComponent(out PlayerInventoryHandler handler) || handler.InventoryInstance == null) return;
         Inventory inventory = handler.InventoryInstance;
 
-        // 1. 8대 장비 슬롯 드롭 판정 (실제 InventorySlotIndex 사용)
+        // 1. 8대 장비 슬롯 드롭 판정 (캐싱 인덱스 대신 실제 Inventory._slots에서 실시간 인덱스 조회)
         if (EquipmentSlotType.HasValue)
         {
             if (sourceItem is EquipmentItem equipItem)
@@ -207,7 +215,7 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
                     return;
                 }
 
-                int realInvIndex = _draggingSlot.InventorySlotIndex;
+                int realInvIndex = inventory.FindSlotIndexOf(equipItem);
                 if (realInvIndex >= 0)
                 {
                     inventory.EquipItem(realInvIndex, player);
@@ -216,7 +224,7 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             return;
         }
 
-        // 2. 퀵슬롯 등록 바 드롭 판정 (가방 -> 퀵슬롯, 또는 2번 퀵슬롯 -> 3번 퀵슬롯 이동 모두 지원)
+        // 2. 퀵슬롯 등록 바 드롭 판정
         if (QuickSlotAssignIndex >= 0)
         {
             if (sourceItem.Data is IQuickSlotUsable && sourceItem is ConsumableItem portion)
@@ -226,10 +234,18 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             return;
         }
 
-        // 3. 장비창 -> 가방 드롭 해제 (무기/방패는 Inventory.UnequipItem 내부에서 해제 차단)
-        if (_draggingSlot.EquipmentSlotType.HasValue && SlotIndex >= 0)
+        // 3. 장비창 -> 가방 드롭 해제
+        if (sourceSlot.EquipmentSlotType.HasValue && SlotIndex >= 0)
         {
-            inventory.UnequipItem(_draggingSlot.EquipmentSlotType.Value, player);
+            inventory.UnequipItem(sourceSlot.EquipmentSlotType.Value, player);
+        }
+    }
+
+    private static void HideDragGhost()
+    {
+        if (_dragGhostObject != null)
+        {
+            _dragGhostObject.SetActive(false);
         }
     }
     #endregion
@@ -247,6 +263,20 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     {
         if (_highlightOutline != null) _highlightOutline.SetActive(false);
         OnSlotHoverEvent?.Invoke(this, false);
+    }
+
+    private void OnDisable()
+    {
+        if (_highlightOutline != null)
+        {
+            _highlightOutline.SetActive(false);
+        }
+
+        if (_draggingSlot == this)
+        {
+            HideDragGhost();
+            _draggingSlot = null;
+        }
     }
     #endregion
 }

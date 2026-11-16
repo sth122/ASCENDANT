@@ -48,7 +48,7 @@ public class ItemDetailPaneUI : MonoBehaviour
         }
 
         if (_itemNameText != null) _itemNameText.text = data.ItemName;
-        if (_categoryText != null) _categoryText.text = data.Category.ToString();
+        if (_categoryText != null) _categoryText.text = GetCategoryDisplayName(data.Category);
 
         // 1. 소모품 계열
         if (data is CountableItemData countableData)
@@ -57,9 +57,16 @@ public class ItemDetailPaneUI : MonoBehaviour
             if (_equipmentPanel != null) _equipmentPanel.SetActive(false);
 
             int curAmount = item is CountableItem countable ? countable.CurrentAmount : 1;
-            if (_possessionCountText != null) _possessionCountText.text = $"{curAmount} / {countableData.MaxStack}";
-            if (_storageCountText != null) _storageCountText.text = $"- / {data.MaxStorageCount}";
-            if (_effectSummaryText != null) _effectSummaryText.text = data.GetEffectSummaryText();
+            if (_possessionCountText != null) _possessionCountText.text = $"소지수: {curAmount} / {countableData.MaxStack}";
+            if (_storageCountText != null) _storageCountText.text = $"저장수: - / {data.MaxStorageCount}";
+
+            if (_effectSummaryText != null)
+            {
+                string summary = data.GetEffectSummaryText();
+                _effectSummaryText.text = string.IsNullOrWhiteSpace(summary)
+                    ? "아이템 효과: 퀵슬롯 등록 후 사용" : $"아이템 효과: {summary}";
+            }
+
             if (_consumableDescText != null) _consumableDescText.text = data.Description;
             return;
         }
@@ -71,13 +78,11 @@ public class ItemDetailPaneUI : MonoBehaviour
             if (_equipmentPanel != null) _equipmentPanel.SetActive(true);
 
             EquipmentItem equipped = inventory != null ? inventory.GetEquippedItem(equipData.EquipSlot) : null;
-            // 동일한 인스턴스(이미 장착된 아이템)라면 비교 생략
             if (equipped != null && equipped.InstanceGuid == item.InstanceGuid)
             {
                 equipped = null;
             }
 
-            // 중량 비교 (가벼워지면 파랑, 무거워지면 빨강)
             if (_equipWeightText != null)
             {
                 if (equipped != null && equipped.Data != null)
@@ -91,7 +96,6 @@ public class ItemDetailPaneUI : MonoBehaviour
                 }
             }
 
-            // 공격력 / 보너스 스탯 비교
             if (_attackPowerText != null)
             {
                 if (equipData is WeaponItemData weapon)
@@ -124,7 +128,6 @@ public class ItemDetailPaneUI : MonoBehaviour
                 }
             }
 
-            // 방어 / 가드 성능 비교
             if (_guardAbsorptionText != null)
             {
                 if (equipData is ShieldItemData shield)
@@ -210,6 +213,19 @@ public class ItemDetailPaneUI : MonoBehaviour
 
         if (_consumablePanel != null) _consumablePanel.SetActive(false);
         if (_equipmentPanel != null) _equipmentPanel.SetActive(false);
+    }
+
+    private string GetCategoryDisplayName(ItemCategory category)
+    {
+        return category switch
+        {
+            ItemCategory.Weapon => "무기",
+            ItemCategory.Shield => "방패",
+            ItemCategory.Armor => "방어구",
+            ItemCategory.Accessory => "장신구",
+            ItemCategory.Consumable => "소모품",
+            _ => category.ToString()
+        };
     }
 
     private string GetGradeString(StatScalingGrade grade) => grade == StatScalingGrade.None ? "-" : grade.ToString();

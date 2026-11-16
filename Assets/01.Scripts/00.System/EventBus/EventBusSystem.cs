@@ -1,5 +1,4 @@
-﻿//using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Util = DebugLogger;
 
 /// <summary>
@@ -48,7 +47,6 @@ public static class EventBusSystem
                 _eventHandlers[eventType] = newDelegate;
             }
         }
-        DebugLogger.LogWithTag("EventBusSystem", $"[구독 해제] {eventType.Name} -> {listener.Method.Name}");
     }
 
     public static void Publish<T>(in T eventData) where T : struct , IEventType
@@ -60,7 +58,6 @@ public static class EventBusSystem
             if(targetDelegate is System.Action<T> callback)
             {
                 callback?.Invoke(eventData);
-                DebugLogger.LogWithTag("EventBusSystem", $"[이벤트 발행] {eventType.Name}");
             }
         }
     }
@@ -68,6 +65,5 @@ public static class EventBusSystem
     public static void ClearAllSubsribers()
     {
         _eventHandlers.Clear();
-        DebugLogger.LogWithTag("EventBusSystem", $"[이벤트 전제 구독 정리]");
     }
 }

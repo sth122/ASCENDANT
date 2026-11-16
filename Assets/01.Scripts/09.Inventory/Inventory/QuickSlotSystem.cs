@@ -13,19 +13,13 @@ public class QuickSlotSystem
     private float _cooldownStartTime = 0f;
     private float _cooldownEndTime = 0f;
 
-    /// <summary>
     /// 아이템 사용 애니메이션(PlayerUseItemState) 진행 중 락
-    /// </summary>
     public bool IsUsingItemLock { get; set; } = false;
 
-    /// <summary>
     /// 공용 쿨타임 진행 여부 (true일 때 모든 퀵슬롯 아이템 사용 및 UseItem 상태 전이 불가)
-    /// </summary>
     public bool IsOnGlobalCooldown => Time.time < _cooldownEndTime;
 
-    /// <summary>
     /// 남은 쿨타임 비율 (1.0 = 막 시작, 0.0 = 종료)
-    /// </summary>
     public float RemainingCooldownRatio
     {
         get
@@ -59,6 +53,36 @@ public class QuickSlotSystem
 
         _slots[targetSlotIndex] = portion;
         OnQuickSlotChanged?.Invoke(targetSlotIndex, portion);
+    }
+    public void UnregisterSlot(int targetSlotIndex)
+    {
+        if (targetSlotIndex < 0 || targetSlotIndex >= MaxQuickSlots) return;
+        if (_slots[targetSlotIndex] == null) return;
+
+        _slots[targetSlotIndex] = null;
+        OnQuickSlotChanged?.Invoke(targetSlotIndex, null);
+    }
+
+    public int FindSlotIndex(ConsumableItem portion)
+    {
+        if (portion == null) return -1;
+        for (int i = 0; i < MaxQuickSlots; i++)
+        {
+            if (_slots[i] != null && _slots[i].InstanceGuid == portion.InstanceGuid)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int FindEmptySlotIndex()
+    {
+        for (int i = 0; i < MaxQuickSlots; i++)
+        {
+            if (_slots[i] == null) return i;
+        }
+        return -1;
     }
 
     public bool TryUseSlot(int slotIndex, PlayerController player)

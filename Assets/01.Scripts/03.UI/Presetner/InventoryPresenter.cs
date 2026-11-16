@@ -137,7 +137,11 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
 
         for (int i = 0; i < View.QuickAssignSlots.Count; i++)
         {
-            if (View.QuickAssignSlots[i] != null) View.QuickAssignSlots[i].OnSlotHoverEvent -= HandleSlotHover;
+            if (View.QuickAssignSlots[i] != null)
+            {
+                View.QuickAssignSlots[i].OnSlotClickedEvent -= HandleQuickAssignSlotClicked;
+                View.QuickAssignSlots[i].OnSlotHoverEvent -= HandleSlotHover;
+            }
         }
 
         if (_inventory != null)
@@ -202,40 +206,155 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
     {
         if (_inventory == null || View == null) return;
 
-        if (View.MainWeaponSlot != null) View.MainWeaponSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.MainWeapon));
-        if (View.ShieldSlot != null) View.ShieldSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Shield));
-        if (View.HelmetSlot != null) View.HelmetSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Helmet));
-        if (View.ChestArmorSlot != null) View.ChestArmorSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.ChestArmor));
-        if (View.GauntletsSlot != null) View.GauntletsSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Gauntlets));
-        if (View.BootsSlot != null) View.BootsSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Boots));
-        if (View.NecklaceSlot != null) View.NecklaceSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Necklace));
-        if (View.RingSlot != null) View.RingSlot.BindItem(_inventory.GetEquippedItem(EquipSlotType.Ring));
+        BindEquipSlotSafe(View.MainWeaponSlot, EquipSlotType.MainWeapon);
+        BindEquipSlotSafe(View.ShieldSlot, EquipSlotType.Shield);
+        BindEquipSlotSafe(View.HelmetSlot, EquipSlotType.Helmet);
+        BindEquipSlotSafe(View.ChestArmorSlot, EquipSlotType.ChestArmor);
+        BindEquipSlotSafe(View.GauntletsSlot, EquipSlotType.Gauntlets);
+        BindEquipSlotSafe(View.BootsSlot, EquipSlotType.Boots);
+        BindEquipSlotSafe(View.NecklaceSlot, EquipSlotType.Necklace);
+        BindEquipSlotSafe(View.RingSlot, EquipSlotType.Ring);
 
         for (int i = 0; i < View.QuickAssignSlots.Count; i++)
         {
-            if (View.QuickAssignSlots[i] != null) View.QuickAssignSlots[i].BindItem(_inventory.QuickSlots.GetItem(i));
+            if (View.QuickAssignSlots[i] != null)
+            {
+                View.QuickAssignSlots[i].BindItem(_inventory.QuickSlots.GetItem(i));
+            }
         }
     }
+
+    private void BindEquipSlotSafe(ItemSlotUI slotUI, EquipSlotType slotType)
+    {
+        if (slotUI == null || _inventory == null) return;
+        slotUI.BindItem(_inventory.GetEquippedItem(slotType));
+    }
+
+    private void ClearSelectionAndDetails()
+    {
+        if (Model != null)
+        {
+            Model.FocusedItem = null;
+        }
+        View?.DetailPaneUI?.ClearDetails();
+    }
+
     private void HandleSlotClicked(ItemSlotUI slot, PointerEventData.InputButton button)
     {
-        if (_inventory == null || _player == null || slot.BoundItem == null) return;
+        if (_inventory == null || _player == null || slot == null) return;
 
-        Model.FocusedItem = slot.BoundItem;
-        View?.DetailPaneUI?.ShowDetails(slot.BoundItem, _inventory, _player);
-
-        if (button == PointerEventData.InputButton.Left && slot.BoundItem is EquipmentItem && slot.InventorySlotIndex >= 0)
+        // 빈 슬롯 클릭 시 상세 패널 및 포커스 초기화
+        if (slot.BoundItem == null)
         {
-            _inventory.EquipItem(slot.InventorySlotIndex, _player);
-            UpdateFullModel();
+            ClearSelectionAndDetails();
+            return;
         }
+
+        Item clickedItem = slot.BoundItem;
+        Model.FocusedItem = clickedItem;
+
+        // 1. 장비 아이템 좌클릭 -> 실제 Inventory._slots에서 현재 인덱스를 조회해 정확히 장착
+        if (button == PointerEventData.InputButton.Left && clickedItem is EquipmentItem)
+        {
+            int liveSlotIndex = _inventory.FindSlotIndexOf(clickedItem);
+            bool equipped = liveSlotIndex >= 0 && _inventory.EquipItem(liveSlotIndex, _player);
+
+            SynchronizeEquipAndQuickSlots();
+            FilterGridByCategory(_currentCategory);
+            UpdateFullModel();
+
+            View?.DetailPaneUI?.ShowDetails(clickedItem, equipped ? null : _inventory, _player);
+            return;
+        }
+
+        // 2. 소모품 아이템 클릭 -> 퀵슬롯 자동 등록 또는 토글 해제
+        if (clickedItem is ConsumableItem consumable && clickedItem.Data is IQuickSlotUsable)
+        {
+            int assignedIdx = _inventory.QuickSlots.FindSlotIndex(consumable);
+
+            if (button == PointerEventData.InputButton.Right)
+            {
+                if (assignedIdx >= 0)
+                {
+                    _inventory.QuickSlots.UnregisterSlot(assignedIdx);
+                }
+                else
+                {
+                    int emptyQuickIdx = _inventory.QuickSlots.FindEmptySlotIndex();
+                    if (emptyQuickIdx >= 0)
+                    {
+                        _inventory.QuickSlots.RegisterItem(emptyQuickIdx, consumable);
+                    }
+                }
+            }
+            else if (button == PointerEventData.InputButton.Left && assignedIdx < 0)
+            {
+                int emptyQuickIdx = _inventory.QuickSlots.FindEmptySlotIndex();
+                if (emptyQuickIdx >= 0)
+                {
+                    _inventory.QuickSlots.RegisterItem(emptyQuickIdx, consumable);
+                }
+            }
+        }
+
+        View?.DetailPaneUI?.ShowDetails(clickedItem, _inventory, _player);
     }
+
     private void HandleEquipSlotClicked(ItemSlotUI slot, PointerEventData.InputButton button)
     {
-        if (_inventory == null || _player == null || !slot.EquipmentSlotType.HasValue) return;
+        if (_inventory == null || _player == null || slot == null || !slot.EquipmentSlotType.HasValue) return;
 
-        _inventory.UnequipItem(slot.EquipmentSlotType.Value, _player);
-        UpdateFullModel();
+        // 빈 장비 슬롯 클릭 시 상세 패널 초기화
+        if (slot.BoundItem == null)
+        {
+            ClearSelectionAndDetails();
+            return;
+        }
+
+        Item unequippedItem = slot.BoundItem;
+        if (_inventory.UnequipItem(slot.EquipmentSlotType.Value, _player))
+        {
+            SynchronizeEquipAndQuickSlots();
+            FilterGridByCategory(_currentCategory);
+            UpdateFullModel();
+
+            Model.FocusedItem = unequippedItem;
+            View?.DetailPaneUI?.ShowDetails(unequippedItem, _inventory, _player);
+        }
+        else
+        {
+            Model.FocusedItem = unequippedItem;
+            View?.DetailPaneUI?.ShowDetails(unequippedItem, null, _player);
+        }
     }
+
+    private void HandleQuickAssignSlotClicked(ItemSlotUI slot, PointerEventData.InputButton button)
+    {
+        if (_inventory == null || slot == null || slot.QuickSlotAssignIndex < 0) return;
+
+        // 빈 퀵슬롯 클릭 시 상세 패널 초기화
+        if (slot.BoundItem == null)
+        {
+            ClearSelectionAndDetails();
+            return;
+        }
+
+        // 퀵슬롯 우클릭 시 등록 해제
+        if (button == PointerEventData.InputButton.Right)
+        {
+            if (Model != null && Model.FocusedItem != null && Model.FocusedItem.InstanceGuid == slot.BoundItem.InstanceGuid)
+            {
+                ClearSelectionAndDetails();
+            }
+            _inventory.QuickSlots.UnregisterSlot(slot.QuickSlotAssignIndex);
+            return;
+        }
+
+        // 좌클릭 시 상세 정보 표시
+        Model.FocusedItem = slot.BoundItem;
+        View?.DetailPaneUI?.ShowDetails(slot.BoundItem, _inventory, _player);
+    }
+
     private void HandleSlotHover(ItemSlotUI slot, bool isEnter)
     {
         if (View?.DetailPaneUI == null) return;
@@ -248,9 +367,13 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         else if (!isEnter)
         {
             if (Model.FocusedItem != null)
+            {
                 View.DetailPaneUI.ShowDetails(Model.FocusedItem, _inventory, _player);
+            }
             else
+            {
                 View.DetailPaneUI.ClearDetails();
+            }
         }
     }
     private void HandleDomainSlotUpdated(int slotIndex, Item item) => FilterGridByCategory(_currentCategory);

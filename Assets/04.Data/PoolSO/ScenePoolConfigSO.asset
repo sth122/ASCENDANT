@@ -38,4 +38,4 @@ MonoBehaviour:
       AddressableKeyOverride: VFX_MeteorExplosion
     - Type: 2001
       PreloadCount: 8
-      AddressableKeyOverride: VFX_FireExplosion
+      AddressableKeyOverride: MeteorProjectile

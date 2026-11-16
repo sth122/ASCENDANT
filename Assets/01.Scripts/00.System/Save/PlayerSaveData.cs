@@ -17,7 +17,7 @@ public class PlayerSaveData
     public int Dexterity = 10;
 
     [UnityEngine.Header("Runtime Status")]
-    public float CurrentHp = 650f;
+    public float CurrentHp = 670f;
 
     [UnityEngine.Header("Loadout Flags")]
     [UnityEngine.Tooltip("초기 장비 지급 완료 여부 (새 게임 검증용 영속 플래그)")]

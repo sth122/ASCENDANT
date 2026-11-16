@@ -68,8 +68,6 @@ public static class InputSystemHandler
                 CameraManager.Instance?.SetCameraInputEnabled(false);
                 break;
         }
-
-        DebugLogger.LogWithTag("InputSystemHandler", $"[입력 모드 전이] {mode} (TimeScale: {Time.timeScale}, Cursor: {Cursor.visible})");
     }
 
     public static void Dispose()

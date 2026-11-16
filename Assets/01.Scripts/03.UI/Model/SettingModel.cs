@@ -26,11 +26,12 @@ public class SettingModel : IUIModel
 
     public static readonly ResolutionOption[] AspectRatioOptions =
     {
+        new ResolutionOption("16:9  (2560 x 1440)", 2560, 1440),
+        new ResolutionOption("21:9  (2560 x 1080)", 2560, 1080),
+        new ResolutionOption("16:10 (1920 x 1200)", 1920, 1200),
         new ResolutionOption("16:9  (1920 x 1080)", 1920, 1080),
         new ResolutionOption("16:9  (1600 x 900)",  1600, 900),
         new ResolutionOption("16:9  (1280 x 720)",  1280, 720),
-        new ResolutionOption("16:10 (1920 x 1200)", 1920, 1200),
-        new ResolutionOption("21:9  (2560 x 1080)", 2560, 1080),
         new ResolutionOption("4:3   (1280 x 960)",  1280, 960)
     };
 

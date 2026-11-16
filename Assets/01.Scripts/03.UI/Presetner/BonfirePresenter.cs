@@ -44,10 +44,14 @@ public class BonfirePresenter : UIPresenterBase<BonfireWindowView, BonfireModel>
 
         View.ConfirmLevelUpBtn?.onClick.AddListener(HandleConfirmLevelUpClicked);
         View.CloseLevelUpPanelBtn?.onClick.AddListener(HandleCloseClicked);
+
+        EventBusSystem.Subscribe<SoulChangedEvent>(HandleSoulChanged);
     }
 
     protected override void OnUnbindHandler()
     {
+        EventBusSystem.Unsubscribe<SoulChangedEvent>(HandleSoulChanged);
+
         if (View == null) return;
 
         View.VigorPlusBtn?.onClick.RemoveListener(HandleVigorPlus);
@@ -61,6 +65,14 @@ public class BonfirePresenter : UIPresenterBase<BonfireWindowView, BonfireModel>
 
         View.ConfirmLevelUpBtn?.onClick.RemoveListener(HandleConfirmLevelUpClicked);
         View.CloseLevelUpPanelBtn?.onClick.RemoveListener(HandleCloseClicked);
+    }
+
+    private void HandleSoulChanged(SoulChangedEvent evt)
+    {
+        if (_isConfirming || _player == null || Model == null || View == null) return;
+
+        Model.CaptureFromPlayer(_player);
+        View.RefreshDisplay(Model);
     }
 
     private void RecalculateAndRefresh()

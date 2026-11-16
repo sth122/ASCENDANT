@@ -41,7 +41,7 @@ public class BossSceneBootstrapper : SceneBootstrapper, IPlayerProvider
     {
         try
         {
-            // 보스 사망 애니메이션 및 디졸브 여운 대기
+            // 보스 사망 애니메이션
             await UniTask.Delay(System.TimeSpan.FromSeconds(4.0f), cancellationToken: ct);
 
             if (SoundManager.Instance != null)

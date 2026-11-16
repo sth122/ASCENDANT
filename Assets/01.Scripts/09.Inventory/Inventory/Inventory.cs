@@ -68,6 +68,35 @@ public class Inventory
     }
 
     /// <summary>
+    /// 런타임 아이템 인스턴스가 현재 인벤토리 가방(_slots)의 몇 번 인덱스에 위치하는지 실시간 조회
+    /// </summary>
+    public int FindSlotIndexOf(Item targetItem)
+    {
+        if (targetItem == null) return -1;
+
+        for (int i = 0; i < DefaultCapacity; i++)
+        {
+            if (ReferenceEquals(_slots[i], targetItem))
+            {
+                return i;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(targetItem.InstanceGuid))
+        {
+            for (int i = 0; i < DefaultCapacity; i++)
+            {
+                if (_slots[i] != null && _slots[i].InstanceGuid == targetItem.InstanceGuid)
+                {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
     /// 장비 장착 처리 (인벤토리 슬롯 <-> 장착 슬롯 스왑)
     /// </summary>
     public bool EquipItem(int inventorySlotIndex, PlayerController player)
@@ -115,10 +144,10 @@ public class Inventory
         _equipmentSlots[slot] = null;
         _slots[emptyIndex] = equipped;
 
+        RecalculateEquipStats(player);
+
         OnEquipmentChanged?.Invoke(slot, null);
         OnSlotUpdated?.Invoke(emptyIndex, equipped);
-
-        RecalculateEquipStats(player);
         return true;
     }
 
