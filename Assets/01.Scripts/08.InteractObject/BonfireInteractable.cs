@@ -24,7 +24,7 @@ public class BonfireInteractable : BaseInteractable, ISceneLoadable
     public UniTask OnSceneObjectLoadAsync(SceneId scene, CancellationToken ct)
     {
         Transform targetPoint = _respawnPoint != null ? _respawnPoint : transform;
-        SavePointManager.Instance.RegisterSavePoint(_bonfireId, targetPoint);
+        SavePointSystem.Instance.RegisterSavePoint(_bonfireId, targetPoint);
         return UniTask.CompletedTask;
     }
 

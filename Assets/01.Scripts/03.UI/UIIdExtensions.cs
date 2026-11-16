@@ -24,9 +24,10 @@ public static class UIIdExtensions
         { UIId.SettingUI, ConstString.SettingUI },
         { UIId.CharacterSelectUI, ConstString.CharacterSelectUI },
         { UIId.BonfireUI, ConstString.BonfireUI },
+        { UIId.ChestUI, ConstString.ChestUI },
+        { UIId.NoticeWindowUI, ConstString.NoticeWindowUI },
 
         { UIId.ConfirmPopup, ConstString.ConfirmPopupUI },
-        { UIId.NoticePopup, ConstString.NoticePopupUI },
         { UIId.KeyBindingPopup, ConstString.KeyBindingPopupUI },
 
         { UIId.FadeCurtainUI, ConstString.FadeCurtainUI },

@@ -230,4 +230,28 @@ public class EnemyCombatController : MonoBehaviour
         }
         System.Array.Clear(_areaHitBuffer, 0, count);
     }
+
+    /// <summary>
+    /// 현재 쿨타임이 완료되어 즉시 사용 가능한 공격 중 최대 사거리를 반환.
+    /// 준비된 공격이 하나도 없으면 fallbackRange(기본 근접 사거리)를 반환하여 제자리 멈춤을 방지.
+    /// </summary>
+    public float GetEffectiveEngageRange(float fallbackRange)
+    {
+        float maxReadyRange = 0f;
+        bool hasReady = false;
+
+        foreach (var kvp in _basicAttacks)
+        {
+            if (Time.time >= _attackCooldowns[kvp.Key])
+            {
+                hasReady = true;
+                if (kvp.Value.AttackRange > maxReadyRange)
+                {
+                    maxReadyRange = kvp.Value.AttackRange;
+                }
+            }
+        }
+
+        return hasReady ? maxReadyRange : fallbackRange;
+    }
 }

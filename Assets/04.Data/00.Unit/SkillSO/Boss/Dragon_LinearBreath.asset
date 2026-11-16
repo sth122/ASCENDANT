@@ -30,7 +30,6 @@ MonoBehaviour:
   _timelineSteps:
   - StateType: 1001
     SpeedMultiplier: 1
-    ClipDurationOverride: 0
     FaceTargetOnEnter: 1
     UseRootMotion: 1
     IsAirborne: 0
@@ -44,6 +43,7 @@ MonoBehaviour:
     HitboxEndNormalized: 0
     HasCustomEvent: 1
     EventTriggerNormalized: 0.2
+    CueEvents: []
   _breathType: 0
   _breathLength: 15
   _breathAngle: 60

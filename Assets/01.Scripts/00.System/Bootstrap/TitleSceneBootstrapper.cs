@@ -13,6 +13,7 @@ public class TitleSceneBootstrapper : SceneBootstrapper
     protected override void Awake()
     {
         SettingModel.ApplySavedSettingsOnStartup();
+        SessionDataManager.Instance.ClearSession();
         base.Awake();
     }
 
@@ -62,14 +63,14 @@ public class TitleSceneBootstrapper : SceneBootstrapper
 
         if (_titleIntroView != null)
         {
-            // 2. 모든 데이터/풀/UI 초기화가 완료된 상태에서 Press Any Button 대기
+            // 모든 데이터/풀/UI 초기화가 완료된 상태에서 Press Any Button 대기
             await _titleIntroView.WaitForAnyButtonAsync(ct);
 
-            // 3. 로고 상단 이동 및 암막 해제
+            // 로고 상단 이동 및 암막 해제
             await _titleIntroView.TransitionLogoToHeaderAsync(0.85f, ct);
         }
 
-        // 4. 타이틀 메뉴 버튼(새 게임, 이어하기, 설정, 종료) 페이드 인 등장
+        // 타이틀 메뉴 버튼(새 게임, 이어하기, 설정, 종료) 페이드 인 등장
         if (_titleMenuView != null)
         {
             await _titleMenuView.ShowAsync(0.35f, ct);

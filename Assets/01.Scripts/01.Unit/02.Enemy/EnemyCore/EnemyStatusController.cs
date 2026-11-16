@@ -74,7 +74,6 @@ public class EnemyStatusController : UnitStatusController
     {
         if (_runtimeEnemyInfo == null) return;
 
-        float prevMaxHp = _maxHp;
         _maxHp = _runtimeEnemyInfo.MaxHp;
 
         if (isInitialSetup)
@@ -104,14 +103,14 @@ public class EnemyStatusController : UnitStatusController
         if (_isDead || _isInvincible) return;
 
         // 보스가 그로기 중일 때 페이즈 2 기준선 도달 검사
-        if (_runtimeEnemyInfo is BossInfo bossInfo && _isPoiseDepleted)
+        if (_runtimeEnemyInfo is BossInfo bossInfo && _isPoiseDepleted && !_hasTriggeredPhase2 && !_isPhase2Pending)
         {
             float thresholdHp = _maxHp * bossInfo.Phase2ThresholdRatio;
             if (_currentHp - damage <= thresholdHp)
             {
-                // 체력을 임계점에 고정하고 그로기가 끝날 때까지 무적화
                 _currentHp = thresholdHp;
                 InvokeChangeHPEvent(_currentHp, _maxHp);
+                // 그로기가 끝날 때까지 즉시 무적화(체력바 은색 전환) 후 대기 플래그 설정
                 SetInvincible(true);
                 _isPhase2Pending = true;
                 return;
@@ -126,7 +125,7 @@ public class EnemyStatusController : UnitStatusController
     /// </summary>
     protected override void ApplyPoiseDamage(float poiseDamage)
     {
-        if (!_isPoiseDepleted)
+        if (!_isPoiseDepleted && !_isInvincible)
         {
             _poiseDecayTimer = _poiseDecayDelay;
             _currentPoise = Mathf.Min(_maxPoise, _currentPoise + poiseDamage);
@@ -157,6 +156,16 @@ public class EnemyStatusController : UnitStatusController
         _isPoiseDepleted = false;
         InvokeChangePoiseEvent(_currentPoise, _maxPoise);
     }
+
+    /// <summary>
+    /// 2페이즈 진입 시 호출: 대기 플래그를 소비하고 2페이즈 진입 완료를 기록 (무적 해제는 2페이즈 연출 종료 시 수행)
+    /// </summary>
+    public void MarkPhase2Triggered()
+    {
+        _isPhase2Pending = false;
+        _hasTriggeredPhase2 = true;
+    }
+
     public void ClearPhase2Pending()
     {
         _isPhase2Pending = false;
@@ -176,7 +185,6 @@ public class EnemyStatusController : UnitStatusController
             bool isCanceled = await UniTask.Delay(100, cancellationToken: token).SuppressCancellationThrow();
             if (isCanceled) return;
 
-            // 그로기 상태이거나, 사망했거나, 이미 0이면 스킵
             if (_isPoiseDepleted || _isPoiseRecoveryPaused || _isDead || _currentPoise <= 0f) continue;
 
             if (_poiseDecayTimer > 0f)

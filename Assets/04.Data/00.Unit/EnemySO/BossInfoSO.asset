@@ -15,8 +15,8 @@ MonoBehaviour:
   _entries:
   - Id: 101
     Value:
-      <MaxHp>k__BackingField: 3500
-      <Poise>k__BackingField: 150
+      <MaxHp>k__BackingField: 6000
+      <Poise>k__BackingField: 1200
       <WalkSpeed>k__BackingField: 4.2
       <FlatDefense>k__BackingField: 10
       <Tier>k__BackingField: 2

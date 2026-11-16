@@ -16,15 +16,6 @@ public class PlayerInitialEquipmentSO : ScriptableObject
     [SerializeField] private WeaponItemData _startingWeapon;
     [SerializeField] private ShieldItemData _startingShield;
 
-    [Header("초기 착용 방어구 (4종)")]
-    [SerializeField] private ArmorItemData _startingHelmet;
-    [SerializeField] private ArmorItemData _startingChestArmor;
-    [SerializeField] private ArmorItemData _startingGauntlets;
-    [SerializeField] private ArmorItemData _startingBoots;
-
-    [Header("초기 착용 악세서리 (2종)")]
-    [SerializeField] private AccessoryItemData _startingNecklace; 
-    [SerializeField] private AccessoryItemData _startingRing;     
 
     [Header("초기 지급 소모품")]
     [SerializeField] private List<ConsumableLoadout> _startingConsumables = new List<ConsumableLoadout>();
@@ -34,12 +25,6 @@ public class PlayerInitialEquipmentSO : ScriptableObject
 
     public WeaponItemData StartingWeapon => _startingWeapon;
     public ShieldItemData StartingShield => _startingShield;
-    public ArmorItemData StartingHelmet => _startingHelmet;
-    public ArmorItemData StartingChestArmor => _startingChestArmor;
-    public ArmorItemData StartingGauntlets => _startingGauntlets;
-    public ArmorItemData StartingBoots => _startingBoots;
-    public AccessoryItemData StartingNecklace => _startingNecklace;
-    public AccessoryItemData StartingRing => _startingRing;
     public IReadOnlyList<ConsumableLoadout> StartingConsumables => _startingConsumables;
     public IReadOnlyList<ItemData> ExtraInventoryItems => _extraInventoryItems;
 }

@@ -22,6 +22,13 @@
         public const string BossEntryPrompt = "보스 방에 진입하시겠습니까?";
         #endregion
 
+        #region UI Text
+        public const string ChestText = "보물 상자";
+        public const string OpenChest = "[F] 보물상자를 연다";
+        public const string ReopenChest = "[F] 보물상자 확인";
+        public const string PromptGuidPrompt = "[E / Enter] : 결정    [ESC] : 닫기";
+        #endregion
+
         #region UI Addressable Keys
         public const string TitleBackgroundUI = "TitleBackgroundUI";
         public const string GameOverBackgroundUI = "GameOverBackgroundUI";
@@ -42,9 +49,10 @@
         public const string SettingUI = "SettingUI";
         public const string CharacterSelectUI = "CharacterSelectUI";
         public const string BonfireUI = "BonfireUI";
+        public const string ChestUI = "ChestUI";
 
         public const string ConfirmPopupUI = "ConfirmPopupUI";
-        public const string NoticePopupUI = "NoticePopupUI";
+        public const string NoticeWindowUI = "NoticeWindowUI";
         public const string KeyBindingPopupUI = "KeyBindingPopupUI";
 
 

@@ -26,7 +26,13 @@ public class PlayerRollState : PlayerActionState
         if (moveInputDirection.sqrMagnitude > 0.001f)
         {
             _rollExecutionDirection = moveInputDirection.normalized;
-            owner.transform.rotation = UnityEngine.Quaternion.LookRotation(_rollExecutionDirection);
+            UnityEngine.Quaternion targetRot = UnityEngine.Quaternion.LookRotation(_rollExecutionDirection);
+            owner.transform.rotation = targetRot;
+
+            if (owner.Rigidbody != null && !owner.Rigidbody.isKinematic)
+            {
+                owner.Rigidbody.MoveRotation(targetRot);
+            }
         }
         else
         {

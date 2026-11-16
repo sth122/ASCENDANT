@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d55000b743bc66449a1446338dd849b, type: 3}
   m_Name: Item_Shield 1
   m_EditorClassIdentifier: Assembly-CSharp::ShieldItemData
-  _id: 1002
+  _id: 1004
   _itemName: Shield
-  _icon: {fileID: 21300030, guid: 8b8333c8af9b0c54da038fe9102febb5, type: 3}
+  _icon: {fileID: 44969149, guid: b126439b7bdbef04ba32e1fdb7c59b9c, type: 3}
   _description: "\uC2E4\uB4DC"
   _weight: 4
   _category: 1

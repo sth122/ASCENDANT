@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using ConstStrings;
 
 public readonly struct InteractionChoice
 {
@@ -91,7 +92,7 @@ public class InteractionPromptUI : MonoBehaviour
 
         if (_legendText != null)
         {
-            _legendText.text = "[E / Enter] : 결정    [ESC / Q] : 닫기";
+            _legendText.text = ConstString.PromptGuidPrompt;
         }
 
         InputSystemHandler.SetMode(InputMode.RealtimeUI);
@@ -155,7 +156,7 @@ public class InteractionPromptUI : MonoBehaviour
             return;
         }
 
-        // 3. 닫기 (Q / ESC)
+        // 3. 닫기 (ESC)
         if (kb != null && (kb.escapeKey.wasPressedThisFrame))
         {
             SoundManager.Instance?.PlaySFX(SoundId.UI_Cancel);

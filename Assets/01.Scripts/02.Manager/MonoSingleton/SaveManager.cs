@@ -2,6 +2,7 @@
 using System;
 using UnityEngine;
 using Util = DebugLogger<SaveManager>;
+
 /// <summary>
 /// 로컬 JSON 직렬화를 통해 세이브 파일의 생성, 쓰기, 읽기를 전담하는 싱글톤 매니저
 /// </summary>
@@ -13,6 +14,8 @@ public class SaveManager : MonoSingleton<SaveManager>
     public const int MaxSaveSlots = 3;
     public int ActiveSlotIndex { get; private set; } = 0;
     private bool _isSaving = false;
+    private bool _hasPendingSave = false;
+    private int _pendingSlotIndex = 0;
     public SaveData CurrentSaveData { get; private set; }
 
     protected override void Awake()
@@ -59,7 +62,6 @@ public class SaveManager : MonoSingleton<SaveManager>
         if (!System.IO.Directory.Exists(dirPath))
         {
             System.IO.Directory.CreateDirectory(dirPath);
-            Util.Log($"세이브 디렉토리 생성 완료: {dirPath}");
         }
     }
 
@@ -94,9 +96,11 @@ public class SaveManager : MonoSingleton<SaveManager>
             PlayerData = new PlayerSaveData()
         };
 
+
+        SessionDataManager.Instance.LoadWorldStateFromSave(CurrentSaveData);
         SessionDataManager.Instance.LoadSessionFromSave(CurrentSaveData.PlayerData);
+
         SaveCurrentGameAsync(slotIndex).Forget();
-        Util.Log($"[새 캐릭터 생성 완료] 슬롯: {slotIndex}, 이름: {characterName}");
         return CurrentSaveData;
     }
 
@@ -111,6 +115,7 @@ public class SaveManager : MonoSingleton<SaveManager>
         if (!System.IO.File.Exists(filePath))
         {
             CurrentSaveData = null;
+            SessionDataManager.Instance.ClearSession();
             return false;
         }
 
@@ -119,10 +124,14 @@ public class SaveManager : MonoSingleton<SaveManager>
             string json = System.IO.File.ReadAllText(filePath);
             CurrentSaveData = JsonUtility.FromJson<SaveData>(json);
 
-            // 로드된 데이터를 인메모리 세션에 즉시 안착
-            if (CurrentSaveData != null && CurrentSaveData.PlayerData != null)
+            if (CurrentSaveData != null && SessionDataManager.Instance != null)
             {
-                SessionDataManager.Instance.LoadSessionFromSave(CurrentSaveData.PlayerData);
+                SessionDataManager.Instance.ClearSession();
+                SessionDataManager.Instance.LoadWorldStateFromSave(CurrentSaveData);
+                if (CurrentSaveData.PlayerData != null)
+                {
+                    SessionDataManager.Instance.LoadSessionFromSave(CurrentSaveData.PlayerData);
+                }
             }
             Util.Log($"[세이브 로드 성공] 슬롯: {slotIndex}, 타임스탬프: {CurrentSaveData.SaveTimestamp}");
             return true;
@@ -131,6 +140,7 @@ public class SaveManager : MonoSingleton<SaveManager>
         {
             Util.LogError($"세이브 데이터 역직렬화 실패: {ex.Message}");
             CurrentSaveData = null;
+            SessionDataManager.Instance?.ClearSession();
             return false;
         }
     }
@@ -140,37 +150,58 @@ public class SaveManager : MonoSingleton<SaveManager>
     /// </summary>
     public async UniTask SaveCurrentGameAsync(int slotIndex = 0)
     {
-        if (CurrentSaveData == null)
+        if (CurrentSaveData == null) return;
+
+        if (_isSaving)
         {
-            Util.LogError("저장할 CurrentSaveData가 Null입니다.");
+            _hasPendingSave = true;
+            _pendingSlotIndex = slotIndex;
             return;
         }
 
-        if (_isSaving) return;
         _isSaving = true;
-
-        EventBusSystem.Publish(new GameSavingEvent(slotIndex));
+        int targetSlot = slotIndex;
 
         try
         {
-            CurrentSaveData.SaveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string json = JsonUtility.ToJson(CurrentSaveData, prettyPrint: true);
-
-            string targetFilePath = GetSaveFilePath(slotIndex);
-            string tempFilePath = targetFilePath + ".tmp";
-
-            // 1. 임시 파일에 비동기 기록
-            await System.IO.File.WriteAllTextAsync(tempFilePath, json);
-
-            // 2. 기록 완료 후 원자적 교체
-            if (System.IO.File.Exists(targetFilePath))
+            while (true)
             {
-                System.IO.File.Delete(targetFilePath);
-            }
-            System.IO.File.Move(tempFilePath, targetFilePath);
+                _hasPendingSave = false;
+                if (CurrentSaveData == null) break;
 
-            EventBusSystem.Publish(new GameSavedEvent(slotIndex));
-            Util.Log($"[원자적 세이브 파일 기록 완료] 경로: {targetFilePath}");
+                EventBusSystem.Publish(new GameSavingEvent(targetSlot));
+
+                CurrentSaveData.SaveSlotIndex = targetSlot;
+                CurrentSaveData.SaveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                string json = JsonUtility.ToJson(CurrentSaveData, prettyPrint: true);
+
+                string targetFilePath = GetSaveFilePath(targetSlot);
+                string tempFilePath = targetFilePath + ".tmp";
+
+                await System.IO.File.WriteAllTextAsync(tempFilePath, json);
+
+                // 파일 기록 도중 해당 슬롯이 삭제되었다면 임시 파일만 정리하고 중단
+                if (CurrentSaveData == null || CurrentSaveData.SaveSlotIndex != targetSlot)
+                {
+                    if (System.IO.File.Exists(tempFilePath))
+                    {
+                        System.IO.File.Delete(tempFilePath);
+                    }
+                    break;
+                }
+
+                if (System.IO.File.Exists(targetFilePath))
+                {
+                    System.IO.File.Delete(targetFilePath);
+                }
+                System.IO.File.Move(tempFilePath, targetFilePath);
+
+                EventBusSystem.Publish(new GameSavedEvent(targetSlot));
+                Util.Log($"[원자적 세이브 파일 기록 완료] 경로: {targetFilePath}");
+
+                if (!_hasPendingSave) break;
+                targetSlot = _pendingSlotIndex;
+            }
         }
         catch (Exception ex)
         {
@@ -198,6 +229,8 @@ public class SaveManager : MonoSingleton<SaveManager>
         CurrentSaveData.LastBonfirePosition = SerializableVector3.FromVector3(bonfirePosition);
         CurrentSaveData.LastBonfireRotationY = bonfireRotationY;
 
+        SessionDataManager.Instance.ExportWorldStateToSave(CurrentSaveData);
+
         PlayerInfo status = player.StatusController.PlayerInfoSource;
         CurrentSaveData.PlayerData = new PlayerSaveData(status, player.StatusController.CurrentHp);
 
@@ -208,7 +241,37 @@ public class SaveManager : MonoSingleton<SaveManager>
         }
 
         SaveCurrentGameAsync(ActiveSlotIndex).Forget();
-        DebugLogger.LogWithTag("SaveManager", $"[체크포인트 & 인벤토리 완전 저장 완료] 슬롯: {bonfireId}");
+    }
+
+    /// <summary>
+    /// 보물상자 획득 또는 열쇠 문 개방 시 플레이어 인벤토리와 월드 진행도를 즉시 세이브 파일에 기록
+    /// </summary>
+    public void SaveWorldInteractionProgress(PlayerController player)
+    {
+        if (CurrentSaveData == null)
+        {
+            CurrentSaveData = new SaveData
+            {
+                SaveSlotIndex = ActiveSlotIndex,
+                IsCharacterCreated = true
+            };
+        }
+
+        SessionDataManager.Instance.ExportWorldStateToSave(CurrentSaveData);
+
+        if (player != null && player.StatusController != null)
+        {
+            PlayerInfo status = player.StatusController.PlayerInfoSource;
+            CurrentSaveData.PlayerData = new PlayerSaveData(status, player.StatusController.CurrentHp);
+
+            if (player.TryGetComponent(out PlayerInventoryHandler handler) && handler.InventoryInstance != null)
+            {
+                handler.InventoryInstance.ExportToSaveData(CurrentSaveData.PlayerData);
+                CurrentSaveData.PlayerData.HasReceivedInitialEquipment = true;
+            }
+        }
+
+        SaveCurrentGameAsync(ActiveSlotIndex).Forget();
     }
 
     /// <summary>
@@ -217,19 +280,25 @@ public class SaveManager : MonoSingleton<SaveManager>
     public bool DeleteSaveData(int slotIndex)
     {
         string filePath = GetSaveFilePath(slotIndex);
+        string tempFilePath = filePath + ".tmp";
+
         try
         {
             if (System.IO.File.Exists(filePath))
             {
                 System.IO.File.Delete(filePath);
             }
+            if (System.IO.File.Exists(tempFilePath))
+            {
+                System.IO.File.Delete(tempFilePath);
+            }
 
             if (CurrentSaveData != null && CurrentSaveData.SaveSlotIndex == slotIndex)
             {
                 CurrentSaveData = null;
+                _hasPendingSave = false;
+                SessionDataManager.Instance?.ClearSession();
             }
-
-            Util.Log($"[세이브 슬롯 삭제 완료] 슬롯: {slotIndex}");
             return true;
         }
         catch (Exception ex)

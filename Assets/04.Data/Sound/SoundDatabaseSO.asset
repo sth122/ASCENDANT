@@ -21,19 +21,19 @@ MonoBehaviour:
     Is3DSpatial: 0
   - Id: 101
     Category: 0
-    Clip: {fileID: 0}
+    Clip: {fileID: 8300000, guid: 3c1539793e34578459bcb97f54a15bb8, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 0
   - Id: 102
     Category: 0
-    Clip: {fileID: 0}
+    Clip: {fileID: 8300000, guid: 4e7c93829aa12b84b997091ca784c00d, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 0
   - Id: 103
     Category: 0
-    Clip: {fileID: 0}
+    Clip: {fileID: 8300000, guid: 3c95a962abba9fc47926357009532efa, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 0
@@ -81,7 +81,7 @@ MonoBehaviour:
     Is3DSpatial: 0
   - Id: 309
     Category: 1
-    Clip: {fileID: 0}
+    Clip: {fileID: 8300000, guid: 6c559e02a2e040c4eb2b1c38aaa5ec2c, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 1
@@ -93,13 +93,13 @@ MonoBehaviour:
     Is3DSpatial: 1
   - Id: 401
     Category: 1
-    Clip: {fileID: 8300000, guid: 6c559e02a2e040c4eb2b1c38aaa5ec2c, type: 3}
+    Clip: {fileID: 8300000, guid: 7d156b8a5b340cd46bcf0a76557dd2dd, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 1
   - Id: 402
     Category: 1
-    Clip: {fileID: 0}
+    Clip: {fileID: 8300000, guid: 5ff823f546b52574a931e1d9b44290a6, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 1
@@ -111,13 +111,13 @@ MonoBehaviour:
     Is3DSpatial: 1
   - Id: 404
     Category: 1
-    Clip: {fileID: 0}
+    Clip: {fileID: 8300000, guid: 94bc8546fe222904c9fd6e0438c1b6fc, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 1
-  - Id: 405
-    Category: 2
-    Clip: {fileID: 0}
+  - Id: 104
+    Category: 0
+    Clip: {fileID: 8300000, guid: 94b009bf18240614385c01a378251224, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 0

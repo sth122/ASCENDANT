@@ -7,6 +7,7 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
     [UnityEngine.Header("Scene Camera Rig")]
     [UnityEngine.SerializeField] private Unity.Cinemachine.CinemachineCamera _sceneFreeLookCamera;
     [UnityEngine.SerializeField] private Unity.Cinemachine.CinemachineCamera _sceneLockOnCamera;
+    [UnityEngine.SerializeField] private Unity.Cinemachine.CinemachineCamera _sceneCutsceneCamera;
 
     private PlayerController _spawnedPlayer;
 
@@ -42,7 +43,7 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
             spawnPos = _playerSpawnPoint != null ? _playerSpawnPoint.position : UnityEngine.Vector3.zero;
             spawnRot = _playerSpawnPoint != null ? _playerSpawnPoint.rotation : UnityEngine.Quaternion.identity;
         }
-        else if (SavePointManager.Instance.TryGetSpawnTransform(save.LastBonfireId, out UnityEngine.Vector3 registeredPos, out UnityEngine.Quaternion registeredRot))
+        else if (SavePointSystem.Instance.TryGetSpawnTransform(save.LastBonfireId, out UnityEngine.Vector3 registeredPos, out UnityEngine.Quaternion registeredRot))
         {
             // 이어하기: SavePointManager에 등록된 해당 BonfireId의 최신 Transform 위치로 소환
             spawnPos = registeredPos;
@@ -86,7 +87,7 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
         if (CameraManager.Instance != null && _spawnedPlayer != null)
         {
             UnityEngine.Transform camTarget = _spawnedPlayer.CameraTarget != null ? _spawnedPlayer.CameraTarget : _spawnedPlayer.transform;
-            CameraManager.Instance.RegisterSceneCameras(_sceneFreeLookCamera, _sceneLockOnCamera);
+            CameraManager.Instance.RegisterSceneCameras(_sceneFreeLookCamera, _sceneLockOnCamera, _sceneCutsceneCamera);
             CameraManager.Instance.SetPlayerTarget(camTarget);
             Util.Log($"[CameraManager] 타깃 주입 완료: {camTarget.name}");
         }
@@ -147,6 +148,11 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
 
     protected override async Cysharp.Threading.Tasks.UniTask SetupSceneUIAsync()
     {
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayBGM(SoundId.BGM_Field, fadeDuration: 1.5f);
+        }
+
         PlayerHUDModel hudModel = new PlayerHUDModel();
         await UIManager.Instance.OpenUIAsync<PlayerHUDView, PlayerHUDPresenter, PlayerHUDModel>(
             UIId.PlayerHUD, hudModel, ct: this.destroyCancellationToken

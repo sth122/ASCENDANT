@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using static UnityEditor.Experimental.GraphView.GraphView;
 using Util = DebugLogger<PlayerStatusController>;
 
 /// <summary>
@@ -50,22 +49,6 @@ public class PlayerStatusController : UnitStatusController
     public PlayerMotionStatusModule PlayerMotionStats => MotionStatus as PlayerMotionStatusModule;
     public PlayerInfo PlayerInfoSource { get; private set; }
     public event System.Action<float, float> OnStaminaChangedEvent;
-
-    private void Update()
-    {
-#if UNITY_EDITOR
-        if (UnityEngine.InputSystem.Keyboard.current.f1Key.wasPressedThisFrame)
-        {
-            // 테스트용 소울 50,000 지급
-            AddSouls(50000);
-        }
-        if (UnityEngine.InputSystem.Keyboard.current.f2Key.wasPressedThisFrame)
-        {
-            // 화톳불 레벨업 창 즉시 오픈
-            UIManager.Instance.OpenUIAsync<BonfireWindowView, BonfirePresenter, BonfireModel>(UIId.BonfireUI).Forget();
-        }
-#endif
-    }
 
     /// <summary>
     /// Player 전용 스탯 및 모듈 확장부

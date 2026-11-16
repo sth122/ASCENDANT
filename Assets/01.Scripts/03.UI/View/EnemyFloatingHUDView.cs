@@ -1,6 +1,6 @@
 ﻿/// <summary>
 /// 일반 Enemy 머리 위에 표시되는 스크린 스페이스 플로팅 HUD 뷰
-/// HP 잔상 애니메이션과 Grogy 상태 판단용 Poise 게이지를 제공
+/// HP 잔상 애니메이션, Groggy 상태 판단용 Poise 게이지, 카메라-벽 차폐 숨김을 제공
 /// </summary>
 public class EnemyFloatingHUDView : UIBase
 {
@@ -14,11 +14,11 @@ public class EnemyFloatingHUDView : UIBase
     [UnityEngine.SerializeField] private UnityEngine.Color _normalPoiseColor = new UnityEngine.Color(0.95f, 0.75f, 0.15f, 1f);
     [UnityEngine.SerializeField] private UnityEngine.Color _groggyPoiseColor = new UnityEngine.Color(0.9f, 0.1f, 0.1f, 1f);
 
-
-    [UnityEngine.Header("Ghost & Tracking Settings")]
+    [UnityEngine.Header("Ghost, Tracking & Occlusion Settings")]
     [UnityEngine.SerializeField] private float _ghostDelayDuration = 0.4f;
     [UnityEngine.SerializeField] private float _ghostDrainSpeed = 0.5f;
     [UnityEngine.SerializeField] private UnityEngine.Vector3 _worldOffset = new UnityEngine.Vector3(0f, 2.2f, 0f);
+    [UnityEngine.SerializeField] private float _maxVisibleDistance = 30f;
 
     private UnityEngine.Transform _targetTransform;
     private UnityEngine.Camera _mainCamera;
@@ -27,26 +27,36 @@ public class EnemyFloatingHUDView : UIBase
     private float _hpGhostTimer = 0f;
     private float _previousHpRatio = 1.0f;
     private float _autoHideTimer = 0f;
-    private const float AutoHideDuration = 6.0f; // 비피격 시 자동 숨김 시간
+    private const float AutoHideDuration = 6.0f;
+
+    private int _occlusionLayerMask;
+    private float _nextOcclusionCheckTime = 0f;
+    private bool _isOccludedByObstacle = false;
 
     protected override void Awake()
     {
         base.Awake();
         _selfRect = GetComponent<UnityEngine.RectTransform>();
         _mainCamera = UnityEngine.Camera.main;
+
+        // Player(6), Enemy(7), Hitbox(9), UI(5), IgnoreRaycast(2)를 제외한 모든 지형/벽 레이어 차폐 감지
+        int ignoredLayers = (1 << 2) | (1 << 5) | (1 << 6) | (1 << 7) | (1 << 9);
+        _occlusionLayerMask = ~ignoredLayers;
     }
 
     public void BindTarget(UnityEngine.Transform targetTransform, float currentHp, float maxHp, float currentPoise, float maxPoise, UnityEngine.Vector3 customOffset = default)
     {
         _targetTransform = targetTransform;
         _mainCamera = UnityEngine.Camera.main;
+        _isOccludedByObstacle = false;
+        _nextOcclusionCheckTime = 0f;
 
         if (customOffset != default)
         {
             _worldOffset = customOffset;
         }
 
-        _previousHpRatio = UnityEngine.Mathf.Clamp01(currentHp / maxHp);
+        _previousHpRatio = maxHp > 0f ? UnityEngine.Mathf.Clamp01(currentHp / maxHp) : 1.0f;
         if (_hpSlider != null) _hpSlider.value = _previousHpRatio;
         if (_hpGhostSlider != null) _hpGhostSlider.value = _previousHpRatio;
 
@@ -138,6 +148,12 @@ public class EnemyFloatingHUDView : UIBase
             if (_mainCamera == null) return;
         }
 
+        if (_autoHideTimer <= 0f)
+        {
+            if (_canvasGroup != null) _canvasGroup.alpha = 0f;
+            return;
+        }
+
         UnityEngine.Vector3 targetWorldPos = _targetTransform.position + _worldOffset;
         UnityEngine.Vector3 screenPos = _mainCamera.WorldToScreenPoint(targetWorldPos);
 
@@ -148,7 +164,30 @@ public class EnemyFloatingHUDView : UIBase
             return;
         }
 
-        if (_autoHideTimer > 0f && _canvasGroup != null)
+        // 벽·기둥 등 장애물 시선 차폐 검사 (0.08초 간격 갱신)
+        if (UnityEngine.Time.unscaledTime >= _nextOcclusionCheckTime)
+        {
+            _nextOcclusionCheckTime = UnityEngine.Time.unscaledTime + 0.08f;
+            UnityEngine.Vector3 camPos = _mainCamera.transform.position;
+            UnityEngine.Vector3 targetChestPos = _targetTransform.position + UnityEngine.Vector3.up * 1.35f;
+
+            if (UnityEngine.Physics.Linecast(camPos, targetChestPos, out UnityEngine.RaycastHit hit, _occlusionLayerMask, UnityEngine.QueryTriggerInteraction.Ignore))
+            {
+                _isOccludedByObstacle = hit.transform.root != _targetTransform.root;
+            }
+            else
+            {
+                _isOccludedByObstacle = false;
+            }
+        }
+
+        if (_isOccludedByObstacle)
+        {
+            if (_canvasGroup != null) _canvasGroup.alpha = 0f;
+            return;
+        }
+
+        if (_canvasGroup != null)
         {
             _canvasGroup.alpha = 1f;
         }
@@ -160,6 +199,8 @@ public class EnemyFloatingHUDView : UIBase
     {
         base.OnSpawn();
         _autoHideTimer = AutoHideDuration;
+        _isOccludedByObstacle = false;
+        _nextOcclusionCheckTime = 0f;
         if (_canvasGroup != null) _canvasGroup.alpha = 1f;
     }
 
@@ -167,5 +208,6 @@ public class EnemyFloatingHUDView : UIBase
     {
         base.OnDespawn();
         _targetTransform = null;
+        _isOccludedByObstacle = false;
     }
 }

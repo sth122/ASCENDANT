@@ -14,6 +14,7 @@ public class DataManager : MonoSingleton<DataManager>, ILoadable
 
     // 타입 기반 단일 SO 캐시
     private readonly Dictionary<Type, ScriptableObject> _singleDataCache = new Dictionary<Type, ScriptableObject>();
+    private readonly Dictionary<int, ItemData> _itemDataCache = new Dictionary<int, ItemData>();
 
     private bool _isDataLoaded = false;
     private UniTaskCompletionSource _loadCompletionSource;
@@ -57,8 +58,6 @@ public class DataManager : MonoSingleton<DataManager>, ILoadable
         _loadCompletionSource = new UniTaskCompletionSource();
         const string dataLabel = "Static_Data";
 
-        Util.Log($"전역 기획 데이터 일괄 로드 시작 (Label: {dataLabel})");
-
         try
         {
             IList<ScriptableObject> loadedAssets = await AssetsManager.Instance.LoadAssetsByLabelAsync<ScriptableObject>(
@@ -71,7 +70,6 @@ public class DataManager : MonoSingleton<DataManager>, ILoadable
                 {
                     RegisterAsset(loadedAssets[i]);
                 }
-                Util.Log($"전역 기획 데이터 총 {loadedAssets.Count}종 캐싱 및 초기화 완료");
             }
             else
             {
@@ -94,17 +92,52 @@ public class DataManager : MonoSingleton<DataManager>, ILoadable
     private void RegisterAsset(ScriptableObject asset)
     {
         if (asset == null) return;
-        Type assetType = asset.GetType();
 
+        // 개별 아이템 SO는 ID 딕셔너리에 등록 (동일 타입 다수 SO가 _singleDataCache를 덮어쓰지 않도록 분리)
+        if (asset is ItemData itemData)
+        {
+            RegisterItemData(itemData);
+            return;
+        }
+
+        Type assetType = asset.GetType();
         _singleDataCache[assetType] = asset;
 
-        // IInitable 인터페이스 다형성을 통한 무결성 일괄 초기화
+        if (asset is PlayerInitialEquipmentSO initialLoadout)
+        {
+            RegisterInitialLoadoutItems(initialLoadout);
+        }
+
         if (asset is IInitable initable)
         {
             initable.Init();
         }
 
         Util.Log($"[SO 캐시 등록 완료] Type: {assetType.Name}");
+    }
+
+    public void RegisterInitialLoadoutItems(PlayerInitialEquipmentSO loadout)
+    {
+        if (loadout == null) return;
+
+        RegisterItemData(loadout.StartingWeapon);
+        RegisterItemData(loadout.StartingShield);
+
+        if (loadout.StartingConsumables != null)
+        {
+            for (int i = 0; i < loadout.StartingConsumables.Count; i++)
+            {
+                RegisterItemData(loadout.StartingConsumables[i].ItemData);
+            }
+        }
+
+        if (loadout.ExtraInventoryItems != null)
+        {
+            for (int i = 0; i < loadout.ExtraInventoryItems.Count; i++)
+            {
+                RegisterItemData(loadout.ExtraInventoryItems[i]);
+            }
+        }
     }
 
     #region 제네릭 Getter API
@@ -140,8 +173,6 @@ public class DataManager : MonoSingleton<DataManager>, ILoadable
         return false;
     }
     #endregion
-
-    private readonly Dictionary<int, ItemData> _itemDataCache = new Dictionary<int, ItemData>();
 
     public void RegisterItemData(ItemData item)
     {

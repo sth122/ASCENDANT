@@ -34,32 +34,34 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         if (View == null) return;
 
         if (View.CloseButton != null) View.CloseButton.onClick.AddListener(HandleCloseClicked);
-        
-        if (View.WeaponTabToggle != null) 
-{
+
+        if (View.WeaponTabToggle != null)
+        {
             View.WeaponTabToggle.onValueChanged.AddListener(
                 (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Weapon); });
-}
+        }
         if (View.ShieldTabToggle != null)
         {
             View.ShieldTabToggle.onValueChanged.AddListener(
-                      (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Shield); });
+                (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Shield); });
         }
         if (View.ArmorTabToggle != null)
         {
             View.ArmorTabToggle.onValueChanged.AddListener(
-                      (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Armor); });
+                (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Armor); });
         }
         if (View.AccessoryTabToggle != null)
         {
             View.AccessoryTabToggle.onValueChanged.AddListener(
-                      (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Accessory); });
+                (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Accessory); });
         }
         if (View.ConsumableTabToggle != null)
         {
             View.ConsumableTabToggle.onValueChanged.AddListener(
-                      (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Consumable); });
-        }      for (int i = 0; i < View.GridSlots.Count; i++)
+                (isOn) => { if (isOn) FilterGridByCategory(ItemCategory.Consumable); });
+        }
+
+        for (int i = 0; i < View.GridSlots.Count; i++)
         {
             View.GridSlots[i].OnSlotClickedEvent += HandleSlotClicked;
             View.GridSlots[i].OnSlotHoverEvent += HandleSlotHover;
@@ -85,30 +87,39 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
             _inventory.OnEquipmentChanged += HandleDomainEquipmentChanged;
             _inventory.QuickSlots.OnQuickSlotChanged += HandleDomainQuickSlotChanged;
         }
+
+        EventBusSystem.Subscribe<SoulChangedEvent>(HandleSoulChanged);
     }
 
     protected override void OnUnbindHandler()
     {
+        EventBusSystem.Unsubscribe<SoulChangedEvent>(HandleSoulChanged);
+
         if (View == null) return;
 
         if (View.CloseButton != null) View.CloseButton.onClick.RemoveAllListeners();
 
-        if (View.WeaponTabToggle != null) 
-{
+        if (View.WeaponTabToggle != null)
+        {
             View.WeaponTabToggle.onValueChanged.RemoveAllListeners();
-}        if (View.ShieldTabToggle != null) 
-{
+        }
+        if (View.ShieldTabToggle != null)
+        {
             View.ShieldTabToggle.onValueChanged.RemoveAllListeners();
-}        if (View.ArmorTabToggle != null) 
-{
+        }
+        if (View.ArmorTabToggle != null)
+        {
             View.ArmorTabToggle.onValueChanged.RemoveAllListeners();
-}        if (View.AccessoryTabToggle != null) 
-{
+        }
+        if (View.AccessoryTabToggle != null)
+        {
             View.AccessoryTabToggle.onValueChanged.RemoveAllListeners();
-}        if (View.ConsumableTabToggle != null) 
-            {
+        }
+        if (View.ConsumableTabToggle != null)
+        {
             View.ConsumableTabToggle.onValueChanged.RemoveAllListeners();
-}
+        }
+
         for (int i = 0; i < View.GridSlots.Count; i++)
         {
             View.GridSlots[i].OnSlotClickedEvent -= HandleSlotClicked;
@@ -123,6 +134,11 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         UnbindEquipSlot(View.BootsSlot);
         UnbindEquipSlot(View.NecklaceSlot);
         UnbindEquipSlot(View.RingSlot);
+
+        for (int i = 0; i < View.QuickAssignSlots.Count; i++)
+        {
+            if (View.QuickAssignSlots[i] != null) View.QuickAssignSlots[i].OnSlotHoverEvent -= HandleSlotHover;
+        }
 
         if (_inventory != null)
         {
@@ -145,8 +161,6 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         slot.OnSlotClickedEvent -= HandleEquipSlotClicked;
         slot.OnSlotHoverEvent -= HandleSlotHover;
     }
-
-
 
     private void ResolvePlayerReferences()
     {
@@ -240,11 +254,13 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         }
     }
     private void HandleDomainSlotUpdated(int slotIndex, Item item) => FilterGridByCategory(_currentCategory);
+
     private void HandleDomainEquipmentChanged(EquipSlotType slotType, EquipmentItem item)
     {
         SynchronizeEquipAndQuickSlots();
         UpdateFullModel();
     }
+
     private void HandleDomainQuickSlotChanged(int slotIndex, ConsumableItem item)
     {
         if (View != null && slotIndex >= 0 && slotIndex < View.QuickAssignSlots.Count && View.QuickAssignSlots[slotIndex] != null)
@@ -253,8 +269,29 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         }
     }
 
+    private void HandleSoulChanged(SoulChangedEvent evt)
+    {
+        if (View == null || Model == null) return;
+
+        Model.CurrentSouls = evt.CurrentSouls;
+        RefreshSoulsDisplay(evt.CurrentSouls);
+        View.CharacterDataPaneUI?.UpdateCharacterData(Model);
+    }
+
+    private void RefreshSoulsDisplay(int currentSouls)
+    {
+        if (View != null && View.CurrentSoulsText != null)
+        {
+            View.CurrentSoulsText.text = currentSouls.ToString("N0");
+        }
+    }
+
     private void UpdateFullModel()
     {
+        if (_player == null)
+        {
+            ResolvePlayerReferences();
+        }
         if (_player == null || View == null || Model == null) return;
 
         PlayerStatusController status = _player.StatusController;
@@ -262,7 +299,7 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         PlayerMotionStatusModule motion = status.PlayerMotionStats;
 
         Model.SoulLevel = info != null ? info.SoulLevel : 1;
-        Model.CurrentSouls = info != null ? info.CurrentSouls : 0;
+        Model.CurrentSouls = status.CurrentSouls;
         Model.Vigor = info != null ? info.Vigor : 10;
         Model.Endurance = info != null ? info.Endurance : 10;
         Model.Strength = info != null ? info.Strength : 10;
@@ -285,12 +322,7 @@ public class InventoryPresenter : UIPresenterBase<InventoryView, InventoryModel>
         Model.FlatDefense = (info != null ? info.FlatDefense : 10f) + status.EquippedArmorFlatDefense;
         Model.Absorption = status.EquippedArmorAbsorption;
 
-        // 상단 헤더 소지 소울 텍스트 갱신
-        if (View.CurrentSoulsText != null)
-        {
-            View.CurrentSoulsText.text = Model.CurrentSouls.ToString("N0");
-        }
-
+        RefreshSoulsDisplay(Model.CurrentSouls);
         View.CharacterDataPaneUI?.UpdateCharacterData(Model);
     }
 

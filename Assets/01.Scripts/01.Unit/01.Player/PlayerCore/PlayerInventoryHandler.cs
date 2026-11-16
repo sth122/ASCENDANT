@@ -41,6 +41,8 @@ public class PlayerInventoryHandler : MonoBehaviour
     /// </summary>
     public void InitializeInventory(DataManager dataManager)
     {
+        ResolveInitialEquipmentSO(dataManager);
+
         SaveData save = SaveManager.Instance != null ? SaveManager.Instance.CurrentSaveData : null;
         PlayerSaveData sessionData = SessionDataManager.Instance != null && SessionDataManager.Instance.HasActiveSession
             ? SessionDataManager.Instance.CurrentSessionData : null;
@@ -53,27 +55,40 @@ public class PlayerInventoryHandler : MonoBehaviour
             return;
         }
 
-        // 2. 화톳불 영속 세이브에 인벤토리 스냅샷이 있는 경우 (게임 이어하기)
+        // 2. 영속 세이브에 인벤토리 스냅샷이 있는 경우 (게임 이어하기)
         if (save != null && save.PlayerData != null && save.PlayerData.HasReceivedInitialEquipment)
         {
             RestoreFromSaveData(save.PlayerData, dataManager);
             EnsureMandatoryWeaponAndShield();
+
+            if (sessionData != null)
+            {
+                InventoryInstance.ExportToSaveData(sessionData);
+                sessionData.HasReceivedInitialEquipment = true;
+            }
             return;
         }
 
         // 3. 신규 게임 초기 로드아웃 지급
         ApplyInitialLoadout(save, sessionData);
     }
+    private void ResolveInitialEquipmentSO(DataManager dataManager)
+    {
+        if (_initialEquipmentSO == null && dataManager != null)
+        {
+            dataManager.TryGetSingle<PlayerInitialEquipmentSO>(out _initialEquipmentSO);
+        }
 
+        if (_initialEquipmentSO != null && dataManager != null)
+        {
+            dataManager.RegisterInitialLoadoutItems(_initialEquipmentSO);
+        }
+    }
     /// <summary>
     /// 구 세이브 데이터 로드 시에도 필수 무기/방패가 비어있지 않도록 보장
     /// </summary>
     private void EnsureMandatoryWeaponAndShield()
     {
-        if (_initialEquipmentSO == null && DataManager.Instance != null)
-        {
-            DataManager.Instance.TryGetSingle<PlayerInitialEquipmentSO>(out _initialEquipmentSO);
-        }
         if (_initialEquipmentSO == null || InventoryInstance == null) return;
 
         if (InventoryInstance.GetEquippedItem(EquipSlotType.MainWeapon) == null && _initialEquipmentSO.StartingWeapon != null)
@@ -88,11 +103,6 @@ public class PlayerInventoryHandler : MonoBehaviour
 
     private void ApplyInitialLoadout(SaveData save, PlayerSaveData sessionData)
     {
-        if (_initialEquipmentSO == null && DataManager.Instance != null)
-        {
-            DataManager.Instance.TryGetSingle<PlayerInitialEquipmentSO>(out _initialEquipmentSO);
-        }
-
         if (_initialEquipmentSO == null)
         {
             DebugLogger.LogErrorWithTag("PlayerInventoryHandler", "PlayerInitialEquipmentSO를 찾을 수 없습니다.");
@@ -104,10 +114,12 @@ public class PlayerInventoryHandler : MonoBehaviour
 
         if (save != null && save.PlayerData != null)
         {
+            InventoryInstance.ExportToSaveData(save.PlayerData);
             save.PlayerData.HasReceivedInitialEquipment = true;
         }
         if (sessionData != null)
         {
+            InventoryInstance.ExportToSaveData(sessionData);
             sessionData.HasReceivedInitialEquipment = true;
         }
         if (SaveManager.Instance != null && save != null)
@@ -115,7 +127,7 @@ public class PlayerInventoryHandler : MonoBehaviour
             SaveManager.Instance.SaveCurrentGameAsync(save.SaveSlotIndex).Forget();
         }
 
-        DebugLogger.LogWithTag("PlayerInventoryHandler", "[신규 게임 초기 장비 지급 완료]");
+        DebugLogger.LogWithTag("PlayerInventoryHandler", "[신규 게임 초기 장비 지급 및 직렬화 동기화 완료]");
     }
 
     #region 세션/세이브 데이터 직렬화 및 복원 브릿지

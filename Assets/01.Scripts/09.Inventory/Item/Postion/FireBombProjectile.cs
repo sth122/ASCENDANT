@@ -44,10 +44,10 @@ public class FireBombProjectile : MonoBehaviour, IPoolable
     private void Explode(Vector3 explosionPoint)
     {
         // 1. 폭발 타격 VFX 스폰
-        //if (ObjectPoolManager.Instance != null)
-        //{
-        //    ObjectPoolManager.Instance.Spawn(PoolType.HitVFX_Blunt, explosionPoint, Quaternion.identity);
-        //}
+        if (ObjectPoolManager.Instance != null)
+        {
+            ObjectPoolManager.Instance.Spawn(PoolType.VFX_FireExplosion, explosionPoint, Quaternion.identity);
+        }
 
         // 2. 반경 2.5m 내 피격체 탐색
         int count = Physics.OverlapSphereNonAlloc(explosionPoint, _explosionRadius, _overlapBuffer, _targetLayer);

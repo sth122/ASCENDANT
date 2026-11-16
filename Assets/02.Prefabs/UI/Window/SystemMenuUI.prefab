@@ -90,7 +90,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4285700016
   m_fontColor: {r: 0.6911765, g: 0.59109664, b: 0.44723183, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -103,7 +103,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -445,7 +445,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Resume
+  m_text: "\uACC4\uC18D\uD558\uAE30"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
   m_sharedMaterial: {fileID: -6072433820831682332, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
@@ -454,7 +454,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4288731134
   m_fontColor: {r: 0.9960785, g: 0.8431373, b: 0.627451, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -467,7 +467,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -598,9 +598,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Quit
-
-'
+  m_text: "\uB098\uAC00\uAE30"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
   m_sharedMaterial: {fileID: -6072433820831682332, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
@@ -609,7 +607,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4289510655
   m_fontColor: {r: 1, g: 0.73671395, b: 0.6764706, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -622,7 +620,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1289,7 +1287,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Settings
+  m_text: "\uC138\uD305"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
   m_sharedMaterial: {fileID: -6072433820831682332, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
@@ -1298,7 +1296,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4288731134
   m_fontColor: {r: 0.9960785, g: 0.8431373, b: 0.627451, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -1311,7 +1309,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2

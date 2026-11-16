@@ -13,6 +13,11 @@ public class PlayerAttackState : PlayerActionState
     private const float SafetyTimeout = 2.5f;
     private float _currentAttackSpeedMult = 1.0f;
 
+    // 직전 상태(Locomotion/이전 타수)의 잔여 normalizedTime 오판 방지용 상태 추적 플래그
+    private int _previousStateHash = 0;
+    private bool _sawTransition = false;
+    private bool _hasEnteredCurrentAttackClip = false;
+
     private UnityEngine.LayerMask searchLayer = UnityEngine.LayerMask.GetMask("Enemy", "EnemyHurtbox");
     private readonly UnityEngine.Collider[] _softLockBuffer = new UnityEngine.Collider[8];
     private WeaponItemData.ComboTiming _currentTiming;
@@ -24,12 +29,12 @@ public class PlayerAttackState : PlayerActionState
         base.Enter();
 
         CanMove = false;
-        CanRotate =false;
+        CanRotate = false;
 
-        // 1. 공격 진입 시 이전 지상 상태에서 누적된 잔여 공격 입력을 즉시 제거 (ComboStep = 2 건너뛰기 원천 차단)
+        // 1. 공격 진입 시 이전 지상 상태에서 누적된 잔여 공격 입력을 즉시 제거
         owner.InputReader.ClearCommand(InputCommandType.Attack);
 
-        // 2. 스태미나 검증 (부족 시 즉시 복귀)
+        // 2. 실제 장착 무기 기준 스태미나 검증
         float staminaCost = GetAttackStaminaCost();
         if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(staminaCost))
         {
@@ -43,10 +48,11 @@ public class PlayerAttackState : PlayerActionState
         _hasOpenedHitboxThisStep = false;
         _stepTimer = 0f;
 
-        // 3.자동 타깃 이동 입력 방향 대신 최근접/타겟팅 적을 향해 자동 스냅
+        // 3. 락온 이동 파라미터 잔류 차단 후 타깃 정렬
+        _playerAnimController.SetBool(AnimParamType.IsLockOn, false);
         AlignAttackDirection();
 
-        // 4. Root Motion 활성화 (클립의 전진 변위가 Rigidbody를 직접 추진하도록 권한 부여)
+        // 4. Root Motion 활성화
         _playerAnimController.SetRootMotion(true);
 
         // 5. 1타 실행
@@ -66,18 +72,35 @@ public class PlayerAttackState : PlayerActionState
             return;
         }
 
-
         UnityEngine.Animator animator = _playerAnimController.AnimatorInstance;
-        if (animator.IsInTransition(0)) return;
+        if (animator == null) return;
 
+        if (animator.IsInTransition(0))
+        {
+            _sawTransition = true;
+            return;
+        }
+
+        // 아직 새 공격 클립으로 전환이 완료되지 않았다면 이전 상태의 normalizedTime으로 종료/캔슬 판정 금지
+        if (!_hasEnteredCurrentAttackClip)
+        {
+            int currentHash = animator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+            if (_sawTransition || currentHash != _previousStateHash)
+            {
+                _hasEnteredCurrentAttackClip = true;
+            }
+            else
+            {
+                return;
+            }
+        }
 
         // 2. 공격 속도 배율에 맞춰 콤보 전환 락아웃 시간 비례 보정
         float scaledLockout = StepLockoutDuration / UnityEngine.Mathf.Max(1.0f, _currentAttackSpeedMult);
-        // 타수 전환 중일 때는 히트박스 갱신 및 캔슬 판정을 전면 보류
         if (_hasAdvancedThisStep)
         {
             CloseHitboxInternal();
-            if (_stepTimer >= scaledLockout && !animator.IsInTransition(0))
+            if (_stepTimer >= scaledLockout)
             {
                 _hasAdvancedThisStep = false;
             }
@@ -126,7 +149,7 @@ public class PlayerAttackState : PlayerActionState
             }
         }
 
-        // 5. 후딜레이 캔슬 이동 판정 (조작감 향상)
+        // 5. 후딜레이 캔슬 이동 판정
         if (!_hasAdvancedThisStep && normalizedTime >= _currentTiming.MovementCancelNormalized)
         {
             if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
@@ -147,17 +170,14 @@ public class PlayerAttackState : PlayerActionState
     {
         base.Exit();
 
-        // 타 상태(이동, 구르기 등)에 공격 배속이 잔류하지 않도록 1.0f 원복
         if (_playerAnimController.AnimatorInstance != null)
         {
             _playerAnimController.AnimatorInstance.speed = 1.0f;
         }
 
-        // 공격이 종료되면 Root Motion을 회수하여 일반 이동 제어권 복원
         _playerAnimController.SetRootMotion(false);
         CloseHitboxInternal();
 
-        // 상태 탈출 시 잔여 트리거 및 콤보 스텝 초기화
         _playerAnimController.ResetTrigger(AnimParamType.Attack);
         _playerAnimController.SetInteger(AnimParamType.ComboStep, 0);
         owner.InputReader.ClearCommand(InputCommandType.Attack);
@@ -165,6 +185,8 @@ public class PlayerAttackState : PlayerActionState
         _hasAdvancedThisStep = false;
         _isHitboxCurrentlyOpen = false;
         _hasOpenedHitboxThisStep = false;
+        _hasEnteredCurrentAttackClip = false;
+        _sawTransition = false;
         _comboStep = 0;
         _stepTimer = 0f;
     }
@@ -176,11 +198,15 @@ public class PlayerAttackState : PlayerActionState
     {
         _isHitboxCurrentlyOpen = false;
         _hasOpenedHitboxThisStep = false;
+        _sawTransition = false;
+        _hasEnteredCurrentAttackClip = false;
+
+        UnityEngine.Animator animator = _playerAnimController.AnimatorInstance;
+        _previousStateHash = animator != null ? animator.GetCurrentAnimatorStateInfo(0).fullPathHash : 0;
 
         WeaponItemData weapon = owner.CombatModule.CurrentWeaponData;
         _currentTiming = (weapon != null) ? weapon.GetComboTiming(_comboStep) : new WeaponItemData.ComboTiming(0.35f, 0.55f, 0.30f, 0.65f, 0.80f);
 
-        // 기량(Dexterity) 기반 공격 속도 배율 산출 및 Animator 배속 적용
         _currentAttackSpeedMult = 1.0f;
         if (_playerStatusController != null && _playerStatusController.PlayerInfoSource != null)
         {
@@ -188,9 +214,9 @@ public class PlayerAttackState : PlayerActionState
                 .CalculateAttackSpeedMultiplier(_playerStatusController.EquippedBonusDexterity);
         }
 
-        if (_playerAnimController.AnimatorInstance != null)
+        if (animator != null)
         {
-            _playerAnimController.AnimatorInstance.speed = _currentAttackSpeedMult;
+            animator.speed = _currentAttackSpeedMult;
         }
 
         float staminaCost = GetAttackStaminaCost();
@@ -206,24 +232,23 @@ public class PlayerAttackState : PlayerActionState
     private void AdvanceCombo()
     {
         float nextCost = GetAttackStaminaCost();
-
-        // 다음 타수에 필요한 스태미나가 없으면 콤보 연계를 차단하고 현재 타수의 후딜을 유지
         if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(nextCost)) return;
 
         CloseHitboxInternal();
-        // 다음 타수가 메카님에 완전히 안착할 때까지 잠금 유지
         _hasAdvancedThisStep = true;
         _stepTimer = 0f;
 
-        // 3타 이후에는 1타로 순환(Loop)
         _comboStep = (_comboStep >= MaxComboStep) ? 1 : _comboStep + 1;
-
         owner.InputReader.ClearCommand(InputCommandType.Attack);
 
-        // 연타 시 입력 방향으로 재회전
-        if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
+        // 락온 중에는 타깃 정면을 재추적하고, 비락온 시에만 이동 입력 방향으로 재회전
+        if (owner.CurrentLockOnTarget != null)
         {
-            owner.transform.rotation = UnityEngine.Quaternion.LookRotation(owner.CurrentMoveDirection);
+            AlignAttackDirection();
+        }
+        else if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
+        {
+            ApplyImmediateRotation(UnityEngine.Quaternion.LookRotation(owner.CurrentMoveDirection));
         }
 
         ExecuteAttackStep();
@@ -231,8 +256,7 @@ public class PlayerAttackState : PlayerActionState
 
     private void UpdateHitboxWindow(float normalizedTime)
     {
-        // 콤보 승급 대기 중일 때는 절대 열지 않음
-        if (_hasAdvancedThisStep)
+        if (_hasAdvancedThisStep || !_hasEnteredCurrentAttackClip)
         {
             CloseHitboxInternal();
             return;
@@ -272,6 +296,15 @@ public class PlayerAttackState : PlayerActionState
         return owner.CombatConfig != null ? owner.CombatConfig.AttackStaminaCost : 14.0f;
     }
 
+    private void ApplyImmediateRotation(UnityEngine.Quaternion targetRot)
+    {
+        owner.transform.rotation = targetRot;
+        if (owner.Rigidbody != null && !owner.Rigidbody.isKinematic)
+        {
+            owner.Rigidbody.MoveRotation(targetRot);
+        }
+    }
+
     /// <summary>
     /// 공격 개시 시 락온 타깃 또는 전방 부채꼴 내 가장 가까운 적을 향해 자동 정렬
     /// </summary>
@@ -284,7 +317,7 @@ public class PlayerAttackState : PlayerActionState
             dirToLockOn.y = 0f;
             if (dirToLockOn.sqrMagnitude > 0.001f)
             {
-                owner.transform.rotation = UnityEngine.Quaternion.LookRotation(dirToLockOn.normalized);
+                ApplyImmediateRotation(UnityEngine.Quaternion.LookRotation(dirToLockOn.normalized));
                 return;
             }
         }
@@ -302,7 +335,6 @@ public class PlayerAttackState : PlayerActionState
             toEnemy.y = 0f;
             float dist = toEnemy.magnitude;
 
-            // 전방 120도 부채꼴 검사 (Dot > 0.5)
             if (UnityEngine.Vector3.Dot(owner.transform.forward, toEnemy.normalized) > 0.5f && dist < closestDist)
             {
                 closestDist = dist;
@@ -317,7 +349,7 @@ public class PlayerAttackState : PlayerActionState
             targetDir.y = 0f;
             if (targetDir.sqrMagnitude > 0.001f)
             {
-                owner.transform.rotation = UnityEngine.Quaternion.LookRotation(targetDir.normalized);
+                ApplyImmediateRotation(UnityEngine.Quaternion.LookRotation(targetDir.normalized));
                 return;
             }
             return;
@@ -326,7 +358,7 @@ public class PlayerAttackState : PlayerActionState
         // 3. 탐색된 적이 없다면 현재 이동 입력 방향으로 회전
         if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
         {
-            owner.transform.rotation = UnityEngine.Quaternion.LookRotation(owner.CurrentMoveDirection.normalized);
+            ApplyImmediateRotation(UnityEngine.Quaternion.LookRotation(owner.CurrentMoveDirection.normalized));
         }
     }
 }

@@ -9,7 +9,7 @@ public class DragonCombatController : EnemyCombatController
 {
     [Header("Dragon EarthShatter Settings")]
     [SerializeField] private float _shatterRadius = 2.8f;
-    [SerializeField] private float _shatterForwardDistance = 4.5f;
+    [SerializeField] private float _shatterForwardDistance = 15.0f;
     [SerializeField] private float _shatterSpreadAngle = 28.0f;
     [SerializeField] private float _shatterMaxHeight = 1.2f; // 1.2m 이상 점프 시 회피 가능
     [SerializeField] private LayerMask _obstacleLayer;
@@ -28,7 +28,7 @@ public class DragonCombatController : EnemyCombatController
         // 드래곤 본체의 수평 정면 벡터 기준
         Vector3 baseForward = _owner != null ? _owner.transform.forward : transform.forward;
         baseForward.y = 0f;
-        if (baseForward.sqrMagnitude < 0.001f) baseForward = Vector3.forward;
+        if (baseForward.sqrMagnitude < 0.001f) baseForward = Vector3.forward * 0.3f;
         baseForward.Normalize();
 
         SoundManager.Instance?.PlaySFX(SoundId.Dragon_EarthShatter, originPos);

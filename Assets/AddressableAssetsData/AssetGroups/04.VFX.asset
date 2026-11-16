@@ -25,6 +25,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a49dffe305c9644f8be82aa059f251e
+    m_Address: VFX_FireExplosion
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c48a0576e2d4b3c42895026e87357393
     m_Address: VFX_Breath_Fire
     m_ReadOnly: 0

@@ -71,7 +71,10 @@ public class PlayerGroundState : PlayerBaseState
                     return;
                 }
 
-                float atkCost = config != null ? config.AttackStaminaCost : 14.0f;
+                float atkCost = (owner.CombatModule != null && owner.CombatModule.CurrentWeaponData != null)
+                    ? owner.CombatModule.CurrentWeaponData.AttackStaminaCost
+                    : (config != null ? config.AttackStaminaCost : 14.0f);
+
                 if (_playerStatusController != null && !_playerStatusController.HasEnoughStamina(atkCost))
                 {
                     owner.InputReader.ClearCommand(InputCommandType.Attack);
@@ -79,10 +82,6 @@ public class PlayerGroundState : PlayerBaseState
                 }
 
                 _playerStateMachine.ChangeState(UnitState.Attack);
-                break;
-
-            case InputCommandType.Guard:
-                _playerStateMachine.ChangeState(UnitState.Guard);
                 break;
         }
     }

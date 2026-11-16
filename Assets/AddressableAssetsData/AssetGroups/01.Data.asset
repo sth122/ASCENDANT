@@ -45,6 +45,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Static_Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b79e9a690882e2b4db5b7eae2285ce47
+    m_Address: ItemDatabaseSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Static_Data
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eff6c5bd9b99d3e47aef7048f63011fd
     m_Address: SoundDatabaseSO
     m_ReadOnly: 0

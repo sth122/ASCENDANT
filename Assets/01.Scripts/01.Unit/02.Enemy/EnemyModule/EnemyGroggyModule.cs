@@ -85,16 +85,21 @@ public class EnemyGroggyModule : UnitBaseModule, IDisposable
         IsGroggy = false;
         CanBeRiposted = false;
 
-        // 사망한 경우 전투로 복귀하지 않음
+        // 사망한 경우 전투로 복귀 금지
         if (_owner.IsDead || (_status != null && _status.CurrentHp <= 0f)) return;
 
-        // 포이즈 0으로 초기화
         _status?.ResetPoiseToDefault();
 
         // 보스 컨트롤러 및 상위 시스템에 그로기 종료 통지
         OnGroggyEnded?.Invoke();
 
-        // 상위 컨트롤러가 후속 연출을 점유하지 않은 경우에만 기본 Idle 복귀
+        // 그로기 중 2페이즈 진입 대기 상태였다면 Idle로 덮어쓰지 않고 BT의 2페이즈 브랜치가 즉시 인계받도록 대기
+        if (_status != null && _status.IsPhase2Pending)
+        {
+            _owner.SetActionState(EnemyActionState.None);
+            return;
+        }
+
         if (_owner.ActionState == EnemyActionState.Groggy)
         {
             _anim.PlayState(AnimStateType.Idle, force: true);

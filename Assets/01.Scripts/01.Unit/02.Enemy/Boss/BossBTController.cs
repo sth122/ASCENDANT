@@ -12,6 +12,9 @@ using Util = DebugLogger;
 public abstract class BossBTController : EnemyBTController, ISkillable
 {
     [Header("Boss Blackboard")]
+    [SerializeField] protected Transform _cutsceneTransform;
+    [Tooltip("컷신 카메라가 바라볼 주시 타깃 (비워두면 보스 루트 transform 사용)")]
+    [SerializeField] protected Transform _cutsceneLookAtTarget;
     [SerializeField] protected BossBlackboard _blackboard = new BossBlackboard();
 
     protected readonly Dictionary<SkillId, BossSkill> _skillMap = new Dictionary<SkillId, BossSkill>();
@@ -58,7 +61,7 @@ public abstract class BossBTController : EnemyBTController, ISkillable
             _blackboard.SkillCycleInterval = runtimeBossInfo.SkillCycleInterval;
             _blackboard.SkillCooldownResetChance = runtimeBossInfo.SkillCooldownResetChance;
 
-            _blackboard.ResetSkillCycle();
+            _blackboard.ResetRuntimeState();
         }
     }
 
@@ -121,7 +124,8 @@ public abstract class BossBTController : EnemyBTController, ISkillable
 
         if (CameraManager.Instance != null)
         {
-            CameraManager.Instance.PlayBossCutscene(transform);
+            Transform lookAt = _cutsceneLookAtTarget != null ? _cutsceneLookAtTarget : transform;
+            CameraManager.Instance.PlayCutscene(_cutsceneTransform, lookAt);
         }
 
         transform.position = _patrolModule.SpawnPoint;
@@ -246,7 +250,7 @@ public abstract class BossBTController : EnemyBTController, ISkillable
     #region 피격 및 페이즈 판정
     public override void ApplyDamage(in DamageContext context)
     {
-        if (IsDead || _blackboard.IsInvincible) return;
+        if (IsDead || _blackboard.IsInvincible || (_enemyStatus != null && _enemyStatus.IsInvincible)) return;
 
         _enemyStatus.TakeDamage(context.Damage, context.PoiseDamage);
     }

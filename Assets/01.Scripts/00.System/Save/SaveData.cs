@@ -1,4 +1,23 @@
-﻿/// <summary>
+﻿using System.Collections.Generic;
+
+[System.Serializable]
+public struct ChestRemainingItemSaveData
+{
+    public string ChestId;
+    public int SlotIndex;
+    public int ItemId;
+    public int Amount;
+
+    public ChestRemainingItemSaveData(string chestId, int slotIndex, int itemId, int amount)
+    {
+        ChestId = chestId;
+        SlotIndex = slotIndex;
+        ItemId = itemId;
+        Amount = amount;
+    }
+}
+
+/// <summary>
 /// 게임 진행도의 단일 세이브 슬롯을 나타내는 루트 세이브 데이터 구조체
 /// </summary>
 [System.Serializable]
@@ -19,6 +38,12 @@ public class SaveData
     public SerializableVector3 LastBonfirePosition;
     public float LastBonfireRotationY;
 
+    [UnityEngine.Header("World Persistence Flags")]
+    public List<string> OpenedChestIds = new List<string>();
+    public List<ChestRemainingItemSaveData> ChestRemainingItems = new List<ChestRemainingItemSaveData>();
+    public List<string> UnlockedDoorIds = new List<string>();
+    public bool HasCompletedIntroTutorial = false;
+
     [UnityEngine.Header("Player Data")]
     public PlayerSaveData PlayerData = new PlayerSaveData();
 
@@ -30,6 +55,10 @@ public class SaveData
         HasCheckpoint = false;
         LastBonfirePosition = new SerializableVector3(0f, 0f, 0f);
         LastBonfireRotationY = 0f;
+        OpenedChestIds = new List<string>();
+        ChestRemainingItems = new List<ChestRemainingItemSaveData>();
+        UnlockedDoorIds = new List<string>();
+        HasCompletedIntroTutorial = false;
         PlayerData = new PlayerSaveData();
     }
 }

@@ -63,6 +63,15 @@ public enum InputCommandType
     Attack,
     Guard
 }
+
+public enum InputMode
+{
+    Title = 0,
+    Gameplay = 1,
+    RealtimeUI = 2,
+    PausedUI = 3,
+    Cutscene = 4,
+}
 #endregion
 
 #region Unit FSM State
@@ -111,6 +120,7 @@ public enum PoolType
     VFX_Breath_Fire = 1501,       // FlameThrower
     VFX_EarthShatter = 1502,      // EarthShatter
     VFX_MeteorExplosion = 1503,   // 메테오 착탄 폭발
+    VFX_FireExplosion = 1504,     // FireBomb 폭발
 
     // 투사체 및 인게임 드랍 (2000 ~)
     SoulOrb = 2000,
@@ -264,12 +274,13 @@ public enum UIId
     SettingUI               = 3007,     // 설정 메뉴 창
     CharacterSelectUI       = 3008,     // 캐릭터 선택/생성/삭제 통합 메뉴
     BonfireUI               = 3009,     // 화톳불 휴식 및 소울 레벨업 창
+    ChestUI                 = 3010,     // 보물상자 아이템 획득 창
+    NoticeWindowUI          = 3011,     // 단일 확인 알림 모달 팝업
+    EndingCreditsUI         = 3012,
 
     // 4000 ~ 4999 : Popup (비동기 결과 대기 및 확인/경고 모달 다이얼로그)
-    ConfirmPopup            = 4001,     // 확인/취소 모달 팝업
-    NoticePopup             = 4002,     // 단일 확인 알림 모달 팝업
+    ConfirmPopup = 4001,     // 확인/취소 모달 팝업
     KeyBindingPopup         = 4003,     // 키 매핑 변경 팝업
-
 
     // 5000 ~ 5999 : System (최상위 화면 제어, 화면 전환 및 시스템 인디케이터)
     FadeCurtainUI           = 5001,     // 씬 전환 암전용 페이드 디머
@@ -444,6 +455,7 @@ public enum SoundId
     BGM_Field = 101,
     BGM_Boss_Phase1 = 102,
     BGM_Boss_Phase2 = 103,
+    BGM_Ending = 104,
 
     // UI SFX (200 ~)
     UI_Hover = 200,
@@ -474,3 +486,15 @@ public enum SoundId
     BossDoor_Open = 405
 }
 #endregion
+
+public enum EnemyActionState
+{
+    None = 0,
+    Spawning,
+    Alerting,
+    BasicAttacking,
+    SkillCasting,
+    HitStagger,
+    Groggy,
+    Dead
+}

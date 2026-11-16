@@ -4,18 +4,6 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AI;
 
-public enum EnemyActionState
-{
-    None = 0,
-    Spawning,
-    Alerting,
-    BasicAttacking,
-    SkillCasting,
-    HitStagger,
-    Groggy,
-    Dead
-}
-
 /// <summary>
 /// AI 의사결정(BT Evaluation)과 수명주기만 총괄하는 최상위 베이스 컨트롤러
 /// </summary>
@@ -30,6 +18,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
     [Header("Spawn Settings")]
     [SerializeField] protected float _spawnWaitDuration = 3.0f;
+    [SerializeField] protected float _tokenlessStandoffMargin = 2.2f; // 공격 토큰 미보유 시 추가 대치 거리
     #endregion
 
     #region 도메인 컴포넌트 및 모듈
@@ -76,6 +65,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     private readonly Collider[] _targetAcquireBuffer = new Collider[8];
     private Vector3 _lastDestination = Vector3.positiveInfinity;
     private float _nextPathUpdateTime = 0f;
+    private float _strafeSign = 1f;
 
     protected INode _rootNode;
     protected CancellationTokenSource _actionCts;
@@ -100,6 +90,8 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         _perceptionModule.OnTargetSpotted += HandleTargetSpotted;
         _perceptionModule.OnNoiseHeard += HandleNoiseHeard;
 
+        _strafeSign = (GetInstanceID() & 1) == 0 ? 1f : -1f;
+
         if (_enemyStatus != null)
         {
             _enemyStatus.OnStatusDataChanged -= HandleStatusDataChanged;
@@ -108,12 +100,36 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
             _enemyStatus.OnPoiseBreakEvent += TriggerGroggy;
         }
 
+
         EventBusSystem.Subscribe<GameSceneReadyEvent>(HandleGameSceneReady);
+    }
+    protected override void Start()
+    {
+        base.Start();
+        RegisterSelfToManager();
+    }
+
+    protected virtual void OnDisable()
+    {
+        ReleaseAttackToken();
+    }
+
+    private void RegisterSelfToManager()
+    {
+        if (ServiceLocator.TryGet<IEnemyManager>(out var enemyManager))
+        {
+            enemyManager.RegisterEnemy(this);
+        }
     }
 
     public override void Init()
     {
         base.Init();
+        _isDeathExecuted = false;
+        _isInvestigatingNoise = false;
+        SetActionState(EnemyActionState.None);
+
+        RegisterSelfToManager();
         if (_isInitializing) return;
         EnsureDataAndInitializeAsync(this.destroyCancellationToken).Forget();
     }
@@ -186,10 +202,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         }
     }
 
-    public void SetActionState(EnemyActionState newState)
-    {
-        ActionState = newState;
-    }
+    public void SetActionState(EnemyActionState newState) => ActionState = newState;
 
     #region IPoolable 구현부
     public virtual void OnSpawn()
@@ -199,6 +212,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         _isInvestigatingNoise = false;
         SetActionState(EnemyActionState.None);
         SetControllerActive(true);
+        RegisterSelfToManager();
 
         if (_collider != null) _collider.enabled = true;
         if (_agent != null)
@@ -328,18 +342,21 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         var selector = new SelectorNode();
 
+        // 1. 공격 실행 (사거리 내 + 글로벌 쿨타임 완료 + 공격 토큰 획득)
         var attackSeq = new SequenceNode();
         attackSeq.Add(new PredicateNode<EnemyBTController>(this, static e =>
             !e.IsActionExecuting && e._combatController.IsGlobalCooldownReady && e._combatController.HasAnyReadyAttack(e._currentTarget)));
         attackSeq.Add(new AsyncActionNode(ExecuteSelectedBasicAttackAsync, GetActionToken));
         selector.Add(attackSeq);
 
+        // 2. 대치 대기 (공격 사거리 내이거나, 공격 토큰이 없어 외곽 대치 거리에 도달한 경우)
         var combatWaitSeq = new SequenceNode();
         combatWaitSeq.Add(new PredicateNode<EnemyBTController>(this, static e =>
-            !e.IsActionExecuting && e._combatController.IsTargetWithinAnyAttackRange(e._currentTarget)));
+            !e.IsActionExecuting && e.IsWithinCombatWaitZone()));
         combatWaitSeq.Add(new ActionNode(TickCombatWait));
         selector.Add(combatWaitSeq);
 
+        // 3. 추격 (토큰 보유 시 근접, 미보유 시 외곽 대치선까지 추격)
         var chaseSeq = new SequenceNode();
         chaseSeq.Add(new PredicateNode<EnemyBTController>(this, static e => !e.IsActionExecuting));
         chaseSeq.Add(new ActionNode(TickChaseTarget));
@@ -369,9 +386,53 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     #endregion
 
     #region AI 서브 루틴
+    protected bool HasCombatAttackPermission()
+    {
+        if (this is BossBTController) return true;
+
+        if (ServiceLocator.TryGet<IEnemyManager>(out var enemyManager) && enemyManager is EnemyManager mgr)
+        {
+            // 이미 토큰을 가졌거나 빈 토큰이 있는 경우 공격권 확보 가능
+            return mgr.HasAttackToken(this) || mgr.ActiveTokenCount == 0;
+        }
+        return true;
+    }
+
+    protected bool IsWithinCombatWaitZone()
+    {
+        if (_currentTarget == null) return false;
+
+        float defaultMeleeRange = _enemyStatus.EnemyInfoSource != null ? _enemyStatus.EnemyInfoSource.AttackRange : 2.0f;
+        float engageRange = _combatController.GetEffectiveEngageRange(defaultMeleeRange);
+
+        Vector3 diff = _currentTarget.position - transform.position;
+        diff.y = 0f;
+        float distSqr = diff.sqrMagnitude;
+
+        // 1. 사용 가능한(또는 기본 근접) 공격 사거리 안에 들어온 경우 대치/공격 대기
+        if (distSqr <= (engageRange * engageRange))
+        {
+            return true;
+        }
+
+        // 2. 공격 토큰이 없는 대기 적은 외곽 대치 거리(기본 근접 사거리 + 여유 마진) 도달 시 멈춤
+        if (!HasCombatAttackPermission())
+        {
+            float standoffDist = defaultMeleeRange + _tokenlessStandoffMargin;
+            return distSqr <= (standoffDist * standoffDist);
+        }
+
+        return false;
+    }
+
     protected virtual INode.ENodeState TickCombatWait()
     {
         if (_currentTarget == null) return INode.ENodeState.ENS_Failure;
+
+        if (_agent != null)
+        {
+            _agent.avoidancePriority = 60; // 대기 적은 공격자(30)에게 길 양보
+        }
 
         _movement.StopMovement();
         _movement.FaceTarget(_currentTarget.position, 6.0f, Time.deltaTime);
@@ -398,6 +459,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
         SetActionState(EnemyActionState.BasicAttacking);
         _combatController.ReserveGlobalCooldown(chosenData.AttackCooldown);
+        if (_agent != null) _agent.avoidancePriority = 25;
         _movement.StopMovement();
 
         try
@@ -421,6 +483,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         {
             _combatController.CloseAllHitboxes();
             ReleaseAttackToken();
+            if (_agent != null) _agent.avoidancePriority = 50;
 
             if (!IsDead && ActionState == EnemyActionState.BasicAttacking)
             {
@@ -445,17 +508,39 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
     {
         if (_currentTarget == null) return INode.ENodeState.ENS_Failure;
 
-        float attackRange = _enemyStatus.EnemyInfoSource != null ? _enemyStatus.EnemyInfoSource.AttackRange : 2.0f;
+        bool canAttack = HasCombatAttackPermission();
+        float defaultMeleeRange = _enemyStatus.EnemyInfoSource != null ? _enemyStatus.EnemyInfoSource.AttackRange : 2.0f;
+        float engageRange = _combatController.GetEffectiveEngageRange(defaultMeleeRange);
+
+        // 공격권 보유 시 유효 사거리의 85%까지, 미보유 시 기본 근접 사거리 + 외곽 대치 마진까지 접근
+        float desiredStop = canAttack
+            ? Mathf.Max(1.2f, engageRange * 0.85f)
+            : (defaultMeleeRange + _tokenlessStandoffMargin);
+
         if (_agent != null)
         {
-            _agent.stoppingDistance = Mathf.Max(1.2f, attackRange * 0.85f);
+            _agent.stoppingDistance = desiredStop;
+            _agent.avoidancePriority = canAttack ? 30 : 60;
         }
 
         float currentChaseSpeed = _enemyStatus.EnemyMotionStatus != null ? _enemyStatus.EnemyMotionStatus.ChaseSpeed.Value : 4.5f;
+        if (!canAttack) currentChaseSpeed *= 0.85f;
 
-        if (Time.time >= _nextPathUpdateTime || (_currentTarget.position - _lastDestination).sqrMagnitude > 1.0f)
+        Vector3 targetDest = _currentTarget.position;
+        if (!canAttack)
         {
-            _lastDestination = _currentTarget.position;
+            Vector3 toEnemy = transform.position - _currentTarget.position;
+            toEnemy.y = 0f;
+            if (toEnemy.sqrMagnitude > 0.01f)
+            {
+                Vector3 sideDir = Vector3.Cross(Vector3.up, toEnemy.normalized) * _strafeSign;
+                targetDest += sideDir * 1.4f;
+            }
+        }
+
+        if (Time.time >= _nextPathUpdateTime || (targetDest - _lastDestination).sqrMagnitude > 0.8f)
+        {
+            _lastDestination = targetDest;
             _nextPathUpdateTime = Time.time + 0.15f;
             _movement.SetDestination(_lastDestination, currentChaseSpeed);
         }
@@ -513,22 +598,17 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         ExecuteDespawnAfterDeathAsync(this.destroyCancellationToken).Forget();
         return INode.ENodeState.ENS_Success;
     }
-
     private async UniTaskVoid ExecuteDespawnAfterDeathAsync(CancellationToken token)
     {
         float deathClipDuration = _enemyAnim.GetStateDuration(AnimStateType.Death);
         float totalWait = deathClipDuration + 1.5f;
 
+        // 1. 사망 모션의 75% 시점까지 대기
         bool isCanceled = await UniTask.Delay(TimeSpan.FromSeconds(totalWait),
             delayTiming: PlayerLoopTiming.Update, cancellationToken: token).SuppressCancellationThrow();
-
         if (isCanceled) return;
 
         if (_isSpawnedFromPool && ObjectPoolManager.Instance != null)
-        {
-            ObjectPoolManager.Instance.Despawn(PoolType.NightmareCreature, gameObject);
-        }
-        else
         {
             gameObject.SetActive(false);
         }
@@ -568,9 +648,9 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         catch (OperationCanceledException) { }
         finally
         {
-            _enemyAnim.PlayState(AnimStateType.Idle, force: true);
-            if (ActionState == EnemyActionState.HitStagger)
+            if (!IsDead && ActionState == EnemyActionState.HitStagger)
             {
+                _enemyAnim.PlayState(AnimStateType.Idle, force: true);
                 SetActionState(EnemyActionState.None);
             }
         }
@@ -704,9 +784,9 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         catch (OperationCanceledException) { }
         finally
         {
-            _enemyAnim.PlayState(AnimStateType.Idle, force: true);
-            if (ActionState == EnemyActionState.HitStagger)
+            if (!IsDead && ActionState == EnemyActionState.HitStagger)
             {
+                _enemyAnim.PlayState(AnimStateType.Idle, force: true);
                 SetActionState(EnemyActionState.None);
             }
         }
@@ -726,7 +806,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
     #region Facade API
     public void OpenHitboxSlot(HitboxSlot slot, float damage, float poiseDamage, bool isParryable,
-        AttackImpactType impactType = AttackImpactType.Light, float knockbackForce = 0f)
+           AttackImpactType impactType = AttackImpactType.Light, float knockbackForce = 0f)
     {
         _combatController?.OpenHitbox(slot, damage, poiseDamage, isParryable, impactType, knockbackForce);
     }
@@ -748,6 +828,7 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
         if (_enemyStatus != null)
         {
             _enemyStatus.OnStatusDataChanged -= HandleStatusDataChanged;
+            _enemyStatus.OnPoiseBreakEvent -= TriggerGroggy;
         }
 
         _perceptionModule?.Dispose();

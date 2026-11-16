@@ -227,15 +227,7 @@ public class Inventory
         if (loadout.StartingWeapon != null) EquipDirect(loadout.StartingWeapon, player);
         if (loadout.StartingShield != null) EquipDirect(loadout.StartingShield, player);
 
-        // 2. 방어구 4부위 및 장신구 2부위는 미장착 상태로 인벤토리(가방)에 지급
-        if (loadout.StartingHelmet != null) AddItem(loadout.StartingHelmet, 1);
-        if (loadout.StartingChestArmor != null) AddItem(loadout.StartingChestArmor, 1);
-        if (loadout.StartingGauntlets != null) AddItem(loadout.StartingGauntlets, 1);
-        if (loadout.StartingBoots != null) AddItem(loadout.StartingBoots, 1);
-        if (loadout.StartingNecklace != null) AddItem(loadout.StartingNecklace, 1);
-        if (loadout.StartingRing != null) AddItem(loadout.StartingRing, 1);
-
-        // 3. 소모품 인벤토리 추가 및 지정된 퀵슬롯 등록
+        // 2. 소모품 인벤토리 추가 및 지정된 퀵슬롯 등록
         for (int i = 0; i < loadout.StartingConsumables.Count; i++)
         {
             var entry = loadout.StartingConsumables[i];
@@ -256,7 +248,7 @@ public class Inventory
             }
         }
 
-        // 4. 기타 가방 보관 아이템 적재
+        // 3. 기타 가방 보관 아이템 적재
         for (int i = 0; i < loadout.ExtraInventoryItems.Count; i++)
         {
             if (loadout.ExtraInventoryItems[i] != null)
@@ -288,7 +280,7 @@ public class Inventory
             if (_slots[i] != null && _slots[i].Data != null)
             {
                 int amount = (_slots[i] is CountableItem countable) ? countable.CurrentAmount : 1;
-                targetData.InventorySlots.Add(new ItemSlotSaveData(i, _slots[i].Data.Id, amount));
+                targetData.InventorySlots.Add(new ItemSlotSaveData(i, _slots[i].Data.Id, amount, _slots[i].InstanceGuid));
             }
         }
 
@@ -308,7 +300,7 @@ public class Inventory
             if (item != null && item.Data != null)
             {
                 int amount = (item is CountableItem countable) ? countable.CurrentAmount : 1;
-                targetData.QuickSlots.Add(new ItemSlotSaveData(q, item.Data.Id, amount));
+                targetData.QuickSlots.Add(new ItemSlotSaveData(q, item.Data.Id, amount, item.InstanceGuid));
             }
         }
     }
@@ -427,4 +419,9 @@ public class Inventory
         return true;
     }
     #endregion
+
+    public bool HasKeyItem(int keyItemId)
+    {
+        return HasItem(keyItemId, 1);
+    }
 }

@@ -197,6 +197,10 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
                 _loadingViews.Remove(id);
             }
         }
+        else if (model != null && _activePresenters.TryGetValue(view, out IUIPresenter cachedPresenter))
+        {
+            cachedPresenter.Bind(view, model);
+        }
 
         // 4. Window/Popup 스택 및 입력/일시정지 공통 적용
         if (targetLayer == UILayer.Window && view is UIWindowView windowView)
@@ -288,14 +292,32 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
         {
             _windowStack.Pop();
         }
+        else if (_popupStack.Count > 0 && _popupStack.Peek() == window)
+        {
+            _popupStack.Pop();
+        }
 
-        if (window.PausePolicy == WindowPausePolicy.PauseTime && GameManager.Instance != null && GameManager.Instance.IsPaused)
+        if (!RequiresTimePause() && GameManager.Instance != null && GameManager.Instance.IsPaused)
         {
             GameManager.Instance.ResumeGame();
         }
 
         RestoreInputMode();
     }
+
+    private bool RequiresTimePause()
+    {
+        foreach (UIWindowView win in _windowStack)
+        {
+            if (win != null && win.PausePolicy == WindowPausePolicy.PauseTime) return true;
+        }
+        foreach (UIBase popup in _popupStack)
+        {
+            if (popup is UIWindowView popupWin && popupWin.PausePolicy == WindowPausePolicy.PauseTime) return true;
+        }
+        return false;
+    }
+
     public void NotifyPopupClosed(UIBase popup)
     {
         if (popup == null) return;
@@ -340,17 +362,7 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
             return;
         }
 
-        bool requiresPause = false;
-        foreach (UIWindowView win in _windowStack)
-        {
-            if (win != null && win.PausePolicy == WindowPausePolicy.PauseTime)
-            {
-                requiresPause = true;
-                break;
-            }
-        }
-
-        if (requiresPause)
+        if (RequiresTimePause())
         {
             if (GameManager.Instance != null && !GameManager.Instance.IsPaused) GameManager.Instance.PauseGame();
             InputSystemHandler.SetMode(InputMode.PausedUI);
@@ -407,9 +419,8 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
     private void HandleCancelInput()
     {
         // 0. 하단 상호작용 다중 선택지 메뉴가 열려 있는 경우 최우선으로 닫고 종료
-        if (TryGetActiveView<PlayerHUDView>(UIId.PlayerHUD, out PlayerHUDView hudView) &&
-            hudView.InteractionPrompt != null &&
-            hudView.InteractionPrompt.IsChoiceMenuOpen)
+        if (TryGetActiveView<PlayerHUDView>(UIId.PlayerHUD, out PlayerHUDView hudView) 
+            && hudView.InteractionPrompt != null && hudView.InteractionPrompt.IsChoiceMenuOpen)
         {
             SoundManager.Instance?.PlaySFX(SoundId.UI_Cancel);
             hudView.InteractionPrompt.CloseChoiceMenu(restoreGameplayInput: true);

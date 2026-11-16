@@ -1,4 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
+using System.Threading;
 using UnityEngine;
 
 /// <summary>
@@ -9,9 +11,8 @@ public class PlayerUseItemState : PlayerActionState
     private ConsumableItem _targetItem;
     private int _targetSlotIndex = -1;
     private const float EffectTriggerNormalized = 0.50f;
-    private const float CancelWindowNormalized = 0.85f;
+    private const float CancelWindowNormalized = 2f;
     private bool _hasExecuted = false;
-    private ItemType _itemType;
 
     public PlayerUseItemState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
@@ -47,35 +48,97 @@ public class PlayerUseItemState : PlayerActionState
             return;
         }
 
-        _playerAnimController.SetTrigger(_targetItem.ItemData.AnimParamType);
+        // 락온 타깃이 존재하면 투척/사용 시작 시 대상 방향으로 정렬
+        if (owner.CurrentLockOnTarget != null)
+        {
+            owner.Movement.SnapToTarget(owner.CurrentLockOnTarget.position);
+        }
+        
+        AnimParamType triggerParam = _targetItem.ItemData.AnimParamType;
+        _playerAnimController.SetTrigger(triggerParam);
 
-        System.Threading.CancellationToken token = CreateActionToken();
-        ExecuteItemUseTimelineAsync(token).Forget();
+        System.Threading.CancellationToken token = CreateActionToken(); 
+        ExecuteItemUseTimelineAsync(triggerParam, token).Forget();
     }
 
-    private async UniTaskVoid ExecuteItemUseTimelineAsync(System.Threading.CancellationToken token)
+    public override void FixedUpdate()
     {
-        float duration = _playerAnimController.GetStateDuration(_playerAnimController.CurrentStateType);
-        float effectDelay = duration * EffectTriggerNormalized;
-        float cancelDelay = duration * CancelWindowNormalized;
+        base.FixedUpdate();
 
-        // 1. 발동 프레임 대기
-        bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(effectDelay), cancellationToken: token).SuppressCancellationThrow();
-        if (canceled) return;
+        // 아이템 사용 모션 중에는 이동 물리 속도 완전 고정
+        if (!CanMove)
+        {
+            owner.StopMovementAPI();
+        }
+    }
 
-        // 2. 정식 퀵슬롯 소비 호출
-        if (!_hasExecuted && owner.TryGetComponent(out PlayerInventoryHandler handler))
+    private async UniTaskVoid ExecuteItemUseTimelineAsync(AnimParamType triggerParam, CancellationToken token)
+    {
+        string expectedStateName = ResolveAnimatorStateName(triggerParam);
+        float enterElapsed = 0f;
+        float clipDuration = 0f;
+
+        if (_playerAnimController.AnimatorInstance != null)
+        {
+            // 1. Animator가 해당 아이템 애니메이션 상태로 전이 완료될 때까지 대기 (최대 0.3초)
+            while (enterElapsed < 0.30f)
+            {
+                if (token.IsCancellationRequested) return;
+
+                AnimatorStateInfo info = _playerAnimController.AnimatorInstance.GetCurrentAnimatorStateInfo(0);
+                if (!_playerAnimController.AnimatorInstance.IsInTransition(0) && info.IsName(expectedStateName) && info.length > 0.05f)
+                {
+                    float speed = Mathf.Max(0.1f, Mathf.Abs(info.speed * info.speedMultiplier));
+                    clipDuration = info.length / speed;
+                    break;
+                }
+
+                enterElapsed += Time.deltaTime;
+                bool canceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+                if (canceled) return;
+            }
+
+            // 폴백: 상태명 매칭 전이라면 RuntimeAnimatorController 클립 목록에서 직접 조회
+            if (clipDuration <= 0.05f && _playerAnimController.AnimatorInstance.runtimeAnimatorController != null)
+            {
+                AnimationClip[] clips = _playerAnimController.AnimatorInstance.runtimeAnimatorController.animationClips;
+                for (int i = 0; i < clips.Length; i++)
+                {
+                    if (clips[i] != null && clips[i].name.IndexOf(expectedStateName, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        clipDuration = clips[i].length;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (clipDuration <= 0.05f)
+        {
+            clipDuration = 1.5f;
+        }
+
+        float effectDelay = Mathf.Max(0.05f, (clipDuration * EffectTriggerNormalized) - enterElapsed);
+        float cancelPoint = clipDuration * CancelWindowNormalized;
+        float postEffectDelay = Mathf.Max(0.05f, cancelPoint - (enterElapsed + effectDelay));
+
+        // 2. 아이템 효과 발동 프레임까지 대기
+        bool isCanceled = await UniTask.Delay(TimeSpan.FromSeconds(effectDelay), cancellationToken: token).SuppressCancellationThrow();
+        if (isCanceled) return;
+
+        // 3. 정식 퀵슬롯 아이템 소비 및 효과 발동
+        if (!_hasExecuted && owner.TryGetComponent(out PlayerInventoryHandler handler) && handler.InventoryInstance != null)
         {
             _hasExecuted = true;
             handler.InventoryInstance.QuickSlots.TryUseSlot(_targetSlotIndex, owner);
         }
 
-        // 3. 후딜레이 캔슬 가능 구간 대기
-        canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(cancelDelay - effectDelay), cancellationToken: token).SuppressCancellationThrow();
-        if (canceled) return;
+        // 4. 후딜레이 종료 직전까지 이동 잠금 유지
+        isCanceled = await UniTask.Delay(TimeSpan.FromSeconds(postEffectDelay), cancellationToken: token).SuppressCancellationThrow();
+        if (isCanceled) return;
 
-        // 4. 구르기 선입력 캔슬 루프
-        float remain = duration - cancelDelay;
+        // 5. 모션 마무리 구간 (구르기 긴급 캔슬만 허용, 일반 이동은 모션 완전 종료 시까지 잠금 유지)
+        float remain = Mathf.Max(0f, clipDuration - cancelPoint);
         float elapsed = 0f;
         while (elapsed < remain)
         {
@@ -83,15 +146,31 @@ public class PlayerUseItemState : PlayerActionState
 
             if (owner.InputReader.TryConsumeCommand(InputCommandType.Roll))
             {
-                _playerStateMachine.ChangeState(UnitState.Roll);
-                return;
+                float rollCost = _playerCombatConfigSO != null ? _playerCombatConfigSO.RollStaminaCost : 18.0f;
+                if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(rollCost))
+                {
+                    _playerStateMachine.ChangeState(UnitState.Roll, true);
+                    return;
+                }
+                owner.InputReader.ClearCommand(InputCommandType.Roll);
             }
 
             elapsed += Time.deltaTime;
-            await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+            bool yieldCanceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+            if (yieldCanceled) return;
         }
 
         CompleteActionAndEvaluateTransition();
+    }
+
+    private static string ResolveAnimatorStateName(AnimParamType paramType)
+    {
+        return paramType switch
+        {
+            AnimParamType.UsePortion => "UsePotion",
+            AnimParamType.ThrowItem => "ThrowBomb",
+            _ => paramType.ToString()
+        };
     }
 
     public override void Exit()

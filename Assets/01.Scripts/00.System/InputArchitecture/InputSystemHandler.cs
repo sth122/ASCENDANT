@@ -59,6 +59,14 @@ public static class InputSystemHandler
                 Cursor.visible = true;
                 CameraManager.Instance?.SetCameraInputEnabled(false);
                 break;
+            case InputMode.Cutscene:
+                Time.timeScale = 1f;
+                Actions.Player.Disable();
+                Actions.UI.Disable();
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = false;
+                CameraManager.Instance?.SetCameraInputEnabled(false);
+                break;
         }
 
         DebugLogger.LogWithTag("InputSystemHandler", $"[입력 모드 전이] {mode} (TimeScale: {Time.timeScale}, Cursor: {Cursor.visible})");

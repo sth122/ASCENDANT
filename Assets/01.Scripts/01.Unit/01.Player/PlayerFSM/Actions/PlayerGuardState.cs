@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using System.Threading;
 using UnityEngine;
 
 /// <summary>
@@ -9,7 +10,7 @@ public class PlayerGuardState : PlayerActionState
 {
     private bool _isParryActive = false;
     private GameObject _lastParriedAttacker = null;
-
+    private Transform _guardTargetEnemy = null;
     public bool IsParryActive => _isParryActive;
 
     public PlayerGuardState(PlayerController owner, PlayerStateMachine stateMachine)
@@ -19,24 +20,34 @@ public class PlayerGuardState : PlayerActionState
     {
         base.Enter();
 
-        CanMove = true;
-        CanRotate = true;
+        CanMove = false;
+        CanRotate = false;
         _isParryActive = false;
         _lastParriedAttacker = null;
+        owner.StopMovementAPI();
 
-        // 1. 방패 거치 애니메이션 파라미터 On
+        // 1. 가장 가까운 적(또는 락온 대상)을 탐색하여 즉시 가드 방향 정렬
+        _guardTargetEnemy = owner.FindClosestEnemy(15f, requireLineOfSight: true);
+        if (_guardTargetEnemy != null)
+        {
+            owner.Movement.SnapToTarget(_guardTargetEnemy.position);
+        }
+
+        // 2. 방패 거치 애니메이션 파라미터 On (제자리 가드)
+        _playerAnimController.SetFloat(AnimParamType.StrafeX, 0f);
+        _playerAnimController.SetFloat(AnimParamType.StrafeZ, 0f);
         _playerAnimController.SetBool(AnimParamType.IsGuarding, true);
 
-        // 2. 가드 중 스태미나 회복 지연 배율 적용
+        // 3. 가드 중 스태미나 회복 지연 배율 적용
         float regenFactor = _playerCombatConfigSO != null ? _playerCombatConfigSO.GuardStaminaRegenFactor : 0.3f;
         _playerStatusController.StaminaRegenMultiplier = regenFactor;
 
-        // 3. C키 해제 및 회피 이벤트 바인딩
+        // 4. C키 해제 및 회피 이벤트 바인딩
         EnableGuardEvents();
 
-        // 4. 방패 스펙에 따른 초기 패링 유효 윈도우 타이머 가동
+        // 5. 방패 스펙에 따른 초기 패링 유효 윈도우 타이머 가동
         float windowDuration = GetParryWindowDuration();
-        System.Threading.CancellationToken token = CreateActionToken();
+        CancellationToken token = CreateActionToken();
         ExecuteParryWindowAsync(windowDuration, token).Forget();
     }
 
@@ -44,34 +55,32 @@ public class PlayerGuardState : PlayerActionState
     {
         base.FixedUpdate();
 
-        float speedFactor = _playerCombatConfigSO != null ? _playerCombatConfigSO.GuardMoveSpeedFactor : 0.75f;
+        // 가드 유지 중에는 이동 정지 유지
+        owner.StopMovementAPI();
+        _playerAnimController.SetFloat(AnimParamType.StrafeX, 0f);
+        _playerAnimController.SetFloat(AnimParamType.StrafeZ, 0f);
 
-        // 4방향 Strafe 애니메이션 파라미터 주입
-        Vector3 localMove = owner.transform.InverseTransformDirection(owner.CurrentMoveDirection);
-        _playerAnimController.SetFloat(AnimParamType.StrafeX, localMove.x);
-        _playerAnimController.SetFloat(AnimParamType.StrafeZ, localMove.z);
-
-        if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
+        // 가드 중인 대상(또는 락온 대상)이 살아있다면 방패 방향만 대상 쪽으로 추적 회전
+        Transform trackTarget = owner.CurrentLockOnTarget != null ? owner.CurrentLockOnTarget : _guardTargetEnemy;
+        if (trackTarget != null)
         {
-            float guardSpeed = owner.StatusController.MotionStatus.WalkSpeed.Value * speedFactor;
-            owner.MoveAPI(owner.CurrentMoveDirection, guardSpeed);
-
-            float rotSpeed = (_playerStatusController != null && _playerStatusController.PlayerInfoSource != null)
-                ? _playerStatusController.PlayerInfoSource.RotationSpeed : 16f;
-
-            if (owner.CurrentLockOnTarget != null)
+            UnitStatusController targetStat = trackTarget.GetComponentInParent<UnitStatusController>();
+            if (targetStat != null && !targetStat.IsDead)
             {
-                Vector3 targetDir = owner.CurrentLockOnTarget.position - owner.transform.position;
+                float rotSpeed = (_playerStatusController != null && _playerStatusController.PlayerInfoSource != null)
+                    ? _playerStatusController.PlayerInfoSource.RotationSpeed : 16f;
+
+                Vector3 targetDir = trackTarget.position - owner.transform.position;
                 targetDir.y = 0f;
                 if (targetDir.sqrMagnitude > 0.001f)
                 {
                     owner.RotateTowardsAPI(targetDir.normalized, rotSpeed, Time.fixedDeltaTime);
                 }
             }
-        }
-        else
-        {
-            owner.StopMovementAPI();
+            else
+            {
+                _guardTargetEnemy = owner.FindClosestEnemy(15f, requireLineOfSight: true);
+            }
         }
     }
 
@@ -87,6 +96,7 @@ public class PlayerGuardState : PlayerActionState
         DisableGuardEvents();
         _isParryActive = false;
         _lastParriedAttacker = null;
+        _guardTargetEnemy = null;
     }
 
     /// <summary>
@@ -96,7 +106,7 @@ public class PlayerGuardState : PlayerActionState
     {
         float blockAngle = _playerCombatConfigSO != null ? _playerCombatConfigSO.GuardBlockAngle : 120.0f;
 
-        // 1. 방어 각도 검사 (전방 180도)
+        // 피격 시 공격자 방향으로 방패 정면 정렬 보정
         if (context.Attacker != null)
         {
             Vector3 dirToAttacker = context.Attacker.transform.position - owner.transform.position;
@@ -110,24 +120,21 @@ public class PlayerGuardState : PlayerActionState
             }
         }
 
-        // 2. 패링 불가 공격 검사
+        // 패링 불가 공격 검사
         if (!context.IsParryable)
         {
             owner.StateMachineInstance.ChangeState(UnitState.Knockback, forceReenter: true);
             return BlockResultType.Knockback;
         }
 
-        // 3. [패링 성공 분기] 초기 패링 윈도우가 살아있을 때 피격된 경우
+        // [패링 성공 분기]
         if (_isParryActive)
         {
             _isParryActive = false;
             _lastParriedAttacker = context.Attacker;
 
-            // 강공격(Heavy) 패링 시 밀림 연출
             if (context.ImpactType == AttackImpactType.Heavy)
             {
-                // 강공격 패링 전용 애니메이션이 없으므로 일반 가드 임팩트 모션을 재생
-                // 본래라면 ParryState에서 따로 처리하는 것이 맞음
                 _playerAnimController.SetTrigger(AnimParamType.GuardImpact);
                 if (owner.Rigidbody != null)
                 {
@@ -136,7 +143,6 @@ public class PlayerGuardState : PlayerActionState
                 return BlockResultType.HeavyParryPushback;
             }
 
-            // 일반 공격 패링 성공 -> PlayerParryState(반격 모션 FSM)로 전이
             if (owner.StateMachineInstance.GetState(UnitState.Parry) is PlayerParryState parryState)
             {
                 parryState.SetParriedAttacker(_lastParriedAttacker);
@@ -147,7 +153,7 @@ public class PlayerGuardState : PlayerActionState
             return BlockResultType.ParrySuccess;
         }
 
-        // 4. [일반 가드 분기] 패링 타이밍이 지났으나 C키를 유지하며 방어한 경우
+        // [일반 가드 분기]
         if (_playerStatusController != null)
         {
             float stability = (_playerStatusController.EquippedShieldStability > 0f)
@@ -157,7 +163,6 @@ public class PlayerGuardState : PlayerActionState
             float staminaCost = context.Damage * (1.0f - stability);
             float currentStamina = _playerStatusController.CurrentStamina;
 
-            // 가드 브레이크 판정
             if (currentStamina < staminaCost)
             {
                 float chipRatio = (staminaCost - currentStamina) / Mathf.Max(1.0f, staminaCost);
@@ -168,7 +173,6 @@ public class PlayerGuardState : PlayerActionState
                 return BlockResultType.GuardBreak;
             }
 
-            // 방패 커트율 적용 대미지 차감 및 스태미나 소비
             float cutRatio = _playerStatusController.EquippedShieldAbsorption;
             float chipDamage = context.Damage * (1.0f - cutRatio);
             if (chipDamage > 0f)
