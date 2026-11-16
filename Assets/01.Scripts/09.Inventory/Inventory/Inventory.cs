@@ -28,15 +28,26 @@ public class Inventory
     {
         if (data == null || amount <= 0) return false;
 
-        // 1. 수량형 아이템인 경우 기존 스택에 합산
-        if (data is CountableItemData countableData)
+        // 1. 수량형 아이템인 경우 기존 스택에 합산 및 퀵슬롯 수량 동기화
+        if (data is CountableItemData)
         {
             for (int i = 0; i < DefaultCapacity; i++)
             {
                 if (_slots[i] is CountableItem existing && existing.Data.Id == data.Id)
                 {
+                    int beforeAmount = existing.CurrentAmount;
                     amount = existing.AddAmountAndGetOverflow(amount);
-                    OnSlotUpdated?.Invoke(i, existing);
+
+                    if (existing.CurrentAmount != beforeAmount)
+                    {
+                        OnSlotUpdated?.Invoke(i, existing);
+
+                        if (existing is ConsumableItem consumable)
+                        {
+                            QuickSlots.NotifyItemUpdated(consumable);
+                        }
+                    }
+
                     if (amount == 0) return true;
                 }
             }
@@ -343,6 +354,7 @@ public class Inventory
 
         for (int i = 0; i < DefaultCapacity; i++) _slots[i] = null;
         _equipmentSlots.Clear();
+        QuickSlots.ClearAll();
 
         for (int i = 0; i < sourceData.InventorySlots.Count; i++)
         {
@@ -436,6 +448,11 @@ public class Inventory
                 else
                 {
                     OnSlotUpdated?.Invoke(i, countable);
+                }
+
+                if (countable is ConsumableItem consumable)
+                {
+                    QuickSlots.NotifyItemUpdated(consumable);
                 }
             }
             else

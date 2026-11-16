@@ -54,6 +54,7 @@ public class QuickSlotSystem
         _slots[targetSlotIndex] = portion;
         OnQuickSlotChanged?.Invoke(targetSlotIndex, portion);
     }
+
     public void UnregisterSlot(int targetSlotIndex)
     {
         if (targetSlotIndex < 0 || targetSlotIndex >= MaxQuickSlots) return;
@@ -61,6 +62,47 @@ public class QuickSlotSystem
 
         _slots[targetSlotIndex] = null;
         OnQuickSlotChanged?.Invoke(targetSlotIndex, null);
+    }
+
+    public void ClearAll()
+    {
+        for (int i = 0; i < MaxQuickSlots; i++)
+        {
+            if (_slots[i] != null)
+            {
+                _slots[i] = null;
+                OnQuickSlotChanged?.Invoke(i, null);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 상자 획득이나 외부 소비로 등록된 아이템 인스턴스의 수량이 변경되었을 때 퀵슬롯 UI 갱신 알림 전파
+    /// </summary>
+    public void NotifyItemUpdated(ConsumableItem item)
+    {
+        if (item == null) return;
+
+        for (int i = 0; i < MaxQuickSlots; i++)
+        {
+            ConsumableItem slotItem = _slots[i];
+            if (slotItem == null) continue;
+
+            if (ReferenceEquals(slotItem, item) ||
+                (!string.IsNullOrEmpty(item.InstanceGuid) && slotItem.InstanceGuid == item.InstanceGuid))
+            {
+                if (slotItem.CurrentAmount <= 0)
+                {
+                    _slots[i] = null;
+                    OnQuickSlotChanged?.Invoke(i, null);
+                }
+                else
+                {
+                    OnQuickSlotChanged?.Invoke(i, slotItem);
+                }
+                break;
+            }
+        }
     }
 
     public int FindSlotIndex(ConsumableItem portion)
