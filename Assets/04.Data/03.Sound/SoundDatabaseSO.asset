@@ -21,19 +21,19 @@ MonoBehaviour:
     Is3DSpatial: 0
   - Id: 101
     Category: 0
-    Clip: {fileID: 8300000, guid: 3c1539793e34578459bcb97f54a15bb8, type: 3}
+    Clip: {fileID: 8300000, guid: 918534363d2e64b41a1cbf7e76158d7e, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 0
   - Id: 102
     Category: 0
-    Clip: {fileID: 8300000, guid: 4e7c93829aa12b84b997091ca784c00d, type: 3}
+    Clip: {fileID: 8300000, guid: 70fceeee157fd1a4089a629bac70cc8e, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 0
   - Id: 103
     Category: 0
-    Clip: {fileID: 8300000, guid: 3c95a962abba9fc47926357009532efa, type: 3}
+    Clip: {fileID: 8300000, guid: 6f99b287eef716d4d81c5e636b74802b, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 0
@@ -117,7 +117,7 @@ MonoBehaviour:
     Is3DSpatial: 1
   - Id: 104
     Category: 0
-    Clip: {fileID: 8300000, guid: 94b009bf18240614385c01a378251224, type: 3}
+    Clip: {fileID: 8300000, guid: 581a55928c007f6468734bff8e81123a, type: 3}
     DefaultVolume: 1
     PitchRandomRange: 0
     Is3DSpatial: 0
