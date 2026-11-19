@@ -392,10 +392,26 @@ public class EnemyBTController : UnitController, IDamageable, IPoolable, IRipost
 
         if (ServiceLocator.TryGet<IEnemyManager>(out var enemyManager) && enemyManager is EnemyManager mgr)
         {
-            // 이미 토큰을 가졌거나 빈 토큰이 있는 경우 공격권 확보 가능
-            return mgr.HasAttackToken(this) || mgr.ActiveTokenCount == 0;
+            // 1. 이미 토큰을 보유 중이면 즉시 허용
+            if (mgr.HasAttackToken(this)) return true;
+
+            // 2. 여유 토큰이 없으면 외곽 대치 유지
+            if (!mgr.HasAvailableAttackToken || _currentTarget == null) return false;
+
+            // 3. 대치 거리 부근에 근접한 적부터 토큰 선점 (원거리 적의 토큰 선점 방지)
+            float defaultMeleeRange = _enemyStatus.EnemyInfoSource != null ? _enemyStatus.EnemyInfoSource.AttackRange : 2.0f;
+            float claimRadius = defaultMeleeRange + _tokenlessStandoffMargin + 3.0f;
+
+            Vector3 diff = _currentTarget.position - transform.position;
+            diff.y = 0f;
+
+            if (diff.sqrMagnitude <= claimRadius * claimRadius)
+            {
+                return mgr.TryAcquireAttackToken(this);
+            }
         }
-        return true;
+
+        return false;
     }
 
     protected bool IsWithinCombatWaitZone()

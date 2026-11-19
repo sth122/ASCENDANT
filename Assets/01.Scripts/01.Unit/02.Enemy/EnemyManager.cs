@@ -18,6 +18,9 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     [SerializeField] private int _maxSimultaneousAttackTokens = 3; // 일반 전투 룸 기본 3기만 공격 허용
     [SerializeField] private float _maxTokenHoldDuration = 6.0f;
 
+    public int MaxSimultaneousAttackTokens => _maxSimultaneousAttackTokens;
+    public bool HasAvailableAttackToken => ActiveTokenCount < _maxSimultaneousAttackTokens;
+
     public int ActiveTokenCount
     {
         get
@@ -66,7 +69,7 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
         }
     }
 
-    #region 이벤트 구독 (무명 메서드 지양 원칙 준수)
+    #region 이벤트 구독
     private void SubscribeEvents()
     {
         UnsubscribeEvents();

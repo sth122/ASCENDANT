@@ -52,7 +52,7 @@ public class DragonCombatController : EnemyCombatController
             Quaternion vfxRot = Quaternion.LookRotation(branchDir);
             if (VFXManager.Instance != null)
             {
-                VFXManager.Instance.PlayVFX(PoolType.VFX_EarthShatter, branchPos, vfxRot);
+                VFXManager.Instance.PlayVFX(PoolType.VFX_EarthShatter, branchPos, vfxRot, null, SoundId.Dragon_EarthShatter);
             }
             else if (ObjectPoolManager.Instance != null)
             {
