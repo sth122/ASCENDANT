@@ -119,10 +119,8 @@ public class UIManager : MonoSingleton<UIManager>, ILoadable
     /// <summary>
     /// UIId 숫자 대역을 분석하여 해당 레이어 컨테이너에 자동 배치하고 Presenter를 바인딩
     /// </summary>
-    public async UniTask<TView> OpenUIAsync<TView, TPresenter, TModel>(UIId id, TModel model = default, System.Threading.CancellationToken ct = default)
-        where TView : UIBase
-        where TPresenter : IUIPresenter, new()
-        where TModel : IUIModel
+    public async UniTask<TView> OpenUIAsync<TView, TPresenter, TModel>(UIId id, TModel model = default, System.Threading.CancellationToken ct = default) 
+        where TView : UIBase where TPresenter : IUIPresenter, new() where TModel : IUIModel
     {
         if (id == UIId.LoadingScreenUI)
         {

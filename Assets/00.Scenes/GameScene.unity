@@ -7162,6 +7162,18 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 1038953739768510399, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1038953739768510399, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1038953739768510399, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1045550657045900547, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -30210,6 +30222,18 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4804053374341968973, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4804053374341968973, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4804053374341968973, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4804053374341968975, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -48210,6 +48234,18 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -0.02
       objectReference: {fileID: 0}
+    - target: {fileID: 7760746479051361290, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7760746479051361290, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7760746479051361290, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7760746479051361293, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -56967,6 +57003,7 @@ PrefabInstance:
     - {fileID: 4362212875321469266, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
     - {fileID: 3507209395656816403, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
     - {fileID: 4017316522538846181, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
+    - {fileID: 1408400978767424832, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 2256756848621649290, guid: 619c350ff97f0da45a10dcacdfe0084b, type: 3}
@@ -58313,8 +58350,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6bf6011d1ebd6044b6f17bae01256f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyManager
-  _maxSimultaneousAttackTokens: 3
-  _maxTokenHoldDuration: 6
+  _maxSimultaneousAttackTokens: 6
 --- !u!4 &1454599542
 Transform:
   m_ObjectHideFlags: 0
@@ -58974,7 +59010,7 @@ Transform:
   m_GameObject: {fileID: 1872529734}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -146.92, y: -2.36, z: 86.49}
+  m_LocalPosition: {x: -143.77, y: -2.506, z: 86.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

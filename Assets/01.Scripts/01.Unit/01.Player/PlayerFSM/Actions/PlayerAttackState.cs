@@ -110,33 +110,7 @@ public class PlayerAttackState : PlayerActionState
         float normalizedTime = _playerAnimController.GetCurrentNormalizedTime(0);
         UpdateHitboxWindow(normalizedTime);
 
-        // 3. 긴급 회피 및 가드 캔슬 판정
-        if (normalizedTime >= _currentTiming.EmergencyCancelNormalized)
-        {
-            float rollCost = owner.CombatConfig != null ? owner.CombatConfig.RollStaminaCost : 18.0f;
-            if (_playerStatusController != null && _playerStatusController.HasEnoughStamina(rollCost))
-            {
-                if (owner.InputReader.TryConsumeCommand(InputCommandType.Roll))
-                {
-                    CloseHitboxInternal();
-                    _playerStateMachine.ChangeState(UnitState.Roll);
-                    return;
-                }
-            }
-            else
-            {
-                owner.InputReader.ClearCommand(InputCommandType.Roll);
-            }
-
-            if (owner.InputReader.TryConsumeCommand(InputCommandType.Guard))
-            {
-                CloseHitboxInternal();
-                _playerStateMachine.ChangeState(UnitState.Guard);
-                return;
-            }
-        }
-
-        // 4. 콤보 연계 판정
+        // 3. 콤보 연계 판정
         if (_comboStep < MaxComboStep && !_hasAdvancedThisStep)
         {
             if (normalizedTime >= _currentTiming.ComboAdvanceNormalized && normalizedTime < 0.95f)
@@ -149,7 +123,7 @@ public class PlayerAttackState : PlayerActionState
             }
         }
 
-        // 5. 후딜레이 캔슬 이동 판정
+        // 4. 후딜레이 캔슬 이동 판정
         if (!_hasAdvancedThisStep && normalizedTime >= _currentTiming.MovementCancelNormalized)
         {
             if (owner.InputReader.MoveInput.sqrMagnitude > 0.01f)
@@ -159,7 +133,7 @@ public class PlayerAttackState : PlayerActionState
             }
         }
 
-        // 6. 모션 완료 시 복귀
+        // 5. 모션 완료 시 복귀
         if (!_hasAdvancedThisStep && normalizedTime >= 0.95f)
         {
             CompleteActionAndEvaluateTransition();

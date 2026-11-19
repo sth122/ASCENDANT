@@ -15,11 +15,9 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     private readonly HashSet<string> _defeatedPermanentIds = new HashSet<string>();
 
     [Header("다대일 전투 토큰 시스템 (동시 공격 허용 수량)")]
-    [SerializeField] private int _maxSimultaneousAttackTokens = 3; // 일반 전투 룸 기본 3기만 공격 허용
-    [SerializeField] private float _maxTokenHoldDuration = 6.0f;
+    [SerializeField] private int _maxSimultaneousAttackTokens = 3;
 
     public int MaxSimultaneousAttackTokens => _maxSimultaneousAttackTokens;
-    public bool HasAvailableAttackToken => ActiveTokenCount < _maxSimultaneousAttackTokens;
 
     public int ActiveTokenCount
     {
@@ -30,7 +28,13 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
         }
     }
 
-    private readonly Dictionary<EnemyBTController, float> _tokenHolders = new Dictionary<EnemyBTController, float>(16);
+    // 현재 공격 토큰을 점유 중인 적 집합
+    private readonly HashSet<EnemyBTController> _tokenHolders = new HashSet<EnemyBTController>(16);
+
+    // 외곽에서 대기 중인 적 목록 
+    private readonly List<EnemyBTController> _waitingEnemies = new List<EnemyBTController>(32);
+
+    // 유효성 검사 중 무효화된 토큰 보유자를 안전하게 제거하기 위한 임시 버퍼
     private readonly List<EnemyBTController> _staleTokenBuffer = new List<EnemyBTController>(8);
 
     private void Awake()
@@ -45,6 +49,7 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
         _registeredEnemies.Clear();
         _defeatedPermanentIds.Clear();
         _tokenHolders.Clear();
+        _waitingEnemies.Clear();
         _staleTokenBuffer.Clear();
     }
 
@@ -145,45 +150,104 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     #endregion
 
     #region 공격 시스템
+    /// <summary>
+    /// 해당 적이 현재 공격 우선권(토큰)을 보유하고 있는지 확인
+    /// </summary>
     public bool HasAttackToken(EnemyBTController enemy)
     {
         if (enemy == null) return false;
-        PruneInvalidTokenHolders();
-        return _tokenHolders.ContainsKey(enemy);
+        PruneInvalidTokenHolders(); 
+        return _tokenHolders.Contains(enemy);
     }
 
     /// <summary>
-    /// 적 AI가 공격을 시작하기 전 공격 권한 티켓 요청
+    /// 적 AI가 플레이어를 처음 인식했을 때 호출하여 발견 순서대로 공격 토큰 발급.
+    /// 최대 허용 수량을 초과한 경우 발견 순서를 유지하며 대기열에 등록.
     /// </summary>
     public bool TryAcquireAttackToken(EnemyBTController enemy)
     {
-        if (enemy == null || enemy.IsDead || !enemy.gameObject.activeInHierarchy) return false;
+        if (!IsEligibleForToken(enemy)) return false;
 
         PruneInvalidTokenHolders();
 
-        if (_tokenHolders.ContainsKey(enemy))
+        // 이미 토큰을 보유 중이라면 우선권 유지
+        if (_tokenHolders.Contains(enemy))
         {
             return true;
         }
 
+        // 여유 토큰이 존재하면 선착순으로 즉시 발급
         if (_tokenHolders.Count < _maxSimultaneousAttackTokens)
         {
-            _tokenHolders.Add(enemy, Time.time);
+            _waitingEnemies.Remove(enemy);
+            _tokenHolders.Add(enemy);
             return true;
+        }
+
+        // 정원이 가득 찬 경우, 발견 순서를 보존하며 대기열 끝에 등록
+        if (!_waitingEnemies.Contains(enemy))
+        {
+            _waitingEnemies.Add(enemy);
         }
 
         return false;
     }
 
     /// <summary>
-    /// 공격 모션 종료, 피격, 그로기, 사망 시 티켓 반환
+    /// 토큰 보유자가 사망, 최대 이동 범위 이탈, 비활성화될 때 호출.
+    /// 토큰을 회수하고 대기열의 다음 적에게 즉시 공격 토큰을 이동.
     /// </summary>
     public void ReleaseAttackToken(EnemyBTController enemy)
     {
-        if (enemy != null)
+        if (enemy == null) return;
+
+        _waitingEnemies.Remove(enemy);
+
+        // 실제로 토큰을 점유하고 있던 개체가 반납한 경우에만 빈 자리를 다음 대기 적에게 승계
+        if (_tokenHolders.Remove(enemy))
         {
-            _tokenHolders.Remove(enemy);
+            PromoteNextWaitingEnemy();
         }
+    }
+
+    /// <summary>
+    /// 빈 토큰 슬롯이 발생했을 때, 플레이어를 인식 중인 대기 적(선착순)에게 즉시 토큰 승계
+    /// </summary>
+    private void PromoteNextWaitingEnemy()
+    {
+        // 1. 발견 순서대로 등록된 대기열에서 유효한 적을 우선 승계
+        while (_tokenHolders.Count < _maxSimultaneousAttackTokens && _waitingEnemies.Count > 0)
+        {
+            EnemyBTController nextCandidate = _waitingEnemies[0];
+            _waitingEnemies.RemoveAt(0);
+
+            if (IsEligibleForToken(nextCandidate) && !_tokenHolders.Contains(nextCandidate))
+            {
+                _tokenHolders.Add(nextCandidate);
+            }
+        }
+
+        // 2. 대기열이 비었음에도 토큰 자리가 남았다면 씬 내 타겟을 인식 중인 다른 적을 탐색해 보충
+        if (_tokenHolders.Count < _maxSimultaneousAttackTokens)
+        {
+            for (int i = 0; i < _registeredEnemies.Count; i++)
+            {
+                EnemyBTController candidate = _registeredEnemies[i];
+                if (IsEligibleForToken(candidate) && !_tokenHolders.Contains(candidate))
+                {
+                    _tokenHolders.Add(candidate);
+                    if (_tokenHolders.Count >= _maxSimultaneousAttackTokens) break;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 적이 공격 토큰을 보유하거나 승계받을 수 있는 유효 상태인지 검증
+    /// </summary>
+    private bool IsEligibleForToken(EnemyBTController enemy)
+    {
+        return enemy != null && enemy.gameObject.activeInHierarchy && !enemy.IsDead && enemy.CurrentTarget != null;
     }
 
     /// <summary>
@@ -194,28 +258,78 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
         if (_tokenHolders.Count == 0) return;
 
         _staleTokenBuffer.Clear();
-        float now = Time.time;
 
-        foreach (var kvp in _tokenHolders)
+        foreach (var holder in _tokenHolders)
         {
-            EnemyBTController holder = kvp.Key;
-            float acquiredTime = kvp.Value;
-
-            if (holder == null ||
-                !holder.gameObject.activeInHierarchy ||
-                holder.IsDead ||
-                holder.ActionState == EnemyActionState.Groggy ||
-                (now - acquiredTime) > _maxTokenHoldDuration)
+            if (!IsEligibleForToken(holder))
             {
                 _staleTokenBuffer.Add(holder);
             }
         }
 
-        for (int i = 0; i < _staleTokenBuffer.Count; i++)
+        if (_staleTokenBuffer.Count > 0)
         {
-            _tokenHolders.Remove(_staleTokenBuffer[i]);
+            for (int i = 0; i < _staleTokenBuffer.Count; i++)
+            {
+                _tokenHolders.Remove(_staleTokenBuffer[i]);
+            }
+            _staleTokenBuffer.Clear();
+
+            // 회수된 수만큼 대기 중인 적에게 즉시 토큰 승계
+            PromoteNextWaitingEnemy();
         }
-        _staleTokenBuffer.Clear();
+    }
+
+    /// <summary>
+    /// 이미 공격 사거리(attackRange) 안에 도달한 전열의 대기 적이 있을 때,
+    /// 사거리 바깥(attackRange + 1.5m 초과)에서 인파에 막혀 접근하지 못하는 토큰 보유자와 권한을 즉시 스왑
+    /// </summary>
+    public bool TrySwapWithBlockedHolder(EnemyBTController frontEnemy, float attackRange)
+    {
+        if (!IsEligibleForToken(frontEnemy)) return false;
+        if (_tokenHolders.Contains(frontEnemy)) return true;
+
+        // 여유 토큰이 남아있다면 즉시 발급
+        if (_tokenHolders.Count < _maxSimultaneousAttackTokens)
+        {
+            _waitingEnemies.Remove(frontEnemy);
+            _tokenHolders.Add(frontEnemy);
+            return true;
+        }
+
+        // 토큰 보유자 중 현재 공격 중이 아니면서 플레이어와 가장 멀리 떨어져(길막 상태) 있는 개체 탐색
+        EnemyBTController blockedHolder = null;
+        float maxBlockedDistSqr = (attackRange + 1.5f) * (attackRange + 1.5f);
+
+        foreach (var holder in _tokenHolders)
+        {
+            if (holder == null || holder == frontEnemy) continue;
+            if (holder.IsActionExecuting || holder.CurrentTarget == null) continue;
+
+            Vector3 diff = holder.CurrentTarget.position - holder.transform.position;
+            diff.y = 0f;
+
+            if (diff.sqrMagnitude > maxBlockedDistSqr)
+            {
+                maxBlockedDistSqr = diff.sqrMagnitude;
+                blockedHolder = holder;
+            }
+        }
+
+        if (blockedHolder != null)
+        {
+            _tokenHolders.Remove(blockedHolder);
+            if (!_waitingEnemies.Contains(blockedHolder))
+            {
+                _waitingEnemies.Add(blockedHolder);
+            }
+
+            _waitingEnemies.Remove(frontEnemy);
+            _tokenHolders.Add(frontEnemy);
+            return true;
+        }
+
+        return false;
     }
     #endregion
 
@@ -266,11 +380,13 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     }
 
     /// <summary>
-    /// 화톳불 휴식 시 등록된 모든 에너미에게 리셋을 명령
+    /// 화톳불 휴식 시 등록된 모든 에너미에게 리셋을 명령하고 토큰 및 대기열을 초기화
     /// </summary>
     public void ResetAllEnemies()
     {
         _tokenHolders.Clear();
+        _waitingEnemies.Clear();
+        _staleTokenBuffer.Clear();
 
         for (int i = _registeredEnemies.Count - 1; i >= 0; i--)
         {

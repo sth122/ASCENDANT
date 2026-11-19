@@ -132,6 +132,18 @@ public class EnemyCombatController : MonoBehaviour
         _globalAttackCooldownTime = Time.time + 1.2f;
     }
 
+    public bool HasAnyOffCooldownAttack()
+    {
+        if (!IsGlobalCooldownReady || _basicAttacks.Count == 0) return false;
+
+        foreach (var kvp in _basicAttacks)
+        {
+            if (Time.time >= _attackCooldowns[kvp.Key])
+                return true;
+        }
+        return false;
+    }
+
     public async UniTask<bool> ExecuteAttackTimelineAsync(EnemyAttackData attackData, Transform target,
         float baseAtk, float basePoise, float speedMod, System.Func<CancellationToken, UniTask> customEvent, CancellationToken ct)
     {
