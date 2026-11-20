@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using Util = DebugLogger<PlayerController>;
 
 /// <summary>
 /// Player 메인 컨트롤러 컴포넌트
@@ -57,6 +56,12 @@ public class PlayerController : UnitController, IDamageable
     protected override void SetupComponents()
     {
         _unitId = UnitId.Player;
+
+        if (_rigidbody != null)
+        {
+            _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+            _rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        }
 
         _statusController = GetComponent<PlayerStatusController>();
         _animController = GetComponent<PlayerAnimController>();
@@ -134,6 +139,8 @@ public class PlayerController : UnitController, IDamageable
     protected override void FixedTickController()
     {
         if (GameManager.Instance != null && GameManager.Instance.IsPaused) return;
+
+        _movement.CheckGrounded();
 
         // FSM 물리 고정 프레임 틱 가동
         _stateMachine?.FixedUpdate();
@@ -265,6 +272,9 @@ public class PlayerController : UnitController, IDamageable
         {
             _inputReader.OnLockOnEvent -= HandleLockOnInput;
             _inputReader.OnLockOnEvent += HandleLockOnInput;
+
+            _inputReader.OnInventoryOpenEvent -= HandleInventoryOpenInput;
+            _inputReader.OnInventoryOpenEvent += HandleInventoryOpenInput;
         }
     }
 
@@ -273,6 +283,7 @@ public class PlayerController : UnitController, IDamageable
         if (_inputReader != null)
         {
             _inputReader.OnLockOnEvent -= HandleLockOnInput;
+            _inputReader.OnInventoryOpenEvent -= HandleInventoryOpenInput;
         }
     }
 
@@ -323,6 +334,56 @@ public class PlayerController : UnitController, IDamageable
             {
                 maxScore = score;
                 closest = targetStat != null ? targetStat.transform : target;
+            }
+        }
+
+        System.Array.Clear(_lockOnHitBuffer, 0, hitCount);
+        return closest;
+    }
+
+    /// <summary>
+    /// 가드 진입 시 가장 가까운 생존 적을 탐색 (락온 타깃이 있으면 우선 반환)
+    /// </summary>
+    public Transform FindClosestEnemy(float searchRadius = 15f, bool requireLineOfSight = true)
+    {
+        if (CurrentLockOnTarget != null)
+        {
+            UnitStatusController lockStat = CurrentLockOnTarget.GetComponentInParent<UnitStatusController>();
+            if (lockStat != null && !lockStat.IsDead)
+            {
+                return CurrentLockOnTarget;
+            }
+        }
+
+        int hitCount = Physics.OverlapSphereNonAlloc(transform.position, searchRadius, _lockOnHitBuffer, _targetLayer);
+        if (hitCount == 0) return null;
+
+        Transform closest = null;
+        float minSqrDist = float.MaxValue;
+        Vector3 origin = transform.position + Vector3.up * 1.2f;
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            Collider col = _lockOnHitBuffer[i];
+            if (col == null || col.transform.root == transform.root) continue;
+
+            UnitStatusController targetStat = col.GetComponentInParent<UnitStatusController>();
+            if (targetStat == null || targetStat.IsDead) continue;
+
+            Transform candidate = targetStat.transform;
+            if (requireLineOfSight &&
+                Physics.Linecast(origin, candidate.position + Vector3.up * 1.0f, _lockOnObstacleLayer, QueryTriggerInteraction.Ignore))
+            {
+                continue;
+            }
+
+            Vector3 diff = candidate.position - transform.position;
+            diff.y = 0f;
+            float sqrDist = diff.sqrMagnitude;
+            if (sqrDist < minSqrDist)
+            {
+                minSqrDist = sqrDist;
+                closest = candidate;
             }
         }
 
@@ -384,6 +445,13 @@ public class PlayerController : UnitController, IDamageable
         else if (evt.NewState == GameState.Playing)
         {
             _inputReader?.EnablePlayerInput();
+        }
+    }
+    private void HandleInventoryOpenInput()
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.RequestOpenInventory();
         }
     }
 

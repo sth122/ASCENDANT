@@ -25,8 +25,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ba520713e38d650429baa649eed895bd
-    m_Address: MeteorShower
+  - m_GUID: db2552afc3cd7c74ea78ca76baf2dfd2
+    m_Address: TreasureChest
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

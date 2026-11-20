@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using System.Threading;
+using UnityEngine;
 using Util = DebugLogger<EnemySpawner>;
 
 /// <summary>
@@ -6,29 +8,41 @@ using Util = DebugLogger<EnemySpawner>;
 /// PoolType과 UnitId 설정을 통해 모든 종류의 Enemy를 범용적으로 스폰·초기화하며,
 /// 화톳불(세이브 터미널) 상호작용 시 사망한 개체를 자동으로 리셋 및 부활시킵니다.
 /// </summary>
-public class EnemySpawner : MonoBehaviour
+public class EnemySpawner : MonoBehaviour, ISceneLoadable
 {
     [Header("Monster Identity Configuration")]
-    [Tooltip("스폰할 적의 풀링 타입")]
     [SerializeField] private PoolType _enemyPoolType = PoolType.NightmareCreature;
-
-    [Tooltip("적 스탯 SO 조회를 위한 고유 UnitId")]
     [SerializeField] private UnitId _unitId = UnitId.NightmareCreature;
 
-    [Header("Spawn Settings")]
-    [SerializeField] private bool _spawnOnStart = true;
+    [Header("Scene Load Order")]
+    [SerializeField] private int _sceneLoadOrder = 10;
 
     private EnemyBTController _spawnedEnemy;
     private bool _isEnemyDead = false;
 
-    private void Start()
+    public int SceneLoadOrder => _sceneLoadOrder;
+
+    private void OnEnable()
     {
-        // 씬 부트스트랩 완료 후 스폰 개시
-        if (_spawnOnStart)
-        {
-            SpawnEnemy();
-        }
+        EventBusSystem.Subscribe<BonfireRestedEvent>(HandleBonfireRested);
     }
+
+    private void OnDisable()
+    {
+        EventBusSystem.Unsubscribe<BonfireRestedEvent>(HandleBonfireRested);
+    }
+    #region ISceneLoadable
+    public UniTask OnSceneObjectLoadAsync(SceneId scene, CancellationToken ct)
+    {
+        SpawnEnemy();
+        return UniTask.CompletedTask;
+    }
+
+    public void OnSceneObjectReady(SceneId scene)
+    {
+        // 모든 씬 액터 배치가 완료된 시점에 추가 연동이 필요할 경우 사용
+    }
+    #endregion
 
     /// <summary>
     /// PoolType에 맞는 EnemyController를 획득하고, DataManager에서 UnitId 스탯을 찾아 확정 주입
@@ -36,8 +50,8 @@ public class EnemySpawner : MonoBehaviour
     public void SpawnEnemy()
     {
         if (_spawnedEnemy != null && !_isEnemyDead) return;
+        if (ObjectPoolManager.Instance == null) return;
 
-        // 1. 오브젝트 풀에서 컴포넌트 타입으로 인스턴스 획득 (어떤 Enemy 파생 클래스든 수용)
         _spawnedEnemy = ObjectPoolManager.Instance.Spawn<EnemyBTController>(
             _enemyPoolType, transform.position, transform.rotation
         );
@@ -50,56 +64,50 @@ public class EnemySpawner : MonoBehaviour
 
         _isEnemyDead = false;
 
-        // 2. DataManager에서 해당 UnitId의 최신 기획 스탯 데이터 획득
-        EnemyInfo runtimeStatus = null;
-        if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<EnemyStatusSO>(out var enemyStatusSO))
+        if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<EnemyInfoSO>(out var enemyStatusSO))
         {
             if (enemyStatusSO.TryGetData(_unitId, out EnemyInfo baseStatus))
             {
-                runtimeStatus = (EnemyInfo)baseStatus.Clone();
+                _spawnedEnemy.BindStatusData((EnemyInfo)baseStatus.Clone());
             }
         }
 
-        // 3. 다형성 초기화 메서드 호출 (위치 및 스탯 확정 바인딩)
-        //_spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
+        if (ServiceLocator.TryGet<IEnemyManager>(out var enemyManager))
+        {
+            enemyManager.RegisterEnemy(_spawnedEnemy);
+        }
 
-        // 4. 사망 이벤트 리스너 바인딩 (화톳불 리셋 추적용)
         _spawnedEnemy.StatusController.OnDieEvent -= HandleEnemyDied;
         _spawnedEnemy.StatusController.OnDieEvent += HandleEnemyDied;
-
-        Util.Log($"[{gameObject.name}] {_enemyPoolType} (ID: {_unitId}) 스폰 및 초기화 완료");
     }
 
     private void HandleEnemyDied()
     {
         _isEnemyDead = true;
-        if (_spawnedEnemy != null)
+        if (_spawnedEnemy != null && _spawnedEnemy.StatusController != null)
         {
             _spawnedEnemy.StatusController.OnDieEvent -= HandleEnemyDied;
         }
-        Util.Log($"[{gameObject.name}] 관리 대상 적 사망 확인: {_unitId}");
     }
 
-    /// <summary>
-    /// 화톳불
-    /// (세이브 터미널)과 상호작용하여 월드가 리셋될 때 호출
-    /// </summary>
+    private void HandleBonfireRested(BonfireRestedEvent evt)
+    {
+        ResetSpawnerOnBonfire();
+    }
+
     public void ResetSpawnerOnBonfire()
     {
-        // 살아있는 적은 위치와 체력을 초기 상태로 리셋
         if (_spawnedEnemy != null && !_isEnemyDead)
         {
-            EnemyInfo runtimeStatus = null;
-            if (DataManager.Instance != null && DataManager.Instance.TryGetSingle<EnemyStatusSO>(out var enemyStatusSO))
+            _spawnedEnemy.transform.SetPositionAndRotation(transform.position, transform.rotation);
+            if (_spawnedEnemy.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) && agent.isOnNavMesh)
             {
-                if (enemyStatusSO.TryGetData(_unitId, out EnemyInfo baseStatus))
-                {
-                    runtimeStatus = (EnemyInfo)baseStatus.Clone();
-                }
+                agent.Warp(transform.position);
             }
-            //_spawnedEnemy.SpawnInit(transform.position, runtimeStatus);
+            _spawnedEnemy.StatusController.HealHp(_spawnedEnemy.StatusController.MaxHp);
+            _spawnedEnemy.StatusController.ResetPoiseToDefault();
+            _spawnedEnemy.ClearTarget();
         }
-        // 이미 사망한 적은 풀에서 새로 스폰하여 제자리에 배치
         else if (_isEnemyDead)
         {
             SpawnEnemy();
@@ -112,12 +120,5 @@ public class EnemySpawner : MonoBehaviour
         {
             _spawnedEnemy.StatusController.OnDieEvent -= HandleEnemyDied;
         }
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, 0.5f);
-        Gizmos.DrawRay(transform.position, transform.forward * 1.5f);
     }
 }

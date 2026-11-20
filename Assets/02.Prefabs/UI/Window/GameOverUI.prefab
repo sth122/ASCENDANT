@@ -32,10 +32,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 337021189008972373}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -180, y: 0}
+  m_SizeDelta: {x: 360, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3624073509917005950
 CanvasRenderer:
@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Retry
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2914a205b8b553a4f9921f91f66eb515, type: 2}
-  m_sharedMaterial: {fileID: -3362585303257314172, guid: 2914a205b8b553a4f9921f91f66eb515, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
+  m_sharedMaterial: {fileID: -6072433820831682332, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -149,6 +149,7 @@ GameObject:
   - component: {fileID: 1103539116141752208}
   - component: {fileID: 6562894156781585971}
   - component: {fileID: 5357145803086646605}
+  - component: {fileID: 8334478846977516525}
   m_Layer: 0
   m_Name: RespawnButton
   m_TagString: Untagged
@@ -197,14 +198,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.18, g: 0.18, b: 0.18, a: 0.9}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 585475772, guid: 7864306b63c32294ea8f447986ba3e55, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -233,7 +234,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 2
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -243,10 +244,10 @@ MonoBehaviour:
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
-    m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 0}
-    m_SelectedSprite: {fileID: 0}
-    m_DisabledSprite: {fileID: 0}
+    m_HighlightedSprite: {fileID: 1755809294, guid: 7864306b63c32294ea8f447986ba3e55, type: 3}
+    m_PressedSprite: {fileID: -455783597, guid: 7864306b63c32294ea8f447986ba3e55, type: 3}
+    m_SelectedSprite: {fileID: 1755809294, guid: 7864306b63c32294ea8f447986ba3e55, type: 3}
+    m_DisabledSprite: {fileID: 1564027389, guid: 7864306b63c32294ea8f447986ba3e55, type: 3}
   m_AnimationTriggers:
     m_NormalTrigger: Normal
     m_HighlightedTrigger: Highlighted
@@ -258,6 +259,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8334478846977516525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1948093050179807930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9d5f2799b31299468c87a6520a0cc0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonFeedback
+  _hoverScale: 1.04
+  _pressScale: 0.97
+  _lerpSpeed: 14
 --- !u!1 &3832083756187090646
 GameObject:
   m_ObjectHideFlags: 0
@@ -325,8 +341,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Main Title
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2914a205b8b553a4f9921f91f66eb515, type: 2}
-  m_sharedMaterial: {fileID: -3362585303257314172, guid: 2914a205b8b553a4f9921f91f66eb515, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
+  m_sharedMaterial: {fileID: -6072433820831682332, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -539,8 +555,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: YOU DIED
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2914a205b8b553a4f9921f91f66eb515, type: 2}
-  m_sharedMaterial: {fileID: -3362585303257314172, guid: 2914a205b8b553a4f9921f91f66eb515, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
+  m_sharedMaterial: {fileID: -6072433820831682332, guid: ba43bac4a33cdf344b199ef90ea8a6d9, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -768,6 +784,7 @@ GameObject:
   - component: {fileID: 874420766721501969}
   - component: {fileID: 8296259060484146810}
   - component: {fileID: 6986290933682918906}
+  - component: {fileID: 4420116092768951046}
   m_Layer: 0
   m_Name: TitleButton
   m_TagString: Untagged
@@ -816,14 +833,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.18, g: 0.18, b: 0.18, a: 0.9}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 585475772, guid: 7864306b63c32294ea8f447986ba3e55, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -852,7 +869,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 2
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -862,10 +879,10 @@ MonoBehaviour:
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
-    m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 0}
-    m_SelectedSprite: {fileID: 0}
-    m_DisabledSprite: {fileID: 0}
+    m_HighlightedSprite: {fileID: 1755809294, guid: 7864306b63c32294ea8f447986ba3e55, type: 3}
+    m_PressedSprite: {fileID: -455783597, guid: 7864306b63c32294ea8f447986ba3e55, type: 3}
+    m_SelectedSprite: {fileID: 1755809294, guid: 7864306b63c32294ea8f447986ba3e55, type: 3}
+    m_DisabledSprite: {fileID: 1564027389, guid: 7864306b63c32294ea8f447986ba3e55, type: 3}
   m_AnimationTriggers:
     m_NormalTrigger: Normal
     m_HighlightedTrigger: Highlighted
@@ -877,3 +894,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &4420116092768951046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8351522467237246213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9d5f2799b31299468c87a6520a0cc0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonFeedback
+  _hoverScale: 1.04
+  _pressScale: 0.97
+  _lerpSpeed: 14

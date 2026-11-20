@@ -53,7 +53,7 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 3.5
-  m_Height: 15.66
+  m_Height: 15
   m_Direction: 0
   m_Center: {x: -7.5, y: -2.07, z: 0}
 --- !u!1 &122862170625386048
@@ -198,7 +198,7 @@ Transform:
   m_GameObject: {fileID: 303604568398480592}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.5, y: -0.52, z: 0}
+  m_LocalPosition: {x: -0.1, y: -4.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -216,7 +216,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c014035a7eba6bb418a203c503cd7ecc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponSweepHitbox
-  _boxHalfExtents: {x: 0.5, y: 0.5, z: 0.5}
+  _boxHalfExtents: {x: 0.65, y: 1, z: 0.65}
   _hitPoints:
   - {fileID: 6043712857094091059}
   _targetLayer:
@@ -518,6 +518,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1778688925818044588}
+  - component: {fileID: 8912447019153403265}
   m_Layer: 9
   m_Name: Bip001-Head
   m_TagString: Untagged
@@ -554,6 +555,27 @@ Transform:
   - {fileID: 2574750958912677394}
   m_Father: {fileID: 2561120097755663229}
   m_LocalEulerAnglesHint: {x: 3.002278, y: 2.0718498, z: -35.201733}
+--- !u!135 &8912447019153403265
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 853307042435727157}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 3.2
+  m_Center: {x: -2, y: 0, z: 0}
 --- !u!1 &856259986067672389
 GameObject:
   m_ObjectHideFlags: 0
@@ -728,7 +750,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c014035a7eba6bb418a203c503cd7ecc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponSweepHitbox
-  _boxHalfExtents: {x: 0, y: 0, z: 0}
+  _boxHalfExtents: {x: 1.8, y: 1.5, z: 1.8}
   _hitPoints:
   - {fileID: 1041294967039746281}
   _targetLayer:
@@ -1982,6 +2004,37 @@ Transform:
   - {fileID: 6741224868103453504}
   m_Father: {fileID: 8297587803831379375}
   m_LocalEulerAnglesHint: {x: -8.9895315, y: -2.790362, z: 34.673042}
+--- !u!1 &3090095798339359109
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2406270104903260135}
+  m_Layer: 7
+  m_Name: _cutsceneTransform
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2406270104903260135
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3090095798339359109}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 16, z: 66}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6153068865494634921}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3105242980742577425
 GameObject:
   m_ObjectHideFlags: 0
@@ -2247,7 +2300,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c014035a7eba6bb418a203c503cd7ecc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponSweepHitbox
-  _boxHalfExtents: {x: 2, y: 0.5, z: 0.7}
+  _boxHalfExtents: {x: 2, y: 1, z: 0.7}
   _hitPoints:
   - {fileID: 3180953557243224221}
   - {fileID: 6588020649219786128}
@@ -2696,7 +2749,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 20, y: 10, z: 15}
+  m_Size: {x: 18, y: 9, z: 13}
   m_Center: {x: -5.1, y: 0, z: 0}
 --- !u!1 &4239058405060127675
 GameObject:
@@ -3873,6 +3926,37 @@ Transform:
   - {fileID: 5552604217870334320}
   m_Father: {fileID: 4355723552519916198}
   m_LocalEulerAnglesHint: {x: -6.4741287, y: 11.445232, z: 17.674046}
+--- !u!1 &6220142860729006749
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 24803822078825275}
+  m_Layer: 7
+  m_Name: _cutsceneLookAtTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &24803822078825275
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6220142860729006749}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 16, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6153068865494634921}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6224904270103231401
 GameObject:
   m_ObjectHideFlags: 0
@@ -4055,7 +4139,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 10, y: 3, z: 5}
-  m_Center: {x: -6.01, y: 0, z: 0}
+  m_Center: {x: -6, y: 0, z: 0}
 --- !u!1 &6638718792116141523
 GameObject:
   m_ObjectHideFlags: 0
@@ -5086,6 +5170,8 @@ Transform:
   m_Children:
   - {fileID: 4604989350414819994}
   - {fileID: 4552055655520227811}
+  - {fileID: 24803822078825275}
+  - {fileID: 2406270104903260135}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &6810940939989134901
@@ -5185,9 +5271,12 @@ MonoBehaviour:
   _maxHp: 0
   _currentPoise: 0
   _maxPoise: 0
+  _isInvincible: 0
   _runtimeEnemyInfo:
     rid: -2
   _dropSouls: 0
+  _poiseDecayDelay: 4
+  _poiseDecayRate: 12
   references:
     version: 2
     RefIds:
@@ -5247,6 +5336,9 @@ MonoBehaviour:
   _groggyRecoveryDuration: 8
   _riposteSocket: {fileID: 0}
   _spawnWaitDuration: 3
+  _tokenlessStandoffMargin: 2.2
+  _cutsceneTransform: {fileID: 2406270104903260135}
+  _cutsceneLookAtTarget: {fileID: 24803822078825275}
   _blackboard:
     SkillCycleInterval: 15
     Phase2HpRatio: 0.3
@@ -5277,6 +5369,8 @@ MonoBehaviour:
   _mouthSocket: {fileID: 1041294967039746281}
   _rightHandSocket: {fileID: 6043712857094091059}
   _shatterRadius: 4
+  _shatterForwardDistance: 4.5
+  _shatterSpreadAngle: 28
   _shatterMaxHeight: 1.2
   _obstacleLayer:
     serializedVersion: 2

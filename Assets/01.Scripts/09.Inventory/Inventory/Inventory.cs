@@ -10,7 +10,7 @@ public class Inventory
     public const int DefaultCapacity = 30;
     private readonly Item[] _slots = new Item[DefaultCapacity];
 
-    // 장착 슬롯 (무기 1, 방패 1, 방어구 1)
+    // 8대 장비 슬롯 (머리, 상의, 장갑, 신발 / 목걸이, 반지 / 한손검, 방패)
     private readonly Dictionary<EquipSlotType, EquipmentItem> _equipmentSlots = new Dictionary<EquipSlotType, EquipmentItem>();
 
     public QuickSlotSystem QuickSlots { get; } = new QuickSlotSystem();
@@ -28,15 +28,26 @@ public class Inventory
     {
         if (data == null || amount <= 0) return false;
 
-        // 1. 수량형 아이템인 경우 기존 스택에 합산
-        if (data is CountableItemData countableData)
+        // 1. 수량형 아이템인 경우 기존 스택에 합산 및 퀵슬롯 수량 동기화
+        if (data is CountableItemData)
         {
             for (int i = 0; i < DefaultCapacity; i++)
             {
                 if (_slots[i] is CountableItem existing && existing.Data.Id == data.Id)
                 {
+                    int beforeAmount = existing.CurrentAmount;
                     amount = existing.AddAmountAndGetOverflow(amount);
-                    OnSlotUpdated?.Invoke(i, existing);
+
+                    if (existing.CurrentAmount != beforeAmount)
+                    {
+                        OnSlotUpdated?.Invoke(i, existing);
+
+                        if (existing is ConsumableItem consumable)
+                        {
+                            QuickSlots.NotifyItemUpdated(consumable);
+                        }
+                    }
+
                     if (amount == 0) return true;
                 }
             }
@@ -46,7 +57,7 @@ public class Inventory
         while (amount > 0)
         {
             int emptyIndex = FindEmptySlotIndex();
-            if (emptyIndex == -1) return false; // 가방 가득 참
+            if (emptyIndex == -1) return false;
 
             Item newItem = data.CreateItem();
             if (newItem is CountableItem countable)
@@ -65,6 +76,35 @@ public class Inventory
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// 런타임 아이템 인스턴스가 현재 인벤토리 가방(_slots)의 몇 번 인덱스에 위치하는지 실시간 조회
+    /// </summary>
+    public int FindSlotIndexOf(Item targetItem)
+    {
+        if (targetItem == null) return -1;
+
+        for (int i = 0; i < DefaultCapacity; i++)
+        {
+            if (ReferenceEquals(_slots[i], targetItem))
+            {
+                return i;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(targetItem.InstanceGuid))
+        {
+            for (int i = 0; i < DefaultCapacity; i++)
+            {
+                if (_slots[i] != null && _slots[i].InstanceGuid == targetItem.InstanceGuid)
+                {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
     }
 
     /// <summary>
@@ -101,6 +141,12 @@ public class Inventory
     /// </summary>
     public bool UnequipItem(EquipSlotType slot, PlayerController player)
     {
+        if (slot == EquipSlotType.MainWeapon || slot == EquipSlotType.Shield)
+        {
+            DebugLogger.LogWarningWithTag("Inventory", "무기와 방패는 장착 해제할 수 없습니다. 다른 장비로 교체해 주세요.");
+            return false;
+        }
+
         if (!_equipmentSlots.TryGetValue(slot, out EquipmentItem equipped) || equipped == null) return false;
 
         int emptyIndex = FindEmptySlotIndex();
@@ -109,16 +155,10 @@ public class Inventory
         _equipmentSlots[slot] = null;
         _slots[emptyIndex] = equipped;
 
+        RecalculateEquipStats(player);
+
         OnEquipmentChanged?.Invoke(slot, null);
         OnSlotUpdated?.Invoke(emptyIndex, equipped);
-
-        // 메인 무기 해제 시 CombatModule의 무기 데이터를 반드시 null로 소거 (유령 무기 버그 차단)
-        if (slot == EquipSlotType.MainWeapon)
-        {
-            player.CombatModule.SetWeaponData(null);
-        }
-
-        RecalculateEquipStats(player);
         return true;
     }
 
@@ -127,50 +167,64 @@ public class Inventory
     /// </summary>
     public void RecalculateEquipStats(PlayerController player)
     {
-        float totalWeight = 0f;
-        float totalFlatDefense = 0f;
-        float totalAbsorption = 0f;
-        float totalPoise = 0f;
-        float shieldStability = 0f;
-        float shieldAbsorption = 0f;
+        EquipmentTotalStats stats = new EquipmentTotalStats();
 
         foreach (var pair in _equipmentSlots)
         {
             EquipmentItem equip = pair.Value;
             if (equip == null) continue;
 
-            totalWeight += equip.Data.Weight;
+            stats.TotalWeight += equip.Data.Weight;
 
-            // 1. 무기 교체 반영
             if (pair.Key == EquipSlotType.MainWeapon && equip is WeaponItem weapon)
             {
                 player.CombatModule.SetWeaponData(weapon.WeaponData);
             }
-            // 2. 방패 사양 반영
             else if (pair.Key == EquipSlotType.Shield && equip is ShieldItem shield)
             {
-                shieldStability = shield.ShieldData.Stability;
-                shieldAbsorption = shield.ShieldData.PhysicalAbsorption;
+                stats.ShieldStability = shield.ShieldData.Stability;
+                stats.ShieldAbsorption = shield.ShieldData.PhysicalAbsorption;
             }
-            // 3. 4부위 방어구(투구, 갑옷, 각반, 신발) 스탯 합산
             else if (equip is ArmorItem armor)
             {
-                totalFlatDefense += armor.ArmorData.FlatDefense;
-                totalAbsorption += armor.ArmorData.ArmorAbsorption;
-                totalPoise += armor.ArmorData.PoiseBonus;
+                stats.TotalFlatDefense += armor.ArmorData.FlatDefense;
+                stats.TotalAbsorption += armor.ArmorData.ArmorAbsorption;
+                stats.TotalPoiseBonus += armor.ArmorData.PoiseBonus;
+            }
+            else if (equip is AccessoryItem accessory)
+            {
+                stats.BonusStrength += accessory.AccessoryData.BonusStrength;
+                stats.BonusDexterity += accessory.AccessoryData.BonusDexterity;
+                stats.BonusMaxHp += accessory.AccessoryData.BonusMaxHp;
+                stats.BonusMaxStamina += accessory.AccessoryData.BonusMaxStamina;
+                stats.BonusAttackPower += accessory.AccessoryData.BonusAttackPower;
+                stats.TotalFlatDefense += accessory.AccessoryData.BonusFlatDefense;
             }
         }
 
-        // 메인 무기가 해제되어 없을 경우 맨손 상태로 캐시 초기화
         if (!_equipmentSlots.ContainsKey(EquipSlotType.MainWeapon) || _equipmentSlots[EquipSlotType.MainWeapon] == null)
         {
             player.CombatModule.SetWeaponData(null);
         }
 
-        // 스탯 모듈에 방어 사양 및 중량비 일괄 동기화
-        player.StatusController.UpdateArmorDefense(totalFlatDefense, totalAbsorption, totalPoise);
-        player.StatusController.UpdateShieldSpec(shieldStability, shieldAbsorption);
-        player.StatusController.PlayerMotionStats.UpdateWeight(totalWeight);
+        player.StatusController.ApplyEquipmentStats(in stats);
+    }
+
+    /// <summary>
+    /// 수량이 0이 된 소모품 인스턴스를 인벤토리 슬롯 배열에서 완전 소거
+    /// </summary>
+    public void CleanDepletedSlot(Item itemInstance)
+    {
+        if (itemInstance == null) return;
+        for (int i = 0; i < DefaultCapacity; i++)
+        {
+            if (ReferenceEquals(_slots[i], itemInstance))
+            {
+                _slots[i] = null;
+                OnSlotUpdated?.Invoke(i, null);
+                break;
+            }
+        }
     }
 
     private int FindEmptySlotIndex()
@@ -209,17 +263,11 @@ public class Inventory
     {
         if (loadout == null || player == null) return;
 
-        // 1. 초기 무기 및 방패 장착
+        // 1. 초기 무기 및 방패만 직접 장착
         if (loadout.StartingWeapon != null) EquipDirect(loadout.StartingWeapon, player);
         if (loadout.StartingShield != null) EquipDirect(loadout.StartingShield, player);
 
-        // 2. 4부위 방어구 장착
-        if (loadout.StartingHelmet != null) EquipDirect(loadout.StartingHelmet, player);
-        if (loadout.StartingChestArmor != null) EquipDirect(loadout.StartingChestArmor, player);
-        if (loadout.StartingLeggings != null) EquipDirect(loadout.StartingLeggings, player);
-        if (loadout.StartingBoots != null) EquipDirect(loadout.StartingBoots, player);
-
-        // 3. 소모품 인벤토리 추가 및 지정된 퀵슬롯 등록
+        // 2. 소모품 인벤토리 추가 및 지정된 퀵슬롯 등록
         for (int i = 0; i < loadout.StartingConsumables.Count; i++)
         {
             var entry = loadout.StartingConsumables[i];
@@ -231,7 +279,7 @@ public class Inventory
             {
                 for (int slotIdx = 0; slotIdx < DefaultCapacity; slotIdx++)
                 {
-                    if (_slots[slotIdx] is PortionItem portion && portion.Data.Id == entry.ItemData.Id)
+                    if (_slots[slotIdx] is ConsumableItem portion && portion.Data.Id == entry.ItemData.Id)
                     {
                         QuickSlots.RegisterItem(entry.AutoAssignQuickSlotIndex, portion);
                         break;
@@ -240,7 +288,7 @@ public class Inventory
             }
         }
 
-        // 4. 기타 가방 보관 아이템 적재
+        // 3. 기타 가방 보관 아이템 적재
         for (int i = 0; i < loadout.ExtraInventoryItems.Count; i++)
         {
             if (loadout.ExtraInventoryItems[i] != null)
@@ -249,27 +297,10 @@ public class Inventory
             }
         }
 
-        DebugLogger.LogWithTag("Inventory", "[초기 무기/방패 및 4부위 방어구 로드아웃 지급 완결]");
+        DebugLogger.LogWithTag("Inventory", "[초기 무기/방패 장착 및 전체 아이템 가방 지급 완료]");
     }
     #endregion
 
-    /// <summary>
-    /// 수량이 0이 된 소모품 인스턴스를 인벤토리 슬롯 배열에서 완전 소거
-    /// </summary>
-    public void CleanDepletedSlot(Item itemInstance)
-    {
-        if (itemInstance == null) return;
-
-        for (int i = 0; i < DefaultCapacity; i++)
-        {
-            if (ReferenceEquals(_slots[i], itemInstance))
-            {
-                _slots[i] = null;
-                OnSlotUpdated?.Invoke(i, null);
-                break;
-            }
-        }
-    }
 
     #region MyRegion
     /// <summary>
@@ -289,7 +320,7 @@ public class Inventory
             if (_slots[i] != null && _slots[i].Data != null)
             {
                 int amount = (_slots[i] is CountableItem countable) ? countable.CurrentAmount : 1;
-                targetData.InventorySlots.Add(new ItemSlotSaveData(i, _slots[i].Data.Id, amount));
+                targetData.InventorySlots.Add(new ItemSlotSaveData(i, _slots[i].Data.Id, amount, _slots[i].InstanceGuid));
             }
         }
 
@@ -309,7 +340,7 @@ public class Inventory
             if (item != null && item.Data != null)
             {
                 int amount = (item is CountableItem countable) ? countable.CurrentAmount : 1;
-                targetData.QuickSlots.Add(new ItemSlotSaveData(q, item.Data.Id, amount));
+                targetData.QuickSlots.Add(new ItemSlotSaveData(q, item.Data.Id, amount, item.InstanceGuid));
             }
         }
     }
@@ -323,14 +354,15 @@ public class Inventory
 
         for (int i = 0; i < DefaultCapacity; i++) _slots[i] = null;
         _equipmentSlots.Clear();
+        QuickSlots.ClearAll();
 
-        // 1. 가방 슬롯 복원
         for (int i = 0; i < sourceData.InventorySlots.Count; i++)
         {
             var entry = sourceData.InventorySlots[i];
             if (dataManager.TryGetItemDataById(entry.ItemId, out ItemData itemData))
             {
                 Item restoredItem = itemData.CreateItem();
+                restoredItem.RestoreGuid(entry.InstanceGuid);
                 if (restoredItem is CountableItem countable)
                 {
                     countable.SetAmount(entry.Amount);
@@ -340,35 +372,102 @@ public class Inventory
             }
         }
 
-        // 2. 착용 슬롯 복원 (CS0165 방지: 명시적 중첩 검증)
         for (int i = 0; i < sourceData.EquippedSlots.Count; i++)
         {
             var entry = sourceData.EquippedSlots[i];
-            if (dataManager.TryGetItemDataById(entry.ItemId, out ItemData itemData))
+            if (dataManager.TryGetItemDataById(entry.ItemId, out ItemData itemData) && itemData is EquipmentItemData equipData)
             {
-                EquipmentItemData equipData = itemData as EquipmentItemData;
-                if (equipData != null)
-                {
-                    EquipDirect(equipData, player);
-                }
+                EquipmentItem equipItem = (EquipmentItem)equipData.CreateItem();
+                _equipmentSlots[entry.SlotType] = equipItem;
+                OnEquipmentChanged?.Invoke(entry.SlotType, equipItem);
             }
         }
 
-        // 3. 퀵슬롯 복원
+        // GUID 우선 매칭 후 아이템 ID 폴백으로 퀵슬롯 복원
         for (int q = 0; q < sourceData.QuickSlots.Count; q++)
         {
             var entry = sourceData.QuickSlots[q];
+            ConsumableItem matched = null;
+
             for (int s = 0; s < DefaultCapacity; s++)
             {
-                if (_slots[s] is PortionItem portion && portion.Data.Id == entry.ItemId)
+                if (_slots[s] is ConsumableItem portion &&
+                    ((!string.IsNullOrEmpty(entry.InstanceGuid) && portion.InstanceGuid == entry.InstanceGuid) ||
+                     portion.Data.Id == entry.ItemId))
                 {
-                    QuickSlots.RegisterItem(entry.SlotIndex, portion);
+                    matched = portion;
                     break;
                 }
+            }
+
+            if (matched != null)
+            {
+                QuickSlots.RegisterItem(entry.SlotIndex, matched);
             }
         }
 
         RecalculateEquipStats(player);
     }
     #endregion
+
+    #region 아이템 사용
+    public bool HasItem(int itemId, int minAmount = 1)
+    {
+        int total = 0;
+        for (int i = 0; i < DefaultCapacity; i++)
+        {
+            if (_slots[i] != null && _slots[i].Data != null && _slots[i].Data.Id == itemId)
+            {
+                total += (_slots[i] is CountableItem countable) ? countable.CurrentAmount : 1;
+                if (total >= minAmount) return true;
+            }
+        }
+        return false;
+    }
+
+    public bool ConsumeItemById(int itemId, int amount = 1)
+    {
+        if (!HasItem(itemId, amount)) return false;
+
+        int remaining = amount;
+        for (int i = 0; i < DefaultCapacity && remaining > 0; i++)
+        {
+            if (_slots[i] == null || _slots[i].Data == null || _slots[i].Data.Id != itemId) continue;
+
+            if (_slots[i] is CountableItem countable)
+            {
+                int take = Mathf.Min(remaining, countable.CurrentAmount);
+                countable.TryConsume(take);
+                remaining -= take;
+
+                if (countable.CurrentAmount <= 0)
+                {
+                    _slots[i] = null;
+                    OnSlotUpdated?.Invoke(i, null);
+                }
+                else
+                {
+                    OnSlotUpdated?.Invoke(i, countable);
+                }
+
+                if (countable is ConsumableItem consumable)
+                {
+                    QuickSlots.NotifyItemUpdated(consumable);
+                }
+            }
+            else
+            {
+                _slots[i] = null;
+                OnSlotUpdated?.Invoke(i, null);
+                remaining--;
+            }
+        }
+        return true;
+    }
+    #endregion
+
+    public bool HasKeyItem(int keyItemId)
+    {
+        return HasItem(keyItemId, 1);
+    }
 }

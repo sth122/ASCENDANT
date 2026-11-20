@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccf927d932245fd4596e1c9a7fc40da8, type: 3}
+  m_Name: HealPortion
+  m_EditorClassIdentifier: Assembly-CSharp::PortionItemData
+  _id: 4001
+  _itemName: Item_EstusPotion
+  _icon: {fileID: 182667767, guid: b126439b7bdbef04ba32e1fdb7c59b9c, type: 3}
+  _description: 111
+  _weight: 0
+  _category: 4
+  _maxStorageCount: 99
+  _maxStack: 99
+  _effects:
+  - {fileID: 11400000, guid: 03027c730ecf3104bbd163a9a439a7ae, type: 2}
+  _cooldown: 4
+  AnimParamType: 22

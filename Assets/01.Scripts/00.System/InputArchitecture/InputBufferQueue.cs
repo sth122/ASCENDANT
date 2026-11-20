@@ -20,6 +20,7 @@ public class InputBufferQueue
     {
         CleanExpiredHead();
 
+        DebugLogger.LogWithTag($"{type}", $"입력 시간 : {UnityEngine.Time.time}");
         int count = _commandQueue.Count;
         bool alreadyExists = false;
 
@@ -63,6 +64,7 @@ public class InputBufferQueue
             if(!found && cmd.CommandType == targetCommand && !cmd.IsExpired(_bufferDuration))
             {
                 // 대상 커맨드 소비
+                DebugLogger.LogWithTag($"{cmd.CommandType}", "선 입력 버퍼 출력");
                 found = true;
             }
             else if(!cmd.IsExpired(_bufferDuration))
@@ -132,6 +134,8 @@ public class InputBufferQueue
             }
         }
 
+
+        DebugLogger.LogWithTag($"{consumedCommand}", "우선 순위 입력 출력");
         return consumed;
     }
 

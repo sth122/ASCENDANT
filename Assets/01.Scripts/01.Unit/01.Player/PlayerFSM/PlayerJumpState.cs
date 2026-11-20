@@ -6,7 +6,6 @@
 public class PlayerJumpState : PlayerBaseState
 {  
     public const float JumpStaminaCost = 12.0f;     // 임시 외부 참조 허용. 소모값 SO나 Module을 따로 만들 예정
-    private const float AirControlFactor = 0.4f;    // 공중 이동 제어 감쇠율
     private const float JumpCooldown = 0.15f;       // 도약 직후 즉시 착지 판정되는 것 방지
     private float _timeInAir = 0f;
 
@@ -82,11 +81,18 @@ public class PlayerJumpState : PlayerBaseState
         base.FixedUpdate();
 
         if(owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
-        {
-            float airSpeed = _playerStatusController.MotionStatus.WalkSpeed.Value * AirControlFactor;
-            UnityEngine.Vector3 airVelocity = owner.CurrentMoveDirection * airSpeed;
+            if (owner.CurrentMoveDirection.sqrMagnitude > 0.001f)
+            {
+                bool isSprint = owner.InputReader.IsSprinting;
+                float speed = isSprint ? _playerStatusController.PlayerMotionStats.SprintSpeed.Value
+                    : _playerStatusController.PlayerMotionStats.WalkSpeed.Value;
 
-            owner.Rigidbody.linearVelocity = new UnityEngine.Vector3(airVelocity.x, owner.Rigidbody.linearVelocity.y, airVelocity.z);
-        }
+                UnityEngine.Vector3 airVelocity = owner.CurrentMoveDirection * speed;
+                owner.Rigidbody.linearVelocity = new UnityEngine.Vector3(airVelocity.x, owner.Rigidbody.linearVelocity.y, airVelocity.z);
+
+                float rotSpeed = (_playerStatusController != null && _playerStatusController.PlayerInfoSource != null)
+                    ? _playerStatusController.PlayerInfoSource.RotationSpeed : 16f;
+                owner.RotateTowardsAPI(owner.CurrentMoveDirection, rotSpeed, UnityEngine.Time.fixedDeltaTime);
+            }
     }
 }

@@ -6,7 +6,9 @@ public class PlayerSprintState : PlayerGroundState
     // 기획 밸런스 수치
     private const float SprintStaminaCostPerSec = 16.0f; // 초당 스태미나 소모량
     private const float MinimumSprintStamina = 5.0f;      // 달리기 시작에 필요한 최소 스태미나
+    private const float FootstepInterval = 0.32f;
 
+    private float _footstepTimer = 0f;
     public PlayerSprintState(PlayerController owner, PlayerStateMachine stateMachine)
         : base(owner, stateMachine) { }
 
@@ -21,12 +23,14 @@ public class PlayerSprintState : PlayerGroundState
             return;
         }
 
+        _footstepTimer = 0.08f; // 달리기 시작 직후 첫 발소리 빠른 반응
         UpdateSprintLocomotionAnimation();
     }
     public override void Update()
     {
         base.Update();
         UpdateSprintLocomotionAnimation();
+        TickSprintFootstep();
     }
 
     public override void FixedUpdate()
@@ -75,5 +79,22 @@ public class PlayerSprintState : PlayerGroundState
         _playerAnimController.SetFloat(AnimParamType.MoveX, 0f);
         // 달리기 상태에서는 MoveZ 블렌드 트리를 전력 질주(1.0f) 수치로 고정
         _playerAnimController.SetFloat(AnimParamType.MoveZ, 1.0f);
+    }
+
+    private void TickSprintFootstep()
+    {
+        if (!owner.Movement.IsGrounded || owner.CurrentMoveDirection.sqrMagnitude <= 0.001f) return;
+
+        _footstepTimer -= UnityEngine.Time.deltaTime;
+        if (_footstepTimer <= 0f)
+        {
+            _footstepTimer = FootstepInterval;
+
+            // 1. Sprint 전용 발소리 SFX 재생
+            SoundManager.Instance?.PlaySFX(SoundId.Player_Footstep, owner.transform.position);
+
+            // 2. 주변 에너미 청각 센서용 소음 이벤트 발행
+            EventBusSystem.Publish(new FootstepNoiseEvent(owner.gameObject, owner.transform.position));
+        }
     }
 }

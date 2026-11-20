@@ -82,8 +82,8 @@ public abstract class UnitMovement
             {
                 IsGrounded = true;
                 IsOnSteepSlope = false;
-                // 평지가 아닌 경사면인지 판별 (0.5도 초과)
-                IsOnSlope = CurrentSlopeAngle > 0.5f;
+                // 평지가 아닌 경사면인지 판별 (2.5도 초과)
+                IsOnSlope = CurrentSlopeAngle > 2.5f;
             }
             else
             {
@@ -125,7 +125,17 @@ public abstract class UnitMovement
 
         targetDirection.y = 0f;
         Quaternion targetRotation = Quaternion.LookRotation(targetDirection.normalized);
-        _transform.rotation = Quaternion.Slerp(_transform.rotation, targetRotation, rotationSpeed * deltaTime);
+        Quaternion currentRotation = (_rb != null && !_rb.isKinematic) ? _rb.rotation : _transform.rotation;
+        Quaternion nextRotation = Quaternion.Slerp(currentRotation, targetRotation, rotationSpeed * deltaTime);
+
+        if (_rb != null && !_rb.isKinematic && Time.inFixedTimeStep)
+        {
+            _rb.MoveRotation(nextRotation);
+        }
+        else
+        {
+            _transform.rotation = nextRotation;
+        }
     }
 
     /// <summary>

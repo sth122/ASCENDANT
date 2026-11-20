@@ -12,69 +12,37 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     public UnityEngine.Vector2 MoveInput { get; private set; }
     public bool IsSprinting { get; private set; }
     public bool IsGuarding { get; private set; }
-
     public bool HasPendingCommand => _bufferQueue != null && _bufferQueue.HasValidCommand;
     #endregion
 
     #region Input Action Events
-    // 단발성 Action 키 이벤트 ( 공격, 구르기, 점프 등)
-    public event System.Action<InputCommandType> OnCommandInputEvent;
-
-    // 지속 입력 상태 변화 이벤트
-    public event System.Action<UnityEngine.Vector2> OnMoveInputChanged;
+    public event System.Action<InputCommandType> OnCommandInputEvent;       // 단발성 Action 키 이벤트 ( 공격, 구르기, 점프 등)
+    public event System.Action<UnityEngine.Vector2> OnMoveInputChanged;     // 지속 입력 상태 변화 이벤트
     public event System.Action<bool> OnSprintChanged;
     public event System.Action OnGuardReleased;
     public event System.Action OnInteractEvent;
     public event System.Action OnLockOnEvent;
     public event System.Action<int> OnQuickSlotDirectEvent;
-    public event System.Action OnInventoryToggleEvent;
+    public event System.Action OnInventoryOpenEvent;
     #endregion
 
     public PlayerInputReader(float bufferDuration = 0.25f)
     {
         _bufferQueue = new InputBufferQueue(bufferDuration);
 
-        if (_inputActions == null)
-        {
-            _inputActions = new PlayerInput();
-            _inputActions.Player.SetCallbacks(this);
-        }
-        EnablePlayerInput();
+        _inputActions = InputSystemHandler.Actions;
+        _inputActions.Player.SetCallbacks(this);
     }
 
-    public void EnablePlayerInput()
-    {
-        _inputActions?.UI.Disable();
-        _inputActions?.Player.Disable();
-        _inputActions?.Player.Enable();
-    }
-
-    public void EnableUIInput()
-    {
-        _inputActions?.Player.Disable();
-        _inputActions?.UI.Disable();
-        _inputActions?.UI.Enable();
-    }
+    public void EnablePlayerInput() => InputSystemHandler.SetMode(InputMode.Gameplay);
+    public void EnableUIInput() => InputSystemHandler.SetMode(InputMode.RealtimeUI);
 
     #region Input Buffer Control
-    public bool TryConsumeCommand(InputCommandType commandtype)
-    {
-        return _bufferQueue.TryConsumeCommand(commandtype);
-    }
-    public bool TryConsumePriorityCommand(out InputCommandType consunmedCommand)
-    {
-        return _bufferQueue.TryConsumePriorityCommand(out consunmedCommand);
-    }
+    public bool TryConsumeCommand(InputCommandType commandtype) => _bufferQueue.TryConsumeCommand(commandtype);
+    public bool TryConsumePriorityCommand(out InputCommandType consunmedCommand) => _bufferQueue.TryConsumePriorityCommand(out consunmedCommand);
+    public void ClearCommand(InputCommandType commandType) => _bufferQueue.ClearCommand(commandType);
 
-    public void ClearCommand(InputCommandType commandType)
-    {
-        _bufferQueue.ClearCommand(commandType);
-    }
-
-    public void ClearAllCommands()
-    {
-        _bufferQueue.ClearAll();
-    }
+    public void ClearAllCommands() => _bufferQueue.ClearAll();
     #endregion
 
     #region IPlayerActions 인터페이스 구현부
@@ -213,20 +181,19 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     }
 
     /// <summary>
-    /// I 키 입력 시 인벤토리 창 열기/닫기 토글
+    /// I 키 입력 시 인벤토리 창 열기 토글
     /// </summary>
     public void OnInventory(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
         if (context.performed)
         {
-            //OnInventoryToggleEvent?.Invoke();
+            OnInventoryOpenEvent?.Invoke();
         }
     }
     #endregion
 
     public void DisablePlayerInput()
     {
-        _inputActions?.Player.Disable();
         MoveInput = UnityEngine.Vector2.zero;
         IsSprinting = false;
         IsGuarding = false;
@@ -237,10 +204,7 @@ public class PlayerInputReader : System.IDisposable, PlayerInput.IPlayerActions
     {
         if (_inputActions != null)
         {
-            _inputActions.Player.Disable();
-            _inputActions.UI.Disable();
             _inputActions.Player.SetCallbacks(null);
-            _inputActions.Dispose();
             _inputActions = null;
         }
     }

@@ -31,15 +31,17 @@ public class EnemyPerceptionModule : UnitBaseModule, System.IDisposable
     public void StartSensorLoop()
     {
         StopSensorLoop();
+        EventBusSystem.Subscribe<FootstepNoiseEvent>(HandleFootstepNoise);
         _sensorCts = new System.Threading.CancellationTokenSource();
-        ReunSensorLoopAsync(_sensorCts.Token).Forget();
+        RunSensorLoopAsync(_sensorCts.Token).Forget();
     }
     public void StopSensorLoop()
     {
+        EventBusSystem.Unsubscribe<FootstepNoiseEvent>(HandleFootstepNoise);
         AsyncUtil.CancelAndDispose(ref _sensorCts);
     }
 
-    private async UniTaskVoid ReunSensorLoopAsync(System.Threading.CancellationToken token)
+    private async UniTaskVoid RunSensorLoopAsync(System.Threading.CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {
@@ -76,7 +78,7 @@ public class EnemyPerceptionModule : UnitBaseModule, System.IDisposable
             Vector3 dirToTarget = targetHeadPos - eyePos;
             float distanceToTarget = dirToTarget.magnitude;
 
-            // 1. 시야각 및 차폐 검사
+            // 시야각 및 차폐 검사
             float angle = Vector3.Angle(_ownerTransform.forward, dirToTarget.normalized);
             if (angle <= SightAngle * 0.5f)
             {
@@ -86,20 +88,21 @@ public class EnemyPerceptionModule : UnitBaseModule, System.IDisposable
                     break;
                 }
             }
-
-            // 2. 청각(Hearing) 검사: 플레이어 달리기 감지 - 추후 Player 발소리 이벤트 추가 예정
-            if (distanceToTarget <= HearingRadius && player.InputReader != null && player.InputReader.IsSprinting)
-            {
-                OnNoiseHeard?.Invoke(player.transform.position);
-                break;
-            }
         }
 
         System.Array.Clear(_overlapBuffer, 0, hitCount);
     }
 
-    public void Dispose()
+    private void HandleFootstepNoise(FootstepNoiseEvent evt)
     {
-        StopSensorLoop();
+        if (_ownerTransform == null || evt.SourceUnit == null || HearingRadius <= 0f) return;
+
+        float sqrDist = (evt.NoisePosition - _ownerTransform.position).sqrMagnitude;
+        if (sqrDist <= HearingRadius * HearingRadius)
+        {
+            OnNoiseHeard?.Invoke(evt.NoisePosition);
+        }
     }
+
+    public void Dispose() => StopSensorLoop();
 }

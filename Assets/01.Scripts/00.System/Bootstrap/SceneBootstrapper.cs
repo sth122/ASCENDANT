@@ -1,4 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Util = DebugLogger<SceneBootstrapper>;
 
@@ -22,16 +24,16 @@ public abstract class SceneBootstrapper : MonoBehaviour, ISceneBootstrap
         if (SceneLoadManager.Instance != null && SceneLoadManager.Instance.IsLoading) return;
 
         // 유니티 에디터에서 해당 씬을 열고 바로 재생 버튼을 눌렀을 때만 자체 기동
-        if (!_isInitialized)
+        if (!_isInitialized && SceneLoadManager.Instance != null)
         {
-            Util.Log($"[에디터 단독 플레이 감지] {_sceneId} 자체 부트스트랩 시작");
+            Util.Log($"[단독/최초 기동 감지] {_sceneId} 통합 부트스트랩 파이프라인 시작");
             try
             {
-                await OnSceneReadyAsync();
+                await SceneLoadManager.Instance.RunInitialOrStandaloneBootstrapAsync(_sceneId, this);
             }
             catch (System.Exception ex)
             {
-                Util.LogError($"[{_sceneId}] 부트스트랩 자체 기동 실패: {ex}");
+                Util.LogError($"[{_sceneId}] 부트스트랩 기동 실패: {ex}");
             }
         }
     }
@@ -51,23 +53,50 @@ public abstract class SceneBootstrapper : MonoBehaviour, ISceneBootstrap
 
         var ct = this.destroyCancellationToken;
 
-        // 에디터 단독 플레이 시에도 데이터와 풀링 적재를 100% 보장
-        if (DataManager.Instance != null)
-        {
-            await DataManager.Instance.EnsureDataLoadedAsync(ct);
-        }
-
-        if (ObjectPoolManager.Instance != null)
-        {
-            await ObjectPoolManager.Instance.OnSceneLoadCreate(_sceneId);
-        }
-
+        // 1. 씬 로컬 서비스 등록 (IPlayerProvider, IEnemyManager)
         RegisterSceneServices();
+
+        // 2. 씬 내 배치된 ISceneLoadable 오브젝트 순차 로드 및 초기화
+        await InitializeSceneLocalLoadablesAsync(ct);
+
+        // 3. 씬 전용 프리로드 에셋
         await PreloadSceneAssetsAsync();
+
+        // 4. 플레이어 및 주요 액터 스폰/바인딩
         await SetupSceneActorsAsync();
+
+        // 5. 씬 UI 오픈
         await SetupSceneUIAsync();
+
+        // 6. 상태 전이 및 완료 브로드캐스트
         OnSceneReadyCompleted();
     }
+
+    private async UniTask InitializeSceneLocalLoadablesAsync(System.Threading.CancellationToken ct)
+    {
+        MonoBehaviour[] allBehaviours = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+        List<ISceneLoadable> sceneLoadables = new List<ISceneLoadable>();
+
+        for (int i = 0; i < allBehaviours.Length; i++)
+        {
+            if (allBehaviours[i] is ISceneLoadable loadable)
+            {
+                sceneLoadables.Add(loadable);
+            }
+        }
+
+        var ordered = sceneLoadables.OrderBy(GetSceneLoadOrderKey).ToList();
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            await ordered[i].OnSceneObjectLoadAsync(_sceneId, ct);
+        }
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            ordered[i].OnSceneObjectReady(_sceneId);
+        }
+    }
+
+    private int GetSceneLoadOrderKey(ISceneLoadable loadable) => loadable.SceneLoadOrder;
 
     protected abstract void RegisterSceneServices();
     protected abstract UniTask PreloadSceneAssetsAsync();

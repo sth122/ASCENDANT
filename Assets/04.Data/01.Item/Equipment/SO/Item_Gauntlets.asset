@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea8fc35f7124ab34a85ed49e58431788, type: 3}
+  m_Name: Item_Gauntlets
+  m_EditorClassIdentifier: Assembly-CSharp::ArmorItemData
+  _id: 2003
+  _itemName: Gauntlets
+  _icon: {fileID: 21300010, guid: 8b8333c8af9b0c54da038fe9102febb5, type: 3}
+  _description: "\uAC74\uD2C0\uB9BF"
+  _weight: 3.5
+  _category: 2
+  _maxStorageCount: 1
+  _equipSlot: 4
+  _requiredStrength: 10
+  _requiredDexterity: 10
+  _flatDefense: 18
+  _armorAbsorption: 0.04
+  _poiseBonus: 4

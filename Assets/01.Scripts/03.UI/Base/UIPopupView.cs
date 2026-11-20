@@ -53,7 +53,7 @@ public abstract class UIPopupView<TResult> : UIBase
     /// <summary>
     /// 팝업 결과를 확정짓고 대기를 해제하는 메서드
     /// </summary>
-    protected void SetResult(TResult result)
+    protected virtual void SetResult(TResult result)
     {
         if (_popupTaskSource != null && !_popupTaskSource.Task.Status.IsCompleted())
         {

@@ -28,6 +28,15 @@ public class BossBlackboard : Blackboard
     [NonSerialized] public float NextSkillCycleTime = 0f;
     #endregion
 
+    public void ResetRuntimeState()
+    {
+        IsPhase2 = false;
+        IsInvincible = false;
+        HasExecutedPhase2Entry = false;
+        IsSkillPending = false;
+        ResetSkillCycle();
+    }
+
     public void ResetSkillCycle()
     {
         NextSkillCycleTime = Time.time + SkillCycleInterval;

@@ -19,6 +19,7 @@ public class PlayerStatusController : UnitStatusController
     public float StaminaRegenMultiplier { get; set; } = 1.0f;
     public float CurrentStamina => _currentStamina;
     public float MaxStamina => _maxStamina;
+    public int CurrentSouls => PlayerInfoSource != null ? PlayerInfoSource.CurrentSouls : 0;
     #endregion
 
     #region Player 장비 연동 스탯
@@ -29,11 +30,20 @@ public class PlayerStatusController : UnitStatusController
     [UnityEngine.SerializeField] private float _equippedShieldStability = 0f;
     [UnityEngine.SerializeField] private float _equippedShieldAbsorption = 0f;
 
+    [UnityEngine.SerializeField] private int _equippedBonusStrength = 0;
+    [UnityEngine.SerializeField] private int _equippedBonusDexterity = 0;
+    [UnityEngine.SerializeField] private float _equippedBonusMaxHp = 0f;
+    [UnityEngine.SerializeField] private float _equippedBonusMaxStamina = 0f;
+    [UnityEngine.SerializeField] private float _equippedBonusAttackPower = 0f;
+
     public float EquippedArmorFlatDefense => _equippedArmorFlatDefense;
     public float EquippedArmorAbsorption => _equippedArmorAbsorption;
     public float EquippedArmorPoiseBonus => _equippedArmorPoiseBonus;
     public float EquippedShieldStability => _equippedShieldStability;
     public float EquippedShieldAbsorption => _equippedShieldAbsorption;
+    public int EquippedBonusStrength => _equippedBonusStrength;
+    public int EquippedBonusDexterity => _equippedBonusDexterity;
+    public float EquippedBonusAttackPower => _equippedBonusAttackPower;
     #endregion
 
     public PlayerMotionStatusModule PlayerMotionStats => MotionStatus as PlayerMotionStatusModule;
@@ -67,6 +77,8 @@ public class PlayerStatusController : UnitStatusController
             StartStaminaRegenLoop();
 
             InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
+
+            PublishMaxStatsCalculated();
         }
         else
         {
@@ -94,6 +106,8 @@ public class PlayerStatusController : UnitStatusController
 
         PlayerMotionStats.SyncBaseValues(updatedStat);
 
+        PublishMaxStatsCalculated();
+
         InvokeChangeHPEvent(_currentHp, _maxHp);
         InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
@@ -104,14 +118,12 @@ public class PlayerStatusController : UnitStatusController
     {
         _currentStamina = UnityEngine.Mathf.Max(0f, _currentStamina - cost);
         _staminaRecoveryTimer = StaminaRegenDelay;
-
         InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
 
     public void RestoreStamina(float amount)
     {
         if (_isDead || amount <= 0f) return;
-
         _currentStamina = UnityEngine.Mathf.Min(_maxStamina, _currentStamina + amount);
         InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
     }
@@ -128,7 +140,6 @@ public class PlayerStatusController : UnitStatusController
         ConsumeStamina(staminaCost);
 
         // 가드 피격 시에도 스태미나 회복 지연 타이머 갱신 ( 무한 가드 방어 )
-
         if (_currentStamina <= 0f)
         {
             _currentStamina = 0f;
@@ -186,8 +197,8 @@ public class PlayerStatusController : UnitStatusController
             _currentPoise = UnityEngine.Mathf.Min(_currentPoise, _maxPoise);
         }
 
+        PublishMaxStatsCalculated();
         InvokeChangePoiseEvent(_currentPoise, _maxPoise);
-        Util.Log($"[방어구 갱신] 추가 DEF: {_equippedArmorFlatDefense}, 경감률: {_equippedArmorAbsorption * 100f:F1}%, 강인도 보너스: {_equippedArmorPoiseBonus}");
     }
 
     /// <summary>
@@ -197,12 +208,64 @@ public class PlayerStatusController : UnitStatusController
     {
         _equippedShieldStability = stability;
         _equippedShieldAbsorption = UnityEngine.Mathf.Clamp01(physicalAbsorption);
-        Util.Log($"[방패 갱신] 안정성: {_equippedShieldStability}, 커트율: {_equippedShieldAbsorption * 100f:F1}%");
     }
+
+    public void ApplyEquipmentStats(in EquipmentTotalStats stats)
+    {
+        _equippedArmorFlatDefense = stats.TotalFlatDefense;
+        _equippedArmorAbsorption = UnityEngine.Mathf.Clamp(stats.TotalAbsorption, 0f, 0.95f);
+        _equippedArmorPoiseBonus = stats.TotalPoiseBonus;
+        _equippedShieldStability = stats.ShieldStability;
+        _equippedShieldAbsorption = UnityEngine.Mathf.Clamp01(stats.ShieldAbsorption);
+
+        _equippedBonusStrength = stats.BonusStrength;
+        _equippedBonusDexterity = stats.BonusDexterity;
+        _equippedBonusMaxHp = stats.BonusMaxHp;
+        _equippedBonusMaxStamina = stats.BonusMaxStamina;
+        _equippedBonusAttackPower = stats.BonusAttackPower;
+
+        // 베이스 스탯에 보너스 수치 반영하여 Max 값 재산출
+        if (PlayerInfoSource != null)
+        {
+            _maxHp = PlayerInfoSource.CalculateMaxHp() + _equippedBonusMaxHp;
+            _currentHp = UnityEngine.Mathf.Min(_currentHp, _maxHp);
+
+            _maxStamina = PlayerInfoSource.CalculateMaxStamina() + _equippedBonusMaxStamina;
+            _currentStamina = UnityEngine.Mathf.Min(_currentStamina, _maxStamina);
+
+            _maxPoise = PlayerInfoSource.Poise + _equippedArmorPoiseBonus;
+            _currentPoise = UnityEngine.Mathf.Min(_currentPoise, _maxPoise);
+        }
+
+        PlayerMotionStats?.UpdateWeight(stats.TotalWeight);
+
+        PublishMaxStatsCalculated();
+
+        InvokeChangeHPEvent(_currentHp, _maxHp);
+        InvokeChangeStatminaEvent(_currentStamina, _maxStamina);
+        InvokeChangePoiseEvent(_currentPoise, _maxPoise);
+    }
+
+    private void PublishMaxStatsCalculated() => EventBusSystem.Publish(new PlayerMaxStatsCalculatedEvent(_maxHp, _maxStamina, _maxPoise));
 
     private void InvokeChangeStatminaEvent(float current, float max)
     {
         OnStaminaChangedEvent?.Invoke(current, max);
         EventBusSystem.Publish(new PlayerStaminaChangedEvent(current, max));
+    }
+
+    public void AddSouls(int amount)
+    {
+        if (PlayerInfoSource == null || amount <= 0) return;
+        PlayerInfoSource.AddSouls(amount);
+        EventBusSystem.Publish(new SoulChangedEvent(PlayerInfoSource.CurrentSouls, amount));
+    }
+
+    public bool TryConsumeSouls(int amount)
+    {
+        if (PlayerInfoSource == null || amount <= 0 || PlayerInfoSource.CurrentSouls < amount) return false;
+        PlayerInfoSource.ConsumeSouls(amount);
+        EventBusSystem.Publish(new SoulChangedEvent(PlayerInfoSource.CurrentSouls, -amount));
+        return true;
     }
 }

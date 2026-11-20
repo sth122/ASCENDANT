@@ -34,13 +34,14 @@ public class CreatureBT : EnemyBTController
         // 2. 그로기 브랜치
         var groggySeq = new SequenceNode();
         groggySeq.Add(new PredicateNode<CreatureBT>(this, static c =>
-            c._enemyStatus != null && c._enemyStatus.IsPoiseBroken && !c._groggyModule.IsGroggy));
+            c._enemyStatus != null && (c._groggyModule.IsGroggy || c._enemyStatus.IsPoiseBroken)));
         groggySeq.Add(new ActionNode(TickGroggyStatus));
         root.Add(groggySeq);
 
-        // 3. 발소리 감지 수색 (Alert) 브랜치
+        // 3. 발소리 감지 경계 (Alert) 브랜치
         var alertSeq = new SequenceNode();
-        alertSeq.Add(new PredicateNode<CreatureBT>(this, static c => !c.IsActionExecuting && c._isAlerted));
+        alertSeq.Add(new PredicateNode<CreatureBT>(this, static c =>
+            !c.IsActionExecuting && c._isAlerted && c._currentTarget == null));
         alertSeq.Add(new AsyncActionNode(ExecuteAlertSequenceAsync, GetActionToken));
         root.Add(alertSeq);
 
@@ -53,7 +54,7 @@ public class CreatureBT : EnemyBTController
 
         // 5. 전투 브랜치
         var combatBranch = new SequenceNode();
-        combatBranch.Add(new PredicateNode<CreatureBT>(this, static c => c._currentTarget != null));
+        combatBranch.Add(new PredicateNode<CreatureBT>(this, static c => c._currentTarget != null && !c._groggyModule.IsGroggy));
         combatBranch.Add(BuildCombatSelector());
         root.Add(combatBranch);
 
@@ -75,7 +76,10 @@ public class CreatureBT : EnemyBTController
         catch (OperationCanceledException) { return; }
         finally
         {
-            SetActionState(EnemyActionState.None);
+            if (ActionState == EnemyActionState.Spawning)
+            {
+                SetActionState(EnemyActionState.None);
+            }
         }
 
         AcquireNearestTarget();
@@ -96,13 +100,24 @@ public class CreatureBT : EnemyBTController
             }
 
             await PlayStateAndWaitAsync(AnimStateType.CrawlToState, ct, force: true);
+
+            // 경계 기립 직후 타깃을 발견했다면 즉시 경계 루틴을 종료하고 전투 포효로 인계
+            if (_currentTarget != null) return true;
+
             await PlayStateAndWaitAsync(AnimStateType.Idle, ct, force: true);
+            if (_currentTarget != null) return true;
+
             await PlayStateAndWaitAsync(AnimStateType.StateToCrawl, ct, force: true);
         }
+        catch (OperationCanceledException) { return false; }
         finally
         {
             _isAlerted = false;
-            SetActionState(EnemyActionState.None);
+            // 다른 상태(Roar/Groggy/Dead)로 이미 전이된 경우 덮어쓰지 않음
+            if (ActionState == EnemyActionState.Alerting && !_hasSpottedAndRoared)
+            {
+                SetActionState(EnemyActionState.None);
+            }
         }
 
         return true;
@@ -110,11 +125,14 @@ public class CreatureBT : EnemyBTController
 
     protected override void HandleTargetSpotted(Transform target)
     {
+        if (IsDead || target == null) return;
+
         if (_currentTarget == null)
         {
             SetTarget(target);
+            _isAlerted = false;
 
-            if (!_hasSpottedAndRoared)
+            if (!_hasSpottedAndRoared && !_groggyModule.IsGroggy)
             {
                 _hasSpottedAndRoared = true;
                 ExecuteRoarAndCallAlliesAsync(GetActionToken()).Forget();
@@ -124,12 +142,9 @@ public class CreatureBT : EnemyBTController
 
     protected override void HandleNoiseHeard(Vector3 noisePosition)
     {
-        base.HandleNoiseHeard(noisePosition);
-        if (_currentTarget == null && !_isAlerted && !IsActionExecuting)
-        {
-            _isAlerted = true;
-            _heardNoisePosition = noisePosition;
-        }
+        if (_currentTarget != null || IsActionExecuting || IsDead || _groggyModule.IsGroggy) return;
+        _isAlerted = true;
+        _heardNoisePosition = noisePosition;
     }
 
     private async UniTaskVoid ExecuteRoarAndCallAlliesAsync(CancellationToken token)
@@ -140,12 +155,29 @@ public class CreatureBT : EnemyBTController
         try
         {
             BroadcastTargetToNearbyAllies();
-            await PlayStateAndWaitAsync(AnimStateType.Roar, token, force: true);
+
+            float roarDuration = _enemyAnim.GetStateDuration(AnimStateType.Roar);
+            _enemyAnim.PlayState(AnimStateType.Roar, force: true);
+
+            float elapsed = 0f;
+            while (elapsed < roarDuration)
+            {
+                token.ThrowIfCancellationRequested();
+                if (_currentTarget != null)
+                {
+                    _movement.FaceTarget(_currentTarget.position, 8.0f, Time.deltaTime);
+                }
+                elapsed += Time.deltaTime;
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { return; }
         finally
         {
-            SetActionState(EnemyActionState.None);
+            if (ActionState == EnemyActionState.Alerting)
+            {
+                SetActionState(EnemyActionState.None);
+            }
         }
     }
 
@@ -167,9 +199,11 @@ public class CreatureBT : EnemyBTController
 
     public void ReceiveAlertSignal(Transform sharedTarget)
     {
-        if (_currentTarget != null || IsDead || IsActionExecuting) return;
+        if (_currentTarget != null || IsDead || _groggyModule.IsGroggy) return;
+        if (ActionState == EnemyActionState.BasicAttacking || ActionState == EnemyActionState.SkillCasting) return;
 
         SetTarget(sharedTarget);
+        _isAlerted = false;
         _hasSpottedAndRoared = true;
         ExecuteRoarResponseAsync(GetActionToken()).Forget();
     }
@@ -181,17 +215,28 @@ public class CreatureBT : EnemyBTController
 
         try
         {
-            if (_currentTarget != null)
-            {
-                _movement.FaceTarget(_currentTarget.position, 10.0f, Time.deltaTime);
-            }
+            float roarDuration = _enemyAnim.GetStateDuration(AnimStateType.Roar);
+            _enemyAnim.PlayState(AnimStateType.Roar, force: true);
 
-            await PlayStateAndWaitAsync(AnimStateType.Roar, token, force: true);
+            float elapsed = 0f;
+            while (elapsed < roarDuration)
+            {
+                token.ThrowIfCancellationRequested();
+                if (_currentTarget != null)
+                {
+                    _movement.FaceTarget(_currentTarget.position, 10.0f, Time.deltaTime);
+                }
+                elapsed += Time.deltaTime;
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { return; }
         finally
         {
-            SetActionState(EnemyActionState.None);
+            if (ActionState == EnemyActionState.Alerting)
+            {
+                SetActionState(EnemyActionState.None);
+            }
         }
     }
 

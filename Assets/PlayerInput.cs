@@ -203,7 +203,7 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""Inventory"",
                     ""type"": ""Button"",
-                    ""id"": ""6f0252e1-4fe2-4292-a532-e0f839b2b7dc"",
+                    ""id"": ""d03b2e7f-04bf-4d66-a3ca-cd3a11f63606"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -389,7 +389,7 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""cc8b1a15-6433-46e0-848a-f1ed7b858125"",
+                    ""id"": ""5d249104-2df3-4bfc-8056-25db7283f8e0"",
                     ""path"": ""<Keyboard>/i"",
                     ""interactions"": """",
                     ""processors"": """",

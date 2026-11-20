@@ -63,6 +63,15 @@ public enum InputCommandType
     Attack,
     Guard
 }
+
+public enum InputMode
+{
+    Title = 0,
+    Gameplay = 1,
+    RealtimeUI = 2,
+    PausedUI = 3,
+    Cutscene = 4,
+}
 #endregion
 
 #region Unit FSM State
@@ -111,6 +120,7 @@ public enum PoolType
     VFX_Breath_Fire = 1501,       // FlameThrower
     VFX_EarthShatter = 1502,      // EarthShatter
     VFX_MeteorExplosion = 1503,   // 메테오 착탄 폭발
+    VFX_FireExplosion = 1504,     // FireBomb 폭발
 
     // 투사체 및 인게임 드랍 (2000 ~)
     SoulOrb = 2000,
@@ -163,7 +173,8 @@ public enum AnimParamType
     Roll,           // Trigger: 전방/방향 구르기
     Fall,           // Trigger: 공중 낙하 체공 모션
     HardLanding,    // Trigger: 하드 랜딩 착지 경직 모션
-    UseItem         // Trigger: 소모품 사용 모션
+    UsePortion,     // Trigger: 소모품 사용 모션
+    ThrowItem,      // Trigger: 투척 아이템 모션
 }
 
 public enum AnimStateType
@@ -259,17 +270,22 @@ public enum UIId
     InventoryUI             = 3003,     // 인벤토리 창 (Tab/I 토글)
     EquipmentUI             = 3004,     // 장비 장착/변경 창
     StatusUI                = 3005,     // 캐릭터 상세 스탯 정보 창
-    GameOverUI              = 3006,
+    GameOverUI              = 3006,     // 게임오버 후 재시작/타이틀 선택 창
+    SettingUI               = 3007,     // 설정 메뉴 창
+    CharacterSelectUI       = 3008,     // 캐릭터 선택/생성/삭제 통합 메뉴
+    BonfireUI               = 3009,     // 화톳불 휴식 및 소울 레벨업 창
+    ChestUI                 = 3010,     // 보물상자 아이템 획득 창
+    NoticeWindowUI          = 3011,     // 단일 확인 알림 모달 팝업
+    EndingCreditsUI         = 3012,
 
     // 4000 ~ 4999 : Popup (비동기 결과 대기 및 확인/경고 모달 다이얼로그)
-    ConfirmPopup            = 4001,     // 확인/취소 모달 팝업
-    NoticePopup             = 4002,     // 단일 확인 알림 모달 팝업
+    ConfirmPopup = 4001,     // 확인/취소 모달 팝업
     KeyBindingPopup         = 4003,     // 키 매핑 변경 팝업
-
 
     // 5000 ~ 5999 : System (최상위 화면 제어, 화면 전환 및 시스템 인디케이터)
     FadeCurtainUI           = 5001,     // 씬 전환 암전용 페이드 디머
     LoadingScreenUI         = 5002,     // 비동기 씬 로딩 스크린 프로그레스바
+    SaveToastUI             = 5003,     // 우측 하단 '게임 저장' 시스템 토스트
 }
 
 /// <summary>
@@ -344,13 +360,26 @@ public enum InteractType
     Chest,        // 보물상자 열기
     Lever         // 기믹 레버 조작
 }
+
+/// <summary>
+/// 씬별 세이브 포인트(화톳불) 고유 식별자
+/// </summary>
+public enum BonfireId
+{
+    None = 0,
+    GameScene_Start = 101,
+    GameScene_Mid = 102,
+    GameScene_BossGate = 103,
+    BossScene_Entrance = 201 
+}
 #endregion
 
 #region Inventory + Item
 public enum ItemType
 {
-    Countable,   // 소모품, 재료 등 수량성 아이템
-    Equipment    // 무기, 방패, 방어구 등 장비 아이템
+    Consumable,     // 소모품
+    Material,       // 재료
+    Bomb,           // 소모품 - 투척
 }
 
 public enum PortionEffectType
@@ -361,12 +390,19 @@ public enum PortionEffectType
 
 public enum EquipSlotType
 {
-    MainWeapon, // 무기
-    Shield,     // 방패
-    Helmet,     // 머리 투구
-    ChestArmor, // 상체 갑옷
-    Leggings,   // 하체 각반
-    Boots       // 발 신발
+    // 무기 및 방패 (2종)
+    MainWeapon,     // 한손검
+    Shield,         // 방패
+
+    // 방어구 (4종)
+    Helmet,         // 머리 투구
+    ChestArmor,     // 상체 갑옷
+    Gauntlets,      // 장갑
+    Boots,          // 신발
+
+    // 악세서리 (2종)
+    Necklace,       // 목걸이
+    Ring            // 반지
 }
 
 public enum ShieldClassification
@@ -376,10 +412,11 @@ public enum ShieldClassification
 
 public enum ItemCategory
 {
-    Consumable, 
-    Weapon,     
-    Shield,     
-    Armor       
+    Weapon,         // 무기
+    Shield,         // 방패
+    Armor,          // 방어구
+    Accessory,      // 악세서리
+    Consumable      // 소모품
 }
 
 public enum StatScalingGrade
@@ -398,4 +435,66 @@ public enum StatScalingGrade
 public enum RollTier
 {
     Fast, Mid, Fat, Overburdened
+}
+
+#region Sound
+public enum SoundCategory
+{
+    BGM,
+    CombatSFX,
+    EnvironmentSFX,
+    UISFX
+}
+
+public enum SoundId
+{
+    None = 0,
+
+    // BGM (100 ~)
+    BGM_Title = 100,
+    BGM_Field = 101,
+    BGM_Boss_Phase1 = 102,
+    BGM_Boss_Phase2 = 103,
+    BGM_Ending = 104,
+
+    // UI SFX (200 ~)
+    UI_Hover = 200,
+    UI_Click = 201,
+    UI_Confirm = 202,
+    UI_Cancel = 203,
+    UI_WindowOpen = 204,
+    UI_WindowClose = 205,
+
+    // 전투 및 액션 SFX (300 ~)
+    Sword_Swing_Light = 300,
+    Sword_Swing_Heavy = 301,
+    Hit_Flesh_Slash = 302,
+    Hit_Armor_Blunt = 303,
+    Shield_Guard_Impact = 304,
+    Shield_Parry_Success = 305,
+    Player_Roll = 306,
+    Player_Footstep = 307,
+    Potion_Drink = 308,
+    FireBomb_Explode = 309,
+
+    // 보스 및 상호작용 SFX (400 ~)
+    Dragon_Roar = 400,
+    Dragon_Breath_Fire = 401,
+    Dragon_EarthShatter = 402,
+    Dragon_Meteor_Impact = 403,
+    Bonfire_Rest = 404,
+    BossDoor_Open = 405
+}
+#endregion
+
+public enum EnemyActionState
+{
+    None = 0,
+    Spawning,
+    Alerting,
+    BasicAttacking,
+    SkillCasting,
+    HitStagger,
+    Groggy,
+    Dead
 }

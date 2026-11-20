@@ -7,6 +7,7 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
     [UnityEngine.Header("Scene Camera Rig")]
     [UnityEngine.SerializeField] private Unity.Cinemachine.CinemachineCamera _sceneFreeLookCamera;
     [UnityEngine.SerializeField] private Unity.Cinemachine.CinemachineCamera _sceneLockOnCamera;
+    [UnityEngine.SerializeField] private Unity.Cinemachine.CinemachineCamera _sceneCutsceneCamera;
 
     private PlayerController _spawnedPlayer;
 
@@ -35,16 +36,22 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
         UnityEngine.Quaternion spawnRot;
 
         SaveData save = SaveManager.Instance != null ? SaveManager.Instance.CurrentSaveData : null;
-        // 1-1. 새 게임이거나 체크 포인트(화톳불)에 들르지 않은 경우
+
+        // 새 게임이거나 체크 포인트(화톳불)에 들르지 않은 경우
         if (save == null || !save.HasCheckpoint)
         {
             spawnPos = _playerSpawnPoint != null ? _playerSpawnPoint.position : UnityEngine.Vector3.zero;
             spawnRot = _playerSpawnPoint != null ? _playerSpawnPoint.rotation : UnityEngine.Quaternion.identity;
         }
-        // 1-2. 체크 포인트가 존재하는 경우
+        else if (SavePointSystem.Instance.TryGetSpawnTransform(save.LastBonfireId, out UnityEngine.Vector3 registeredPos, out UnityEngine.Quaternion registeredRot))
+        {
+            // 이어하기: SavePointManager에 등록된 해당 BonfireId의 최신 Transform 위치로 소환
+            spawnPos = registeredPos;
+            spawnRot = registeredRot;
+        }
         else
         {
-            // SaveData의 SerializableVector3와 Y축 회전각 복원
+            // 저장된 raw 좌표 복원
             spawnPos = save.LastBonfirePosition.ToVector3();
             spawnRot = UnityEngine.Quaternion.Euler(0f, save.LastBonfireRotationY, 0f);
         }
@@ -80,7 +87,7 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
         if (CameraManager.Instance != null && _spawnedPlayer != null)
         {
             UnityEngine.Transform camTarget = _spawnedPlayer.CameraTarget != null ? _spawnedPlayer.CameraTarget : _spawnedPlayer.transform;
-            CameraManager.Instance.RegisterSceneCameras(_sceneFreeLookCamera, _sceneLockOnCamera);
+            CameraManager.Instance.RegisterSceneCameras(_sceneFreeLookCamera, _sceneLockOnCamera, _sceneCutsceneCamera);
             CameraManager.Instance.SetPlayerTarget(camTarget);
             Util.Log($"[CameraManager] 타깃 주입 완료: {camTarget.name}");
         }
@@ -141,15 +148,20 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
 
     protected override async Cysharp.Threading.Tasks.UniTask SetupSceneUIAsync()
     {
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayBGM(SoundId.BGM_Field, fadeDuration: 1.5f);
+        }
+
         PlayerHUDModel hudModel = new PlayerHUDModel();
         await UIManager.Instance.OpenUIAsync<PlayerHUDView, PlayerHUDPresenter, PlayerHUDModel>(
             UIId.PlayerHUD, hudModel, ct: this.destroyCancellationToken
         );
 
-        //QuickSlotModel quickSlotModel = new QuickSlotModel();
-        //await UIManager.Instance.OpenUIAsync<QuickSlotView, QuickSlotPresenter, QuickSlotModel>(
-        //    UIId.QuickSlotHUD, quickSlotModel, ct: this.destroyCancellationToken
-        //);
+        QuickSlotModel quickSlotModel = new QuickSlotModel();
+        await UIManager.Instance.OpenUIAsync<QuickSlotView, QuickSlotPresenter, QuickSlotModel>(
+            UIId.QuickSlotHUD, quickSlotModel, ct: this.destroyCancellationToken
+        );
     }
 
     protected override void OnSceneReadyCompleted()
@@ -161,23 +173,10 @@ public class GameSceneBootstrapper : SceneBootstrapper, IPlayerProvider
         }
 
         // 2. 조작권 활성화 및 커서 잠금
-        if (UIManager.Instance != null && UIManager.Instance.InputReader != null)
-        {
-            UIManager.Instance.InputReader.EnablePlayerInput();
-        }
-
-        if (_spawnedPlayer != null && _spawnedPlayer.InputReader != null)
-        {
-            _spawnedPlayer.InputReader.EnablePlayerInput();
-        }
-
-        UnityEngine.Cursor.lockState = UnityEngine.CursorLockMode.Locked;
-        UnityEngine.Cursor.visible = false;
+        InputSystemHandler.SetMode(InputMode.Gameplay);
 
         // 3. 씬 준비 완료 브로드캐스트
         EventBusSystem.Publish(new GameSceneReadyEvent(_sceneId));
-
-        Util.Log("[GameScene 부트스트랩 완료: 인게임 조작 개시]");
     }
 
     protected override void OnDestroy()

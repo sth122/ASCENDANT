@@ -10,14 +10,12 @@ public class BossSceneBootstrapper : SceneBootstrapper, IPlayerProvider
     [SerializeField] private CinemachineCamera _sceneLockOnCamera;
     [SerializeField] private CinemachineCamera _bossCutsceneCamera;
 
-    [Header("Boss & Weapon Fallback")]
-    [SerializeField] private WeaponItemData _fallbackWeaponData;
-
     private PlayerController _spawnedPlayer;
 
     public PlayerController Player => _spawnedPlayer;
     public Transform PlayerTransform => _spawnedPlayer != null ? _spawnedPlayer.transform : null;
     public bool IsPlayerSpawned => _spawnedPlayer != null;
+    private bool _isEndingTriggered = false;
 
     protected override void RegisterSceneServices()
     {
@@ -29,8 +27,38 @@ public class BossSceneBootstrapper : SceneBootstrapper, IPlayerProvider
             enemyManager = gameObject.AddComponent<EnemyManager>();
         }
         ServiceLocator.Register<IEnemyManager>(enemyManager, ServiceLifetime.Local);
+
+        EventBusSystem.Subscribe<BossDefeatedEvent>(HandleBossDefeated);
     }
 
+    private void HandleBossDefeated(BossDefeatedEvent evt)
+    {
+        if (_isEndingTriggered) return;
+        _isEndingTriggered = true;
+        StartEndingSequenceAsync(this.destroyCancellationToken).Forget();
+    }
+    private async UniTaskVoid StartEndingSequenceAsync(System.Threading.CancellationToken ct)
+    {
+        try
+        {
+            // 보스 사망 애니메이션
+            await UniTask.Delay(System.TimeSpan.FromSeconds(4.0f), cancellationToken: ct);
+
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayBGM(SoundId.BGM_Ending, fadeDuration: 1.5f);
+            }
+
+            if (UIManager.Instance != null)
+            {
+                EndingCreditsModel creditsModel = EndingCreditsModel.CreateDefault();
+                await UIManager.Instance.OpenUIAsync<EndingCreditsView, EndingCreditsPresenter, EndingCreditsModel>(
+                    UIId.EndingCreditsUI, creditsModel, ct: ct
+                );
+            }
+        }
+        catch (System.OperationCanceledException) { }
+    }
     protected override async UniTask PreloadSceneAssetsAsync() => await UniTask.CompletedTask;
 
     protected override async UniTask SetupSceneActorsAsync()
@@ -62,10 +90,10 @@ public class BossSceneBootstrapper : SceneBootstrapper, IPlayerProvider
 
         SetupPlayerRuntimeStatus(_spawnedPlayer);
 
-        // 무기 데이터 바인딩 보장 (인벤토리 데이터 미동기화 시 폴백)
-        if (_spawnedPlayer.CombatModule != null && _spawnedPlayer.CombatModule.CurrentWeaponData == null && _fallbackWeaponData != null)
+        // 세션 또는 세이브로부터 인벤토리, 착용 장비, 퀵슬롯 복원
+        if (_spawnedPlayer.TryGetComponent(out PlayerInventoryHandler invHandler))
         {
-            _spawnedPlayer.CombatModule.SetWeaponData(_fallbackWeaponData);
+            invHandler.InitializeInventory(DataManager.Instance);
         }
 
         // 보스 컷신 카메라를 포함하여 3종 카메라 등록
@@ -112,6 +140,11 @@ public class BossSceneBootstrapper : SceneBootstrapper, IPlayerProvider
         await UIManager.Instance.OpenUIAsync<PlayerHUDView, PlayerHUDPresenter, PlayerHUDModel>(
             UIId.PlayerHUD, hudModel, ct: this.destroyCancellationToken
         );
+
+        QuickSlotModel quickSlotModel = new QuickSlotModel();
+        await UIManager.Instance.OpenUIAsync<QuickSlotView, QuickSlotPresenter, QuickSlotModel>(
+            UIId.QuickSlotHUD, quickSlotModel, ct: this.destroyCancellationToken
+        );
     }
 
     protected override void OnSceneReadyCompleted()
@@ -121,18 +154,7 @@ public class BossSceneBootstrapper : SceneBootstrapper, IPlayerProvider
             GameManager.Instance.SetState(GameState.Playing);
         }
 
-        if (UIManager.Instance != null && UIManager.Instance.InputReader != null)
-        {
-            UIManager.Instance.InputReader.EnablePlayerInput();
-        }
-
-        if (_spawnedPlayer != null && _spawnedPlayer.InputReader != null)
-        {
-            _spawnedPlayer.InputReader.EnablePlayerInput();
-        }
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        InputSystemHandler.SetMode(InputMode.Gameplay);
 
         // 카메라 즉시 스냅 (2초간 날아가는 현상 차단)
         if (CameraManager.Instance != null)
@@ -145,6 +167,8 @@ public class BossSceneBootstrapper : SceneBootstrapper, IPlayerProvider
 
     protected override void OnDestroy()
     {
+        EventBusSystem.Unsubscribe<BossDefeatedEvent>(HandleBossDefeated);
+
         if (CameraManager.Instance != null)
         {
             CameraManager.Instance.UnregisterSceneCameras();

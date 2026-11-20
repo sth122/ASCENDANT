@@ -24,9 +24,7 @@ public class PlayerInventoryHandler : MonoBehaviour
         if (_player != null && _player.InputReader != null)
         {
             _player.InputReader.OnQuickSlotDirectEvent -= HandleQuickSlotDirect;
-            _player.InputReader.OnInventoryToggleEvent -= HandleInventoryToggle;
             _player.InputReader.OnQuickSlotDirectEvent += HandleQuickSlotDirect;
-            _player.InputReader.OnInventoryToggleEvent += HandleInventoryToggle;
         }
     }
 
@@ -35,7 +33,6 @@ public class PlayerInventoryHandler : MonoBehaviour
         if (_player != null && _player.InputReader != null)
         {
             _player.InputReader.OnQuickSlotDirectEvent -= HandleQuickSlotDirect;
-            _player.InputReader.OnInventoryToggleEvent -= HandleInventoryToggle;
         }
     }
 
@@ -44,6 +41,8 @@ public class PlayerInventoryHandler : MonoBehaviour
     /// </summary>
     public void InitializeInventory(DataManager dataManager)
     {
+        ResolveInitialEquipmentSO(dataManager);
+
         SaveData save = SaveManager.Instance != null ? SaveManager.Instance.CurrentSaveData : null;
         PlayerSaveData sessionData = SessionDataManager.Instance != null && SessionDataManager.Instance.HasActiveSession
             ? SessionDataManager.Instance.CurrentSessionData : null;
@@ -52,27 +51,58 @@ public class PlayerInventoryHandler : MonoBehaviour
         if (sessionData != null && sessionData.HasReceivedInitialEquipment)
         {
             RestoreFromSaveData(sessionData, dataManager);
+            EnsureMandatoryWeaponAndShield();
             return;
         }
 
-        // 2. 화톳불 영속 세이브에 인벤토리 스냅샷이 있는 경우 (게임 이어하기)
+        // 2. 영속 세이브에 인벤토리 스냅샷이 있는 경우 (게임 이어하기)
         if (save != null && save.PlayerData != null && save.PlayerData.HasReceivedInitialEquipment)
         {
             RestoreFromSaveData(save.PlayerData, dataManager);
+            EnsureMandatoryWeaponAndShield();
+
+            if (sessionData != null)
+            {
+                InventoryInstance.ExportToSaveData(sessionData);
+                sessionData.HasReceivedInitialEquipment = true;
+            }
             return;
         }
 
         // 3. 신규 게임 초기 로드아웃 지급
         ApplyInitialLoadout(save, sessionData);
     }
+    private void ResolveInitialEquipmentSO(DataManager dataManager)
+    {
+        if (_initialEquipmentSO == null && dataManager != null)
+        {
+            dataManager.TryGetSingle<PlayerInitialEquipmentSO>(out _initialEquipmentSO);
+        }
+
+        if (_initialEquipmentSO != null && dataManager != null)
+        {
+            dataManager.RegisterInitialLoadoutItems(_initialEquipmentSO);
+        }
+    }
+    /// <summary>
+    /// 구 세이브 데이터 로드 시에도 필수 무기/방패가 비어있지 않도록 보장
+    /// </summary>
+    private void EnsureMandatoryWeaponAndShield()
+    {
+        if (_initialEquipmentSO == null || InventoryInstance == null) return;
+
+        if (InventoryInstance.GetEquippedItem(EquipSlotType.MainWeapon) == null && _initialEquipmentSO.StartingWeapon != null)
+        {
+            InventoryInstance.EquipDirect(_initialEquipmentSO.StartingWeapon, _player);
+        }
+        if (InventoryInstance.GetEquippedItem(EquipSlotType.Shield) == null && _initialEquipmentSO.StartingShield != null)
+        {
+            InventoryInstance.EquipDirect(_initialEquipmentSO.StartingShield, _player);
+        }
+    }
 
     private void ApplyInitialLoadout(SaveData save, PlayerSaveData sessionData)
     {
-        if (_initialEquipmentSO == null && DataManager.Instance != null)
-        {
-            DataManager.Instance.TryGetSingle<PlayerInitialEquipmentSO>(out _initialEquipmentSO);
-        }
-
         if (_initialEquipmentSO == null)
         {
             DebugLogger.LogErrorWithTag("PlayerInventoryHandler", "PlayerInitialEquipmentSO를 찾을 수 없습니다.");
@@ -82,15 +112,22 @@ public class PlayerInventoryHandler : MonoBehaviour
         // 초기 장비, 방어구, 소모품 지급
         InventoryInstance.ApplyInitialEquipmentLoadout(_initialEquipmentSO, _player);
 
-        if (save != null && save.PlayerData != null) save.PlayerData.HasReceivedInitialEquipment = true;
-        if (sessionData != null) sessionData.HasReceivedInitialEquipment = true;
-
+        if (save != null && save.PlayerData != null)
+        {
+            InventoryInstance.ExportToSaveData(save.PlayerData);
+            save.PlayerData.HasReceivedInitialEquipment = true;
+        }
+        if (sessionData != null)
+        {
+            InventoryInstance.ExportToSaveData(sessionData);
+            sessionData.HasReceivedInitialEquipment = true;
+        }
         if (SaveManager.Instance != null && save != null)
         {
             SaveManager.Instance.SaveCurrentGameAsync(save.SaveSlotIndex).Forget();
         }
 
-        DebugLogger.LogWithTag("PlayerInventoryHandler", "[신규 게임 초기 장비 지급 완료]");
+        DebugLogger.LogWithTag("PlayerInventoryHandler", "[신규 게임 초기 장비 지급 및 직렬화 동기화 완료]");
     }
 
     #region 세션/세이브 데이터 직렬화 및 복원 브릿지
@@ -111,33 +148,28 @@ public class PlayerInventoryHandler : MonoBehaviour
     #region 입력 핸들러 및 FSM 연동
     private void HandleQuickSlotDirect(int slotIndex)
     {
-        if (!_player.IsControllerActive) return;
+        if (!_player.IsControllerActive || InventoryInstance == null) return;
+
+        QuickSlotSystem quickSlots = InventoryInstance.QuickSlots;
+
+        // 1. 아이템 사용 모션 중이거나 공용 쿨타임 중이면 상태 전환 자체를 차단
+        if (quickSlots.IsUsingItemLock || quickSlots.IsOnGlobalCooldown) return;
 
         IState curState = _player.StateMachineInstance.CurrentState;
+        if (curState is PlayerUseItemState) return;
 
-        // 지상 이동 상태군(Idle, Move, Sprint)에서 사용 허용
         if (curState is PlayerIdleState || curState is PlayerMoveState || curState is PlayerSprintState)
         {
-            PortionItem item = InventoryInstance.QuickSlots.GetItem(slotIndex) as PortionItem;
+            ConsumableItem item = quickSlots.GetItem(slotIndex) as ConsumableItem;
             if (item == null || item.CurrentAmount <= 0) return;
 
-            // PlayerUseItemState로 전이하여 실제 애니메이션 모션과 함께 소비
             if (_player.StateMachineInstance.GetState(UnitState.UseItem) is PlayerUseItemState useItemState)
             {
+                quickSlots.IsUsingItemLock = true;
                 useItemState.SetupItemToUse(slotIndex, item);
                 _player.StateMachineInstance.ChangeState(UnitState.UseItem);
             }
         }
-    }
-
-    private void HandleInventoryToggle()
-    {
-        if (UIManager.Instance == null) return;
-
-        InventoryModel model = new InventoryModel();
-        UIManager.Instance.OpenUIAsync<InventoryView, InventoryPresenter, InventoryModel>(
-            UIId.InventoryUI, model
-        ).Forget();
     }
     #endregion
 }

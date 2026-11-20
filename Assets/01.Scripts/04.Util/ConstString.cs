@@ -14,24 +14,51 @@
         public const string LeverPullPrompt = "[F] 레버 당기기";
         #endregion
 
+        #region Popup Prompts
+        public const string GameStartPrompt = "게임을 시작하시겠습니까?";
+        public const string GameQuitPrompt = "게임을 종료하시겠습니까?";
+        public const string NewGameOverwritePrompt = "이전 데이터를 삭제하고 새로 시작하시겠습니까?";
+        public const string LoadGamePrompt = "게임을 불러오시겠습니까?";
+        public const string BossEntryPrompt = "보스 방에 진입하시겠습니까?";
+        #endregion
+
+        #region UI Text
+        public const string ChestText = "보물 상자";
+        public const string OpenChest = "[F] 보물상자를 연다";
+        public const string ReopenChest = "[F] 보물상자 확인";
+        public const string PromptGuidPrompt = "[E / Enter] : 결정    [ESC] : 닫기";
+        #endregion
+
         #region UI Addressable Keys
         public const string TitleBackgroundUI = "TitleBackgroundUI";
         public const string GameOverBackgroundUI = "GameOverBackgroundUI";
+
+
         public const string PlayerHUD = "PlayerHUD";
         public const string EnemyFloatingHUD = "EnemyFloatingHUD";
         public const string BossHUD = "BossHUD";
         public const string QuickSlotHUD = "QuickSlotHUD";
+
+
         public const string TitleMenuUI = "TitleMenuUI";
         public const string SystemMenuUI = "SystemMenuUI";
         public const string InventoryUI = "InventoryUI";
         public const string EquipmentUI = "EquipmentUI";
         public const string StatusUI = "StatusUI";
         public const string GameOverUI = "GameOverUI";
+        public const string SettingUI = "SettingUI";
+        public const string CharacterSelectUI = "CharacterSelectUI";
+        public const string BonfireUI = "BonfireUI";
+        public const string ChestUI = "ChestUI";
+
         public const string ConfirmPopupUI = "ConfirmPopupUI";
-        public const string NoticePopupUI = "NoticePopupUI";
+        public const string NoticeWindowUI = "NoticeWindowUI";
         public const string KeyBindingPopupUI = "KeyBindingPopupUI";
+
+
         public const string FadeCurtainUI = "FadeCurtainUI";
         public const string LoadingScreenUI = "LoadingScreenUI";
+        public const string SaveToastUI = "SaveToastUI";
         #endregion
     }
 }

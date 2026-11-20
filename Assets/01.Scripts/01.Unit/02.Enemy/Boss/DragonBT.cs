@@ -25,12 +25,12 @@ public class DragonBT : BossBTController
         }
         _dragonCombat = _combatController as DragonCombatController;
 
-        if (_groggyModule != null)
-        {
-            _groggyModule.OnGroggyEnded += HandleGroggyEnded;
-        }
-
         base.SetupComponents();
+    }
+    public override void BindStatusData(EnemyInfo overrideStat = null)
+    {
+        _isPhase2Transitioning = false;
+        base.BindStatusData(overrideStat);
     }
 
     protected override INode BuildBehaviorTree()
@@ -43,14 +43,16 @@ public class DragonBT : BossBTController
         deathSeq.Add(new ActionNode(ExecuteDeath));
         root.Add(deathSeq);
 
-        // 2. 2페이즈 전환
+        // 2. 2페이즈 전환 (일반 전투 중 체력 임계점 도달 또는 그로기 종료 후 대기 플래그 발동 시 단일 진입)
         var phase2Seq = new SequenceNode();
         phase2Seq.Add(new PredicateNode<DragonBT>(this, static b =>
         {
             if (b._isPhase2Transitioning) return true;
-            if (b._blackboard.HasExecutedPhase2Entry || b._enemyStatus == null) return false;
-            if (b._groggyModule.IsGroggy || b._enemyStatus.IsPhase2Pending) return false;   // 그로기 중이거나 페이즈2 대기 중인 동안에는 BT가 2페이즈 브랜치를 타지 않고 그로기 브랜치 유지
-            return (b._enemyStatus.CurrentHp / b._enemyStatus.MaxHp) <= b._blackboard.Phase2HpRatio;
+            if (b._enemyStatus == null || b._blackboard.HasExecutedPhase2Entry || b._enemyStatus.HasTriggeredPhase2) return false;
+            if (b._groggyModule.IsGroggy) return false; // 그로기 중에는 그로기가 완전히 끝날 때까지 2페이즈 모션 보류
+
+            return b._enemyStatus.IsPhase2Pending ||
+                   (b._enemyStatus.MaxHp > 0f && (b._enemyStatus.CurrentHp / b._enemyStatus.MaxHp) <= b._blackboard.Phase2HpRatio);
         }));
         phase2Seq.Add(new AsyncActionNode(ExecutePhase2TransitionAsync, GetActionToken));
         root.Add(phase2Seq);
@@ -58,7 +60,7 @@ public class DragonBT : BossBTController
         // 3. 그로기
         var groggySeq = new SequenceNode();
         groggySeq.Add(new PredicateNode<DragonBT>(this, static b =>
-            b._enemyStatus != null && (b._groggyModule.IsGroggy || b._enemyStatus.IsPoiseBroken)));
+            !b._isPhase2Transitioning && b._enemyStatus != null && (b._groggyModule.IsGroggy || b._enemyStatus.IsPoiseBroken)));
         groggySeq.Add(new ActionNode(TickGroggyStatus));
         root.Add(groggySeq);
 
@@ -68,13 +70,11 @@ public class DragonBT : BossBTController
         {
             if (b.IsDead || b._groggyModule.IsGroggy || b._isPhase2Transitioning) return false;
 
-            // 스킬 쿨타임 주기 도달 및 사거리 내 유효 스킬 존재 시 대기 플래그 셋
             if (Time.time >= b._blackboard.NextSkillCycleTime && b.HasAnyReadySkill(b._currentTarget))
             {
                 b._blackboard.IsSkillPending = true;
             }
 
-            // 기본 공격이 진행 중이면 스킬을 절대 시전하지 않고 평타 종료 대기
             if (b.IsActionExecuting) return false;
 
             return b._blackboard.IsSkillPending && b.HasAnyReadySkill(b._currentTarget);
@@ -87,13 +87,13 @@ public class DragonBT : BossBTController
 
         var basicAttackSeq = new SequenceNode();
         basicAttackSeq.Add(new PredicateNode<DragonBT>(this, static b =>
-            !b.IsActionExecuting && !b._blackboard.IsSkillPending && b._combatController.IsGlobalCooldownReady &&
-            b._combatController.HasAnyReadyAttack(b._currentTarget)));
+            !b.IsActionExecuting && !b._isPhase2Transitioning && !b._blackboard.IsSkillPending &&
+            b._combatController.IsGlobalCooldownReady && b._combatController.HasAnyReadyAttack(b._currentTarget)));
         basicAttackSeq.Add(new AsyncActionNode(ExecuteSelectedBasicAttackAsync, GetActionToken));
         combatSelector.Add(basicAttackSeq);
 
         var chaseSeq = new SequenceNode();
-        chaseSeq.Add(new PredicateNode<DragonBT>(this, static b => !b.IsActionExecuting && b._currentTarget != null));
+        chaseSeq.Add(new PredicateNode<DragonBT>(this, static b => !b.IsActionExecuting && !b._isPhase2Transitioning && b._currentTarget != null));
         chaseSeq.Add(new ActionNode(TickChasePlayer));
         combatSelector.Add(chaseSeq);
 
@@ -101,7 +101,12 @@ public class DragonBT : BossBTController
 
         return root;
     }
-
+    public override void TriggerGroggy()
+    {
+        // 2페이즈 돌입 모션(무적) 중에는 그로기로 인터럽트되지 않음
+        if (_isPhase2Transitioning || (_enemyStatus != null && _enemyStatus.IsInvincible)) return;
+        base.TriggerGroggy();
+    }
     #region 전투 평가 및 실행
     protected override async UniTask<bool> ExecuteSelectedBasicAttackAsync(CancellationToken ct)
     {
@@ -179,17 +184,30 @@ public class DragonBT : BossBTController
     #region 페이즈 2 전환 시퀀스
     private async UniTask<bool> ExecutePhase2TransitionAsync(CancellationToken ct)
     {
-        _combatController.CloseAllHitboxes();
+        if (_blackboard.HasExecutedPhase2Entry) return false;
 
+        // 1. 진입 즉시 재진입 차단 및 무적 활성화 (BossHUD 체력바 은백색 전환)
         _isPhase2Transitioning = true;
-        SetActionState(EnemyActionState.None);
+        _blackboard.HasExecutedPhase2Entry = true;
+        _enemyStatus.MarkPhase2Triggered();
+        _enemyStatus.ResetPoiseToDefault();
+
+        _enemyStatus.SetInvincible(true);
         _blackboard.IsInvincible = true;
+
+        _combatController.CloseAllHitboxes();
+        SetActionState(EnemyActionState.SkillCasting);
         _movement.StopMovement();
 
-        Util.Log("[Phase 2] 무적화 및 공중 체공 진입");
+        Util.Log("[Phase 2] 무적화(은색 체력바) 및 2페이즈 진입 연출 시작");
 
         try
         {
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayBGM(SoundId.BGM_Boss_Phase2, fadeDuration: 1.5f);
+            }
+
             _movement.BeginRootMotionMovement();
             _enemyAnim.SetRootMotion(true, (deltaPos, deltaRot) => _movement.ApplyRootMotionDelta(deltaPos, deltaRot, isAirborne: true));
             await PlayStateAndWaitAsync(AnimStateType.Dragon_Takeoff_InPlace, ct, force: true);
@@ -203,18 +221,31 @@ public class DragonBT : BossBTController
 
             await PlayStateAndWaitAsync(AnimStateType.Berserk, ct, force: true);
         }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
         finally
         {
             _enemyAnim.SetRootMotion(false);
             _movement.EndRootMotionMovement();
 
+            // 2. 연출 종료 시 무적 반드시 해제 (BossHUD 체력바 붉은색 복귀)
+            _enemyStatus.SetInvincible(false);
+            _blackboard.IsInvincible = false;
+
             _enemyStatus.ResetPoiseToDefault();
             _blackboard.IsPhase2 = true;
-            _blackboard.HasExecutedPhase2Entry = true;
-            _blackboard.IsInvincible = false;
             _blackboard.ResetSkillCycle();
             _isPhase2Transitioning = false;
-            SetActionState(EnemyActionState.None);
+
+            if (!IsDead)
+            {
+                _enemyAnim.PlayState(AnimStateType.Idle, force: true);
+                SetActionState(EnemyActionState.None);
+            }
+
+            Util.Log("[Phase 2] 2페이즈 전환 완료 및 무적 해제");
         }
 
         return true;

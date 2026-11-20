@@ -98,6 +98,16 @@ public interface ILoadable
 }
 
 /// <summary>
+/// 씬 내부에 배치된 월드 오브젝트/기믹/연출 트리거가 씬 부트스트랩 파이프라인에 참여하기 위한 규약
+/// </summary>
+public interface ISceneLoadable
+{
+    int SceneLoadOrder { get; }
+    Cysharp.Threading.Tasks.UniTask OnSceneObjectLoadAsync(SceneId scene, System.Threading.CancellationToken ct);
+    void OnSceneObjectReady(SceneId scene);
+}
+
+/// <summary>
 /// 각 씬의 하이어라키 루트에서 인게임 액터 및 로컬 서비스를 셋업하는 규약
 /// </summary>
 public interface ISceneBootstrap
@@ -113,6 +123,16 @@ public interface IPlayerProvider
     PlayerController Player { get; }
     UnityEngine.Transform PlayerTransform { get; }
     bool IsPlayerSpawned { get; }
+}
+
+/// <summary>
+/// 씬에 배치된 화톳불(세이브 포인트)과 스폰 지점을 관리하는 규약
+/// </summary>
+public interface ISpawnProvider
+{
+    void RegisterSavePoint(BonfireId id, UnityEngine.Transform spawnTransform);
+    bool TryGetSpawnTransform(BonfireId id, out UnityEngine.Vector3 position, out UnityEngine.Quaternion rotation);
+    void ClearSavePoints();
 }
 #endregion
 

@@ -298,7 +298,7 @@ public class UnitStatusController : MonoBehaviour
         }
 
         // 3. 일반 에너미 데이터베이스(EnemyStatusSO) 조회
-        if (DataManager.Instance.TryGetSingle<EnemyStatusSO>(out var enemyStatusSO) && enemyStatusSO != null)
+        if (DataManager.Instance.TryGetSingle<EnemyInfoSO>(out var enemyStatusSO) && enemyStatusSO != null)
         {
             if (enemyStatusSO.TryGetData(unitId, out EnemyInfo enemyInfo) && enemyInfo != null)
             {
